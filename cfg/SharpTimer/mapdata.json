@@ -111,5 +111,215 @@
     "MapEndC1": "4143.97 -2095.97 141.03",
     "MapEndC2": "3876.42 -1760.03 141.03",
     "RespawnPos": "-6485.49 -2924.37 -4209.47"
+  },
+  "bhop_colour": {
+    "MapStartC1": "3984 5050 110",
+    "MapStartC2": "3488 4552 160",
+    "MapEndC1": "6360 7152 158",
+    "MapEndC2": "6859 7257 230",
+    "RespawnPos": "3862 4795 68"
+  },
+    "bhop_water_test": {
+    "MapStartC1": "-1007 -192 110",
+    "MapStartC2": "-720 -303 150",
+    "MapEndC1": "521 1920 110",
+    "MapEndC2": "885 2037 150",
+    "RespawnPos": "-946 -302 130"
+  },
+    "bhop_leaf": {
+    "MapStartC1": "12032 -2637 300",
+    "MapStartC2": "13092 393 592",
+    "MapEndC1": "12289 11447 230",
+    "MapEndC2": "12990 9850 300",
+    "RespawnPos": "12035 -1525 325"
+  },
+    "bhop_moonlight": {
+    "MapStartC1": "-158 -222 -5",
+    "MapStartC2": "191  210 130",
+    "MapEndC1": "-3075 -1012 35",
+    "MapEndC2": "-2700 -115 130",
+    "RespawnPos": "-61 10 -5"
+  },
+    "bhop_emevaelx3": {
+    "MapStartC1": "-14721 -13664 115",
+    "MapStartC2": "-15039 -13983 200",
+    "MapEndC1": "-5281 -528 -1350",
+    "MapEndC2": "-5647 -1871 -1250",
+    "RespawnPos": "-14858 -13820 129"
+  },
+    "bhop_1n5an3_cybershoke": {
+    "MapStartC1": "-10 -509 110",
+    "MapStartC2": "-500 -16 200",
+    "MapEndC1": "2223 -511 110",
+    "MapEndC2": "1744 -16 200",
+    "RespawnPos": "-258 -352 129"
+  },
+    "bhop_fur": {
+    "MapStartC1": "-14592 15344 560",
+    "MapStartC2": "-15343 13840 650",
+    "MapEndC1": "1661 -2031 1200",
+    "MapEndC2": "1109 -5449 2148",
+    "RespawnPos": "-14735 14597 577"
+  },
+    "bhop_hilton": {
+    "MapStartC1": "-1135 -319 100",
+    "MapStartC2": "623 87 200",
+    "MapEndC1": "-512 1073 135",
+    "MapEndC2": "-607 1375 230",
+    "RespawnPos": "-260 -108 113 "
+  },
+    "bhop_cobblestone": {
+    "MapStartC1": "-192 200 128",
+    "MapStartC2": "271 655 255",
+    "MapEndC1": "128 3007 128",
+    "MapEndC2": "351 2270 255 ",
+    "RespawnPos": "-55 492 128"
+  },
+    "bhop_gottagofast": {
+    "MapStartC1": "2400 -250 64",
+    "MapStartC2": "2542 250 200",
+    "MapEndC1": "2535 63 64",
+    "MapEndC2": "-1376 1520 64",
+    "RespawnPos": "-1519 1044 200"
+  },
+    "bhop_kiitovittu": {
+    "MapStartC1": "446 255 64",
+    "MapStartC2": "23 -191 200",
+    "MapEndC1": "-3953 6369 64",
+    "MapEndC2": "-4857 6632 300",
+    "RespawnPos": "272 15 64"
+  },
+    "bhop_nira": {
+    "MapStartC1": "-11792 -12992 128",
+    "MapStartC2": "-12271 -13239 250",
+    "MapEndC1": "-12799 2312 -2976",
+    "MapEndC2": "-11970 2683 -2934",
+    "RespawnPos": "-12031 -13168 128"
+  },
+    "bhop_masyunya": {
+    "MapStartC1": "2426 -443 -110",
+    "MapStartC2": "2119 -764 0",
+    "MapEndC1": "12862 12609 4700",
+    "MapEndC2": "12384 13055 4800",
+    "RespawnPos": "2292 -625 -148"
+  },
+    "bhop_redshit": {
+    "MapStartC1": "-80 152 -144",
+    "MapStartC2": "-152 -320 0",
+    "MapEndC1": "7749 -2776 -1300",
+    "MapEndC2": "8575 -3015 -1100",
+    "RespawnPos": "-210 -4 -144"
+  },
+    "bhop_atom": {
+    "MapStartC1": "2174 -8961 0",
+    "MapStartC2": "1920 -9151 100",
+    "MapEndC1": "4286 -1662 5",
+    "MapEndC2": "3905 -1281 140",
+    "RespawnPos": "2046 -9082 0"
+  },
+    "bhop_minimal": {
+    "MapStartC1": "260 4 68",
+    "MapStartC2": "-255 -259 220",
+    "MapEndC1": "-4962 3299 330",
+    "MapEndC2": "-4445 3036 450",
+    "RespawnPos": "1 -135 68"
+  },
+    "bhop_facilityrun": {
+    "MapStartC1": "-848 1440 2380",
+    "MapStartC2": "-1152 1048 2500",
+    "MapEndC1": "694 1790 -303",
+    "MapEndC2": "1033 1700 0",
+    "RespawnPos": "-1060 1248 2368"
+  },
+    "bhop_gloom": {
+    "MapStartC1": "-700 192 128",
+    "MapStartC2": "-943 495 260",
+    "MapEndC1": "1600 -5520 -250",
+    "MapEndC2": "1281 -5752 -100",
+    "RespawnPos": "-832 337 128"
+  },
+    "bhop_junglehop": {
+    "MapStartC1": "1550 2112 248",
+    "MapStartC2": "2031 2621 400",
+    "MapEndC1": "-272 -1024 300",
+    "MapEndC2": "-751 -1472 400",
+    "RespawnPos": "1810 2285 248"
+  },
+    "bhop_alley": {
+    "MapStartC1": "-400 -192 64",
+    "MapStartC2": "-50 111 200",
+    "MapEndC1": "600 385 -250",
+    "MapEndC2": "272 623 -150",
+    "RespawnPos": "-272 -145 64"
+  },
+    "bhop_aso_wood": {
+    "MapStartC1": "-640 431 192",
+    "MapStartC2": "-1007 -239 320",
+    "MapEndC1": "1408 -3631 192",
+    "MapEndC2": "1711 -2960 320",
+    "RespawnPos": "-768 96 192"
+  },
+    "bhop_easyhop": {
+    "MapStartC1": "-288 -231 24",
+    "MapStartC2": "-543 0 150",
+    "MapEndC1": "-592 24 24",
+    "MapEndC2": "-592 -190 150",
+    "RespawnPos": "-417 -106 24"
+  },
+    "bhop_zentic": {
+    "MapStartC1": "128 -192 64",
+    "MapStartC2": "-72 192 200",
+    "MapEndC1": "13888 1920 -600",
+    "MapEndC2": "13752 1536 -500",
+    "RespawnPos": "-2 0 64"
+  },
+    "bhop_dreamworld": {
+    "MapStartC1": "-500 -256 236",
+    "MapStartC2": "431 303 270",
+    "MapEndC1": "3520 104 60",
+    "MapEndC2": "3360 951 200",
+    "RespawnPos": "-2 -140 236"
+  },
+    "bhop_messup": {
+    "MapStartC1": "191 -1 192",
+    "MapStartC2": "-511 -255 330",
+    "MapEndC1": "3639 -1408 900",
+    "MapEndC2": "3116 -808 1000",
+    "RespawnPos": "-140 -152 192 "
+  },
+    "bhop_fps_max_cybershoke": {
+    "MapStartC1": "-15344 12288 14875",
+    "MapStartC2": "-13328 11280 15000",
+    "MapEndC1": "10706 -6350 6660",
+    "MapEndC2": "9598 -5153 7100",
+    "RespawnPos": "-14336 12101 14848"
+  },
+    "bhop_eazy": {
+    "MapStartC1": "-224 -464 64",
+    "MapStartC2": "-465 -240 200",
+    "MapEndC1": "1408 -752 64",
+    "MapEndC2": "1264 -975 200",
+    "RespawnPos": "-352 -352 64"
+  },
+    "bhop_inch": {
+    "MapStartC1": "3951 64 1440",
+    "MapStartC2": "2872 -303 1600",
+    "MapEndC1": "1600 128 40",
+    "MapEndC2": "2176 -256 180",
+    "RespawnPos": "3544 -80 1440"
+  },
+    "bhop_bridge_cybershoke": {
+    "MapStartC1": "-2376 4360 -561",
+    "MapStartC2": "-2736 460 -400",
+    "MapEndC1": "-495 -9488 87",
+    "MapEndC2": "0 -9655 300",
+    "RespawnPos": "-2552 2460 -561"
+  },
+    "bhop_grigio_cybershoke": {
+    "MapStartC1": "240 560 208",
+    "MapStartC2": "-240 64 350",
+    "MapEndC1": "2199 3746 -710",
+    "MapEndC2": "1977 4191 -620",
+    "RespawnPos": "-1 478 208"
   }
 }
