@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Memory;
@@ -10,6 +11,7 @@ using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace SharpTimer
 {
+    [MinimumApiVersion(84)]
     public class MapInfo
     {
         public string? MapStartTrigger { get; set; }
@@ -27,6 +29,7 @@ namespace SharpTimer
         public int TimerTicks { get; set; }
         public string? TimerRank { get; set; }
         public int CheckpointIndex { get; set; }
+        public int TicksSinceLastCmd { get; set; }
         public CCSPlayer_MovementServices? MovementService { get; set; }
     }
 
@@ -49,7 +52,7 @@ namespace SharpTimer
         private List<CCSPlayerController> connectedPlayers = new List<CCSPlayerController>();
 
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => "0.0.1";
+        public override string ModuleVersion => "0.0.6";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
@@ -92,10 +95,7 @@ namespace SharpTimer
                     connectedPlayers.Add(player);
                     playerTimers[player.UserId ?? 0] = new PlayerTimerInfo();
 
-                    if (connectMsgEnabled == true)
-                    {
-                        Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{player.PlayerName} {ChatColors.White}connected!");
-                    }
+                    if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{player.PlayerName} {ChatColors.White}connected!");
 
                     player.PrintToChat($"{msgPrefix}Welcome {ChatColors.Red}{player.PlayerName} {ChatColors.White}to the server!");
 
@@ -139,7 +139,7 @@ namespace SharpTimer
                 {
                     connectedPlayers.Remove(player);
                     playerTimers.Remove(player.UserId ?? 0);
-                    Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{player.PlayerName} {ChatColors.White}disconnected!");
+                    if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{player.PlayerName} {ChatColors.White}disconnected!");
 
                     return HookResult.Continue;
                 }
@@ -194,6 +194,8 @@ namespace SharpTimer
                         {
                             if(playerTimers[player.UserId ?? 0].MovementService.DuckSpeed != 7.0f) playerTimers[player.UserId ?? 0].MovementService.DuckSpeed = 7.0f;
                         }
+
+                        playerTimers[player.UserId ?? 0].TicksSinceLastCmd++;
                     }
                 }
             });
@@ -207,7 +209,7 @@ namespace SharpTimer
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
-                if (!connectedPlayers.Contains(player) || playerTimers[player.UserId ?? 0].IsTimerRunning == false) return HookResult.Continue;
+                if (playerTimers[player.UserId ?? 0].IsTimerRunning == false) return HookResult.Continue;
 
                 if (trigger.Entity.Name == currentMapEndTrigger && player.IsValid)
                 {
@@ -226,8 +228,6 @@ namespace SharpTimer
                 if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false) return HookResult.Continue;
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
-
-                if (!connectedPlayers.Contains(player)) return HookResult.Continue;
 
                 if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid)
                 {
@@ -309,10 +309,7 @@ namespace SharpTimer
             if (player == null || !player.IsValid) return;
 
             // Remove checkpoints for the current player
-            if (playerCheckpoints.ContainsKey(player.UserId ?? 0))
-            {
-                playerCheckpoints.Remove(player.UserId ?? 0);
-            }
+            playerCheckpoints.Remove(player.UserId ?? 0);
 
             playerTimers[player.UserId ?? 0].IsTimerRunning = true;
             playerTimers[player.UserId ?? 0].TimerTicks = 0;
@@ -370,7 +367,7 @@ namespace SharpTimer
             playerTimers[player.UserId ?? 0].IsTimerRunning = false;
 
             string timeDifference = "";
-            char ifFirstTimeColor = ChatColors.Red;
+            char ifFirstTimeColor;
             if (previousRecordTicks != 0)
             {
                 timeDifference = FormatTimeDifference(currentTicks, previousRecordTicks);
@@ -396,7 +393,7 @@ namespace SharpTimer
 
 
             playerTimers[player.UserId ?? 0].TimerRank = GetPlayerPlacementWithTotal(player);
-            NativeAPI.IssueClientCommand((int)player.EntityIndex!.Value.Value - 1, $"play {beepSound}");
+            player.ExecuteClientCommand($"play {beepSound}");
         }
 
         private static int GetPreviousPlayerRecord(CCSPlayerController? player)
@@ -520,7 +517,7 @@ namespace SharpTimer
                 }
             }
 
-            int totalPlayers = sortedRecords.Count + 1; // Including the current player
+            int totalPlayers = sortedRecords.Count;
 
             return $"Rank: {placement}/{totalPlayers}";
         }
@@ -612,6 +609,14 @@ namespace SharpTimer
         {
             if (player == null || topEnabled == false) return;
 
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+
             string currentMapName = Server.MapName;
 
             Dictionary<string, int> sortedRecords = GetSortedRecords();
@@ -639,6 +644,14 @@ namespace SharpTimer
         {
             if (player == null || rankEnabled == false) return;
 
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+
             player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{GetPlayerPlacementWithTotal(player)}");
         }
 
@@ -648,6 +661,14 @@ namespace SharpTimer
         {
             if (player == null || respawnEnabled == false) return;
 
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+
             if (currentRespawnPos == new Vector(0, 0, 0))
             {
                 player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnPos found for current map!");
@@ -655,10 +676,7 @@ namespace SharpTimer
             }
 
             // Remove checkpoints for the current player
-            if (playerCheckpoints.ContainsKey(player.UserId ?? 0))
-            {
-                playerCheckpoints.Remove(player.UserId ?? 0);
-            }
+            playerCheckpoints.Remove(player.UserId ?? 0);
 
             if (useTriggers == true)
             {
@@ -670,7 +688,7 @@ namespace SharpTimer
             }
             playerTimers[player.UserId ?? 0].IsTimerRunning = false;
             playerTimers[player.UserId ?? 0].TimerTicks = 0;
-            NativeAPI.IssueClientCommand((int)player.EntityIndex!.Value.Value - 1, $"play {respawnSound}");
+            player.ExecuteClientCommand($"play {respawnSound}");
         }
 
         [ConsoleCommand("css_cp", "Sets a checkpoint")]
@@ -679,12 +697,20 @@ namespace SharpTimer
         {
             if (player == null || cpEnabled == false) return;
 
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
             if (!player.PlayerPawn.Value.OnGroundLastTick)
             {
                 player.PrintToChat(msgPrefix + $"{ChatColors.LightRed}Cant set checkpoint while in air");
-                NativeAPI.IssueClientCommand((int)player.EntityIndex!.Value.Value - 1, $"play {cpSoundAir}");
+                player.ExecuteClientCommand($"play {cpSoundAir}");
                 return;
             }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
 
             // Get the player's current position and rotation
             Vector currentPosition = player.Pawn.Value.CBodyComponent?.SceneNode?.AbsOrigin ?? new Vector(0, 0, 0);
@@ -711,7 +737,7 @@ namespace SharpTimer
 
             // Print the chat message with the checkpoint count
             player.PrintToChat(msgPrefix + $"Checkpoint set! {ChatColors.Green}#{checkpointCount}");
-            NativeAPI.IssueClientCommand((int)player.EntityIndex!.Value.Value - 1, $"play {cpSound}");
+            player.ExecuteClientCommand($"play {cpSound}");
         }
 
         [ConsoleCommand("css_tp", "Tp to the most recent checkpoint")]
@@ -719,6 +745,14 @@ namespace SharpTimer
         public void TpPlayerCP(CCSPlayerController? player, CommandInfo command)
         {
             if (player == null || cpEnabled == false) return;
+
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
 
             // Check if the player has any checkpoints
             if (!playerCheckpoints.ContainsKey(player.UserId ?? 0) || playerCheckpoints[player.UserId ?? 0].Count == 0)
@@ -738,7 +772,7 @@ namespace SharpTimer
             player.PlayerPawn.Value.Teleport(position, rotation, new Vector(0, 0, 0));
 
             // Play a sound or provide feedback to the player
-            NativeAPI.IssueClientCommand((int)player.EntityIndex!.Value.Value - 1, $"play {tpSound}");
+            player.ExecuteClientCommand($"play {tpSound}");
             player.PrintToChat(msgPrefix + "Teleported to most recent checkpoint!");
         }
 
@@ -747,6 +781,14 @@ namespace SharpTimer
         public void TpPreviousCP(CCSPlayerController? player, CommandInfo command)
         {
             if (player == null || !cpEnabled) return;
+
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
 
             if (!playerCheckpoints.TryGetValue(player.UserId ?? 0, out List<PlayerCheckpoint> checkpoints) || checkpoints.Count == 0)
             {
@@ -778,7 +820,7 @@ namespace SharpTimer
                 player.PlayerPawn.Value.Teleport(position, rotation, new Vector(0, 0, 0));
 
                 // Play a sound or provide feedback to the player
-                NativeAPI.IssueClientCommand((int)player.EntityIndex!.Value.Value - 1, $"play {tpSound}");
+                player.ExecuteClientCommand($"play {tpSound}");
                 player.PrintToChat(msgPrefix + "Teleported to the previous checkpoint!");
             }
         }
@@ -788,6 +830,14 @@ namespace SharpTimer
         public void TpNextCP(CCSPlayerController? player, CommandInfo command)
         {
             if (player == null || !cpEnabled) return;
+
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
 
             if (!playerCheckpoints.TryGetValue(player.UserId ?? 0, out List<PlayerCheckpoint> checkpoints) || checkpoints.Count == 0)
             {
@@ -819,7 +869,7 @@ namespace SharpTimer
                 player.PlayerPawn.Value.Teleport(position, rotation, new Vector(0, 0, 0));
 
                 // Play a sound or provide feedback to the player
-                NativeAPI.IssueClientCommand((int)player.EntityIndex!.Value.Value - 1, $"play {tpSound}");
+                player.ExecuteClientCommand($"play {tpSound}");
                 player.PrintToChat(msgPrefix + "Teleported to the next checkpoint!");
             }
         }
