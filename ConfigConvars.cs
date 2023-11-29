@@ -55,7 +55,7 @@ namespace SharpTimer
 
         [ConsoleCommand("sharptimer_remove_crouch_fatigue", "Whether the player should get no crouch fatigue or not. Default value: true")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
-        public void SharpTimerFOVConvar(CCSPlayerController? player, CommandInfo command)
+        public void SharpTimerRemoveCrouchFatigueConvar(CCSPlayerController? player, CommandInfo command)
         {
             string args = command.ArgString;
 
