@@ -9,6 +9,8 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 [**MovementUnlocker** *(optional)*](https://github.com/Source2ZE/MovementUnlocker)
 
+⚠️ **CS2Fixes** does clash with **CSS** a bit and will break the `!cp` command ⚠️
+
 ## Features
 <p align="center">
 <strong style="font-weight: bold;">----------------- [Timer, Speedometer and Keys] -----------------</strong>
