@@ -11,7 +11,10 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 ⚠️ **CS2Fixes** does clash with **CSS** a bit and will break the `!cp` command ⚠️
 
-## Features
+# Demo Video
+[![Demo](https://i.imgur.com/Xr0nDqC.png)](https://www.youtube.com/watch?v=wUKOQ68K5t8)
+
+# Features
 <p align="center">
 <strong style="font-weight: bold;">----------------- [Timer, Speedometer and Keys] -----------------</strong>
 </p>
@@ -67,7 +70,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
   
 * Here a collection of maps supported by default: https://steamcommunity.com/sharedfiles/filedetails/?id=3095738559
 
-## Commands
+# Commands
 
 | Command  | What it does |
 | ------------- | ------------- |
