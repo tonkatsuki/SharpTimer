@@ -209,11 +209,15 @@ namespace SharpTimer
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
-                if (playerTimers[player.UserId ?? 0].IsTimerRunning == false) return HookResult.Continue;
-
-                if (trigger.Entity.Name == currentMapEndTrigger && player.IsValid)
+                if (trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers[player.UserId ?? 0].IsTimerRunning == true)
                 {
                     OnTimerStop(player);
+                    return HookResult.Continue;
+                }
+
+                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid)
+                {
+                    OnTimerStart(player);
                     return HookResult.Continue;
                 }
 
