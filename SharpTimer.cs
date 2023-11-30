@@ -29,6 +29,7 @@ namespace SharpTimer
         public int TimerTicks { get; set; }
         public string? TimerRank { get; set; }
         public int CheckpointIndex { get; set; }
+        public bool Azerty { get; set; }
         public int TicksSinceLastCmd { get; set; }
         public CCSPlayer_MovementServices? MovementService { get; set; }
     }
@@ -43,6 +44,7 @@ namespace SharpTimer
     {
         public string? PositionString { get; set; }
         public string? RotationString { get; set; }
+        public string? SpeedString { get; set; }
     }
 
     public partial class SharpTimer : BasePlugin
@@ -69,6 +71,7 @@ namespace SharpTimer
         public bool topEnabled = true;
         public bool rankEnabled = true;
         public bool cpEnabled = false;
+        public bool removeCpRestrictEnabled = false;
         public bool connectMsgEnabled = true;
         public bool srEnabled = true;
         public int srTimer = 120;
@@ -156,6 +159,18 @@ namespace SharpTimer
                         float playerVel = (float)Math.Sqrt(playerVelV.X * playerVelV.X + playerVelV.Y * playerVelV.Y + playerVelV.Z * playerVelV.Z);
                         string formattedPlayerVel = Math.Round(playerVel).ToString().PadLeft(4, '0');
                         string playerTime = FormatTime(playerTimers[player.UserId ?? 0].TimerTicks);
+                        string forwardKey = "W";
+                        string leftKey = "A";
+                        string backKey = "S";
+                        string rightKey = "D";
+
+                        if (playerTimers[player.UserId ?? 0].Azerty == true)
+                        {
+                            forwardKey = "Z";
+                            leftKey = "Q";
+                            backKey = "S";
+                            rightKey = "D";
+                        }
 
                         if (playerTimers[player.UserId ?? 0].IsTimerRunning)
                         {
@@ -163,10 +178,10 @@ namespace SharpTimer
                                 $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='green'>{playerTime}</font><br>" +
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.UserId ?? 0].TimerRank}</font><br>" +
-                                $"<font color='white'>{((buttons & PlayerButtons.Forward) != 0 ? "W" : "_")} " +
-                                $"{((buttons & PlayerButtons.Moveleft) != 0 ? "A" : "_")} " +
-                                $"{((buttons & PlayerButtons.Back) != 0 ? "S" : "_")} " +
-                                $"{((buttons & PlayerButtons.Moveright) != 0 ? "D" : "_")} " +
+                                $"<font color='white'>{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
                                 $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}</font>");
 
@@ -177,10 +192,10 @@ namespace SharpTimer
                             player.PrintToCenterHtml(
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.UserId ?? 0].TimerRank}</font><br>" +
-                                $"<font color='white'>{((buttons & PlayerButtons.Forward) != 0 ? "W" : "_")} " +
-                                $"{((buttons & PlayerButtons.Moveleft) != 0 ? "A" : "_")} " +
-                                $"{((buttons & PlayerButtons.Back) != 0 ? "S" : "_")} " +
-                                $"{((buttons & PlayerButtons.Moveright) != 0 ? "D" : "_")} " +
+                                $"<font color='white'>{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
                                 $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}</font>");
                         }
@@ -607,6 +622,31 @@ namespace SharpTimer
             return new Vector(0, 0, 0);
         }
 
+        [ConsoleCommand("css_azerty", "Switches layout to AZERTY")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void AzertySwitchCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player == null || topEnabled == false) return;
+
+            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+
+            if(playerTimers[player.UserId ?? 0].Azerty == true)
+            {
+                playerTimers[player.UserId ?? 0].Azerty = false;
+            }
+            else
+            {
+                playerTimers[player.UserId ?? 0].Azerty = true;
+            }
+            
+        }
+
         [ConsoleCommand("css_top", "Prints top players of this map")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void PrintTopRecords(CCSPlayerController? player, CommandInfo command)
@@ -707,7 +747,7 @@ namespace SharpTimer
                 return;
             }
 
-            if (!player.PlayerPawn.Value.OnGroundLastTick)
+            if (!player.PlayerPawn.Value.OnGroundLastTick && removeCpRestrictEnabled == false)
             {
                 player.PrintToChat(msgPrefix + $"{ChatColors.LightRed}Cant set checkpoint while in air");
                 player.ExecuteClientCommand($"play {cpSoundAir}");
@@ -718,11 +758,13 @@ namespace SharpTimer
 
             // Get the player's current position and rotation
             Vector currentPosition = player.Pawn.Value.CBodyComponent?.SceneNode?.AbsOrigin ?? new Vector(0, 0, 0);
+            Vector currentSpeed = player.PlayerPawn.Value.AbsVelocity ?? new Vector(0, 0, 0);
             QAngle currentRotation = player.PlayerPawn.Value.EyeAngles ?? new QAngle(0, 0, 0);
 
             // Convert position and rotation to strings
             string positionString = $"{currentPosition.X} {currentPosition.Y} {currentPosition.Z}";
             string rotationString = $"{currentRotation.X} {currentRotation.Y} {currentRotation.Z}";
+            string speedString = $"{currentSpeed.X} {currentSpeed.Y} {currentSpeed.Z}";
 
             // Add the current position and rotation strings to the player's checkpoint list
             if (!playerCheckpoints.ContainsKey(player.UserId ?? 0))
@@ -733,7 +775,8 @@ namespace SharpTimer
             playerCheckpoints[player.UserId ?? 0].Add(new PlayerCheckpoint
             {
                 PositionString = positionString,
-                RotationString = rotationString
+                RotationString = rotationString,
+                SpeedString = speedString
             });
 
             // Get the count of checkpoints for this player
@@ -771,9 +814,17 @@ namespace SharpTimer
             // Convert position and rotation strings to Vector and QAngle
             Vector position = ParseVector(lastCheckpoint.PositionString ?? "0 0 0");
             QAngle rotation = ParseQAngle(lastCheckpoint.RotationString ?? "0 0 0");
+            Vector speed = ParseVector(lastCheckpoint.SpeedString ?? "0 0 0");
 
             // Teleport the player to the most recent checkpoint, including the saved rotation
-            player.PlayerPawn.Value.Teleport(position, rotation, new Vector(0, 0, 0));
+            if(removeCpRestrictEnabled == true) 
+            {
+                player.PlayerPawn.Value.Teleport(position, rotation, speed);
+            }
+            else
+            {
+                player.PlayerPawn.Value.Teleport(position, rotation, new Vector(0, 0, 0));
+            }
 
             // Play a sound or provide feedback to the player
             player.ExecuteClientCommand($"play {tpSound}");
