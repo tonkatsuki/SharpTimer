@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using System.Drawing;
 using System.Text.Json;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
@@ -54,7 +55,7 @@ namespace SharpTimer
         private List<CCSPlayerController> connectedPlayers = new List<CCSPlayerController>();
 
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => "0.0.7";
+        public override string ModuleVersion => "0.0.8";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
@@ -70,6 +71,7 @@ namespace SharpTimer
         public bool respawnEnabled = true;
         public bool topEnabled = true;
         public bool rankEnabled = true;
+        public bool removeLegsEnabled = true;
         public bool cpEnabled = false;
         public bool removeCpRestrictEnabled = false;
         public bool connectMsgEnabled = true;
@@ -119,6 +121,8 @@ namespace SharpTimer
                     playerTimers[player.UserId ?? 0].TimerRank = GetPlayerPlacementWithTotal(player);
 
                     playerTimers[player.UserId ?? 0].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
+
+                    if(removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254,254,254,254);
 
                     return HookResult.Continue;
                 }
