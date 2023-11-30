@@ -9,10 +9,22 @@ using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
 using System.Text.Json;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+using MySqlConnector;
+
+
 
 namespace SharpTimer
 {
     [MinimumApiVersion(84)]
+    public class MySqlConnectionSettings
+    {
+        public string? MySqlHost { get; set; }
+        public string? MySqlDatabase { get; set; }
+        public string? MySqlUsername { get; set; }
+        public string? MySqlPassword { get; set; }
+        public int MySqlPort { get; set; }
+    }
+
     public class MapInfo
     {
         public string? MapStartTrigger { get; set; }
@@ -66,6 +78,8 @@ namespace SharpTimer
         public Vector currentMapEndC1 = new Vector(0, 0, 0);
         public Vector currentMapEndC2 = new Vector(0, 0, 0);
         public Vector currentRespawnPos = new Vector(0, 0, 0);
+
+        public bool useMySQL = false;
 
         public bool useTriggers = true;
         public bool respawnEnabled = true;
@@ -122,7 +136,7 @@ namespace SharpTimer
 
                     playerTimers[player.UserId ?? 0].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
 
-                    if(removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254,254,254,254);
+                    if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
                     return HookResult.Continue;
                 }
@@ -211,7 +225,7 @@ namespace SharpTimer
 
                         if (playerTimers[player.UserId ?? 0].MovementService != null && removeCrouchFatigueEnabled == true)
                         {
-                            if(playerTimers[player.UserId ?? 0].MovementService.DuckSpeed != 7.0f) playerTimers[player.UserId ?? 0].MovementService.DuckSpeed = 7.0f;
+                            if (playerTimers[player.UserId ?? 0].MovementService.DuckSpeed != 7.0f) playerTimers[player.UserId ?? 0].MovementService.DuckSpeed = 7.0f;
                         }
 
                         playerTimers[player.UserId ?? 0].TicksSinceLastCmd++;
@@ -640,7 +654,7 @@ namespace SharpTimer
 
             playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
 
-            if(playerTimers[player.UserId ?? 0].Azerty == true)
+            if (playerTimers[player.UserId ?? 0].Azerty == true)
             {
                 playerTimers[player.UserId ?? 0].Azerty = false;
             }
@@ -648,7 +662,7 @@ namespace SharpTimer
             {
                 playerTimers[player.UserId ?? 0].Azerty = true;
             }
-            
+
         }
 
         [ConsoleCommand("css_top", "Prints top players of this map")]
@@ -821,7 +835,7 @@ namespace SharpTimer
             Vector speed = ParseVector(lastCheckpoint.SpeedString ?? "0 0 0");
 
             // Teleport the player to the most recent checkpoint, including the saved rotation
-            if(removeCpRestrictEnabled == true) 
+            if (removeCpRestrictEnabled == true)
             {
                 player.PlayerPawn.Value.Teleport(position, rotation, speed);
             }
