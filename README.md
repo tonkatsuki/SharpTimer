@@ -9,6 +9,8 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 [**MovementUnlocker** *(optional)*](https://github.com/Source2ZE/MovementUnlocker)
 
+⚠️ **Linux only**
+
 ⚠️ **CS2Fixes** does clash with **CSS** there fore the plugin might not work correctly with it
 
 # Demo Video
@@ -64,9 +66,12 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 * Unzip into your servers `game/csgo/` dir
 * Its recommended to have a custom server cfg with your desired settings (for example surf or kz)
   
-  Like this one for Surf: https://raw.githubusercontent.com/DEAFPS/cs-cfg/main/surf.cfg
-  
-  You can replace the contents of `gamemode_competitive.cfg` or `gamemode_casual.cfg` with it
+  You can use this Plugin to exec a custom cfg on Map Start: https://github.com/kus/CS2_ExecAfter/
+
+  [Example Surf Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/surf.cfg)
+
+  [Example KZ Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/kz.cfg)
+
   
 * Here a collection of maps supported by default: https://steamcommunity.com/sharedfiles/filedetails/?id=3095738559
 
