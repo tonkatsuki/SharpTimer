@@ -65,8 +65,6 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 * Unzip into your servers `game/csgo/` dir
 * Its recommended to have a custom server cfg with your desired settings (for example surf or kz)
-  
-  You can use this Plugin to exec a custom cfg on Map Start: https://github.com/kus/CS2_ExecAfter/
 
   [Example Surf Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/surf.cfg)
 
@@ -89,6 +87,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 ### Configuration
 * See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *(yes you can enable checkpoints there)*
+* You can add custom server settings to `game/csgo/cfg/SharpTimer/custom_exec.cfg`
 * This plugin will look for `timer_startzone` & `timer_endzone` triggers by default, if the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `mapdata.json`
 
 * To add Map Start and End zones you can simply add the `targetnames` of the triggers in the `mapdata.json` inside of `game/csgo/cfg/SharpTimer/` using `MapStartTrigger` and  `MapEndTrigger`
