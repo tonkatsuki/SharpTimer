@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="2.3.1" />
+    <PackageReference Include="Nexd.MySQL" Version="1.0.1" />
   </ItemGroup>
 
 </Project>

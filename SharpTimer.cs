@@ -6,10 +6,10 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using System.Data.SqlTypes;
 using System.Drawing;
 using System.Text.Json;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-using MySqlConnector;
 
 
 
@@ -64,7 +64,7 @@ namespace SharpTimer
     {
         private Dictionary<int, PlayerTimerInfo> playerTimers = new Dictionary<int, PlayerTimerInfo>();
         private Dictionary<int, List<PlayerCheckpoint>> playerCheckpoints = new Dictionary<int, List<PlayerCheckpoint>>();
-        private List<CCSPlayerController> connectedPlayers = new List<CCSPlayerController>();
+        private Dictionary<int, CCSPlayerController> connectedPlayers = new Dictionary<int, CCSPlayerController>();
 
         public override string ModuleName => "SharpTimer";
         public override string ModuleVersion => "0.0.8";
@@ -91,6 +91,7 @@ namespace SharpTimer
         public bool connectMsgEnabled = true;
         public bool srEnabled = true;
         public int srTimer = 120;
+        public bool isADTimerRunning = false;
         public bool removeCrouchFatigueEnabled = true;
 
         public string beepSound = "sounds/ui/csgo_ui_button_rollover_large.vsnd";
@@ -101,6 +102,8 @@ namespace SharpTimer
 
         public override void Load(bool hotReload)
         {
+            RegisterListener<Listeners.OnMapStart>(OnMapStartHandler);
+
             RegisterEventHandler<EventPlayerConnectFull>((@event, info) =>
             {
                 var player = @event.Userid;
@@ -111,7 +114,9 @@ namespace SharpTimer
                 }
                 else
                 {
-                    connectedPlayers.Add(player);
+                    connectedPlayers[player.UserId ?? 0] = player;
+                    Console.WriteLine($"Added player {player.PlayerName} with UserID {player.UserId} to connectedPlayers");
+                    Console.WriteLine(string.Join(", ", connectedPlayers.Values));
                     playerTimers[player.UserId ?? 0] = new PlayerTimerInfo();
 
                     if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{player.PlayerName} {ChatColors.White}connected!");
@@ -138,6 +143,16 @@ namespace SharpTimer
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
+                    string SteamID = player.SteamID.ToString();
+                    if (GetPlayerSettingFromDatabase(SteamID, "azerty") == true)
+                    {
+                        playerTimers[player.UserId ?? 0].Azerty = true;
+                    }
+                    else
+                    {
+                        playerTimers[player.UserId ?? 0].Azerty = false;
+                    }
+
                     return HookResult.Continue;
                 }
             });
@@ -158,9 +173,15 @@ namespace SharpTimer
                 }
                 else
                 {
-                    connectedPlayers.Remove(player);
-                    playerTimers.Remove(player.UserId ?? 0);
-                    if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{player.PlayerName} {ChatColors.White}disconnected!");
+                    if (connectedPlayers.TryGetValue(player.UserId ?? 0, out var connectedPlayer))
+                    {
+                        connectedPlayers.Remove(player.UserId ?? 0);
+                        playerTimers.Remove(player.UserId ?? 0);
+                        Console.WriteLine($"Removed player {connectedPlayer.PlayerName} with UserID {connectedPlayer.UserId} from connectedPlayers");
+                        Console.WriteLine(string.Join(", ", connectedPlayers.Values));
+
+                        if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{connectedPlayer.PlayerName} {ChatColors.White}disconnected!");
+                    }
 
                     return HookResult.Continue;
                 }
@@ -168,8 +189,10 @@ namespace SharpTimer
 
             RegisterListener<Listeners.OnTick>(() =>
             {
-                foreach (var player in connectedPlayers)
+                foreach (var playerEntry in connectedPlayers)
                 {
+                    var player = playerEntry.Value;
+
                     if (player.IsValid && !player.IsBot && player.PawnIsAlive)
                     {
                         var buttons = player.Buttons;
@@ -238,17 +261,21 @@ namespace SharpTimer
                 var trigger = h.GetParam<CBaseTrigger>(0);
                 var entity = h.GetParam<CBaseEntity>(1);
 
-                if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false) return HookResult.Continue;
+                if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false)
+                    return HookResult.Continue;
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
-                if (trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers[player.UserId ?? 0].IsTimerRunning == true)
+                if (!connectedPlayers.ContainsKey(player.UserId ?? 0))
+                    return HookResult.Continue;  // Player not in connectedPlayers, do nothing
+
+                if (trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0) && playerTimers[player.UserId ?? 0].IsTimerRunning)
                 {
                     OnTimerStop(player);
                     return HookResult.Continue;
                 }
 
-                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid)
+                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0))
                 {
                     OnTimerStart(player);
                     return HookResult.Continue;
@@ -266,7 +293,7 @@ namespace SharpTimer
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
-                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid)
+                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0))
                 {
                     OnTimerStart(player);
                     return HookResult.Continue;
@@ -280,6 +307,8 @@ namespace SharpTimer
 
         private void ServerRecordADtimer()
         {
+            if (isADTimerRunning) return;
+
             var timer = AddTimer(srTimer, () =>
             {
                 Dictionary<string, int> sortedRecords = GetSortedRecords();
@@ -297,6 +326,7 @@ namespace SharpTimer
                     Server.PrintToChatAll(msgPrefix + $" {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(record.Value)}");
                 }
             }, TimerFlags.REPEAT);
+            isADTimerRunning = true;
         }
 
         private static string FormatTime(int ticks)
@@ -400,7 +430,9 @@ namespace SharpTimer
             int currentTicks = playerTimers[player.UserId ?? 0].TimerTicks;
             int previousRecordTicks = GetPreviousPlayerRecord(player);
 
+
             SavePlayerTime(player, playerTimers[player.UserId ?? 0].TimerTicks);
+            if (useMySQL == true) SavePlayerTimeToDatabase(player, playerTimers[player.UserId ?? 0].TimerTicks);
             playerTimers[player.UserId ?? 0].IsTimerRunning = false;
 
             string timeDifference = "";
@@ -531,14 +563,31 @@ namespace SharpTimer
             }
 
             string steamId = player.SteamID.ToString();
-            int savedPlayerTime = GetPreviousPlayerRecord(player);
+
+            int savedPlayerTime;
+            if (useMySQL == true)
+            {
+                savedPlayerTime = GetPreviousPlayerRecordFromDatabase(player);
+            }
+            else
+            {
+                savedPlayerTime = GetPreviousPlayerRecord(player);
+            }
 
             if (savedPlayerTime == 0)
             {
                 return "Unranked";
             }
 
-            Dictionary<string, int> sortedRecords = GetSortedRecords();
+            Dictionary<string, int> sortedRecords;
+            if (useMySQL == true)
+            {
+                sortedRecords = GetSortedRecordsFromDatabase();
+            }
+            else
+            {
+                sortedRecords = GetSortedRecords();
+            }
 
             int placement = 1;
 
@@ -644,7 +693,7 @@ namespace SharpTimer
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void AzertySwitchCommand(CCSPlayerController? player, CommandInfo command)
         {
-            if (player == null || topEnabled == false) return;
+            if (player == null) return;
 
             if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
             {
@@ -657,10 +706,12 @@ namespace SharpTimer
             if (playerTimers[player.UserId ?? 0].Azerty == true)
             {
                 playerTimers[player.UserId ?? 0].Azerty = false;
+                SavePlayerSettingToDatabase(player.SteamID.ToString(), "azerty", false);
             }
             else
             {
                 playerTimers[player.UserId ?? 0].Azerty = true;
+                SavePlayerSettingToDatabase(player.SteamID.ToString(), "azerty", true);
             }
 
         }
@@ -681,7 +732,15 @@ namespace SharpTimer
 
             string currentMapName = Server.MapName;
 
-            Dictionary<string, int> sortedRecords = GetSortedRecords();
+            Dictionary<string, int> sortedRecords;
+            if (useMySQL == true)
+            {
+                sortedRecords = GetSortedRecordsFromDatabase();
+            }
+            else
+            {
+                sortedRecords = GetSortedRecords();
+            }
 
             if (sortedRecords.Count == 0)
             {
@@ -947,9 +1006,17 @@ namespace SharpTimer
             }
         }
 
+        private void OnMapStartHandler(string mapName)
+        {
+            Server.NextFrame(() =>
+            {
+                Server.ExecuteCommand("execifexists SharpTimer/custom_exec.cfg");
+            });
+        }
+
         private void LoadConfig()
         {
-            Server.ExecuteCommand("exec SharpTimer/config.cfg");
+            Server.ExecuteCommand("execifexists SharpTimer/config.cfg");
 
             if (srEnabled == true) ServerRecordADtimer();
 
