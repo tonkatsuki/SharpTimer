@@ -42,7 +42,7 @@ namespace SharpTimer
         public async Task SavePlayerTimeToDatabase(CCSPlayerController? player, int timerTicks)
         {
             if (player == null) return;
-            if (playerTimers[player.UserId ?? 0].IsTimerRunning == false) return;
+            if (playerTimers[player.Slot].IsTimerRunning == false) return;
 
             try
             {

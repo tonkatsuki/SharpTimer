@@ -32,6 +32,7 @@ namespace SharpTimer
         public int CheckpointIndex { get; set; }
         public bool Azerty { get; set; }
         public int TicksSinceLastCmd { get; set; }
+        public Dictionary<string, PlayerRecord>? sortedCachedRecords { get; set; }
         public CCSPlayer_MovementServices? MovementService { get; set; }
     }
 
@@ -79,10 +80,12 @@ namespace SharpTimer
         public bool connectMsgEnabled = true;
         public bool srEnabled = true;
         public int srTimer = 120;
+        public int rankHUDTimer = 170;
         public bool resetTriggerTeleportSpeedEnabled = false;
         public bool maxStartingSpeedEnabled = true;
         public int maxStartingSpeed = 320;
         public bool isADTimerRunning = false;
+        public bool isRankHUDTimerRunning = false;
         public bool removeCrouchFatigueEnabled = true;
 
         public string beepSound = "sounds/ui/csgo_ui_button_rollover_large.vsnd";
@@ -105,10 +108,11 @@ namespace SharpTimer
                 }
                 else
                 {
-                    connectedPlayers[player.UserId ?? 0] = player;
+                    
+                    connectedPlayers[player.Slot] = player;
+
                     Console.WriteLine($"Added player {player.PlayerName} with UserID {player.UserId} to connectedPlayers");
-                    Console.WriteLine(string.Join(", ", connectedPlayers.Values));
-                    playerTimers[player.UserId ?? 0] = new PlayerTimerInfo();
+                    playerTimers[player.Slot] = new PlayerTimerInfo();
 
                     if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{player.PlayerName} {ChatColors.White}connected!");
 
@@ -130,18 +134,19 @@ namespace SharpTimer
 
                     _ = HandleSetPlayerPlacementWithTotal(player);
 
-                    playerTimers[player.UserId ?? 0].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
+                    playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
+                    playerTimers[player.Slot].sortedCachedRecords = GetSortedRecords();
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
                     string SteamID = player.SteamID.ToString();
                     if (GetPlayerSettingFromDatabase(SteamID, "azerty") == true)
                     {
-                        playerTimers[player.UserId ?? 0].Azerty = true;
+                        playerTimers[player.Slot].Azerty = true;
                     }
                     else
                     {
-                        playerTimers[player.UserId ?? 0].Azerty = false;
+                        playerTimers[player.Slot].Azerty = false;
                     }
 
                     return HookResult.Continue;
@@ -164,10 +169,10 @@ namespace SharpTimer
                 }
                 else
                 {
-                    if (connectedPlayers.TryGetValue(player.UserId ?? 0, out var connectedPlayer))
+                    if (connectedPlayers.TryGetValue(player.Slot, out var connectedPlayer))
                     {
-                        connectedPlayers.Remove(player.UserId ?? 0);
-                        playerTimers.Remove(player.UserId ?? 0);
+                        connectedPlayers.Remove(player.Slot);
+                        playerTimers.Remove(player.Slot);
                         Console.WriteLine($"Removed player {connectedPlayer.PlayerName} with UserID {connectedPlayer.UserId} from connectedPlayers");
                         Console.WriteLine(string.Join(", ", connectedPlayers.Values));
 
@@ -190,13 +195,13 @@ namespace SharpTimer
                         var playerVelV = player.PlayerPawn.Value.AbsVelocity;
                         float playerVel = (float)Math.Sqrt(playerVelV.X * playerVelV.X + playerVelV.Y * playerVelV.Y + playerVelV.Z * playerVelV.Z);
                         string formattedPlayerVel = Math.Round(playerVel).ToString().PadLeft(4, '0');
-                        string playerTime = FormatTime(playerTimers[player.UserId ?? 0].TimerTicks);
+                        string playerTime = FormatTime(playerTimers[player.Slot].TimerTicks);
                         string forwardKey = "🆆";
                         string leftKey = "🅰";
                         string backKey = "🆂";
                         string rightKey = "🅳";
 
-                        if (playerTimers[player.UserId ?? 0].Azerty == true)
+                        if (playerTimers[player.Slot].Azerty == true)
                         {
                             forwardKey = "🆉";
                             leftKey = "🆀";
@@ -204,12 +209,12 @@ namespace SharpTimer
                             rightKey = "🅳";
                         }
 
-                        if (playerTimers[player.UserId ?? 0].IsTimerRunning)
+                        if (playerTimers[player.Slot].IsTimerRunning)
                         {
                             player.PrintToCenterHtml(
                                 $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='green'>{playerTime}</font><br>" +
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
-                                $"<font class='fontSize-s' color='gray'>{playerTimers[player.UserId ?? 0].TimerRank}</font><br>" +
+                                $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank}</font><br>" +
                                 $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
@@ -217,13 +222,13 @@ namespace SharpTimer
                                 $"{((buttons & PlayerButtons.Jump) != 0 ? "🅹" : "_")} " +
                                 $"{((buttons & PlayerButtons.Duck) != 0 ? "🅲" : "_")}</font>");
 
-                            playerTimers[player.UserId ?? 0].TimerTicks++;
+                            playerTimers[player.Slot].TimerTicks++;
                         }
                         else
                         {
                             player.PrintToCenterHtml(
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
-                                $"<font class='fontSize-s' color='gray'>{playerTimers[player.UserId ?? 0].TimerRank}</font><br>" +
+                                $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank}</font><br>" +
                                 $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
@@ -237,12 +242,12 @@ namespace SharpTimer
                             CheckPlayerActions(player);
                         }
 
-                        if (playerTimers[player.UserId ?? 0].MovementService != null && removeCrouchFatigueEnabled == true)
+                        if (playerTimers[player.Slot].MovementService != null && removeCrouchFatigueEnabled == true)
                         {
-                            if (playerTimers[player.UserId ?? 0].MovementService.DuckSpeed != 7.0f) playerTimers[player.UserId ?? 0].MovementService.DuckSpeed = 7.0f;
+                            if (playerTimers[player.Slot].MovementService.DuckSpeed != 7.0f) playerTimers[player.Slot].MovementService.DuckSpeed = 7.0f;
                         }
 
-                        playerTimers[player.UserId ?? 0].TicksSinceLastCmd++;
+                        playerTimers[player.Slot].TicksSinceLastCmd++;
                     }
                 }
             });
@@ -257,16 +262,16 @@ namespace SharpTimer
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
-                if (!connectedPlayers.ContainsKey(player.UserId ?? 0))
+                if (!connectedPlayers.ContainsKey(player.Slot))
                     return HookResult.Continue;  // Player not in connectedPlayers, do nothing
 
-                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0) && playerTimers[player.UserId ?? 0].IsTimerRunning)
+                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
                 {
                     OnTimerStop(player);
                     return HookResult.Continue;
                 }
 
-                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0))
+                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
                 {
                     OnTimerStart(player);
                     return HookResult.Continue;
@@ -293,7 +298,7 @@ namespace SharpTimer
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
-                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0))
+                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
                 {
                     OnTimerStart(player);
 
@@ -345,22 +350,22 @@ namespace SharpTimer
             if (player == null || !player.IsValid) return;
 
             // Remove checkpoints for the current player
-            playerCheckpoints.Remove(player.UserId ?? 0);
+            playerCheckpoints.Remove(player.Slot);
 
-            playerTimers[player.UserId ?? 0].IsTimerRunning = true;
-            playerTimers[player.UserId ?? 0].TimerTicks = 0;
+            playerTimers[player.Slot].IsTimerRunning = true;
+            playerTimers[player.Slot].TimerTicks = 0;
         }
 
         public void OnTimerStop(CCSPlayerController? player)
         {
-            if (player == null || playerTimers[player.UserId ?? 0].IsTimerRunning == false || !player.IsValid) return;
+            if (player == null || playerTimers[player.Slot].IsTimerRunning == false || !player.IsValid) return;
 
-            int currentTicks = playerTimers[player.UserId ?? 0].TimerTicks;
+            int currentTicks = playerTimers[player.Slot].TimerTicks;
             int previousRecordTicks = GetPreviousPlayerRecord(player);
 
             SavePlayerTime(player, currentTicks);
             if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks);
-            playerTimers[player.UserId ?? 0].IsTimerRunning = false;
+            playerTimers[player.Slot].IsTimerRunning = false;
 
             string timeDifference = "";
             char ifFirstTimeColor;
@@ -394,7 +399,7 @@ namespace SharpTimer
 
         public async Task HandleSetPlayerPlacementWithTotal(CCSPlayerController? player)
         {
-            playerTimers[player.UserId ?? 0].TimerRank = await GetPlayerPlacementWithTotal(player);
+            playerTimers[player.Slot].TimerRank = await GetPlayerPlacementWithTotal(player);
         }
 
         [ConsoleCommand("css_azerty", "Switches layout to AZERTY")]
@@ -403,22 +408,22 @@ namespace SharpTimer
         {
             if (player == null) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
-            if (playerTimers[player.UserId ?? 0].Azerty == true)
+            if (playerTimers[player.Slot].Azerty == true)
             {
-                playerTimers[player.UserId ?? 0].Azerty = false;
+                playerTimers[player.Slot].Azerty = false;
                 SavePlayerSettingToDatabase(player.SteamID.ToString(), "azerty", false);
             }
             else
             {
-                playerTimers[player.UserId ?? 0].Azerty = true;
+                playerTimers[player.Slot].Azerty = true;
                 SavePlayerSettingToDatabase(player.SteamID.ToString(), "azerty", true);
             }
 
@@ -430,13 +435,13 @@ namespace SharpTimer
         {
             if (player == null || topEnabled == false) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
             _ = PrintTopRecordsHandler(player);
         }
@@ -480,7 +485,7 @@ namespace SharpTimer
         {
             if (player == null || rankEnabled == false) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -492,6 +497,9 @@ namespace SharpTimer
         public async Task RankCommandHandler(CCSPlayerController? player)
         {
             string ranking = await GetPlayerPlacementWithTotal(player);
+
+            _ = HandleSetPlayerPlacementWithTotal(player);
+
             player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{ranking}");
         }
 
@@ -501,13 +509,13 @@ namespace SharpTimer
         {
             if (player == null || respawnEnabled == false) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
             if (currentRespawnPos == new Vector(0, 0, 0))
             {
@@ -516,7 +524,7 @@ namespace SharpTimer
             }
 
             // Remove checkpoints for the current player
-            playerCheckpoints.Remove(player.UserId ?? 0);
+            playerCheckpoints.Remove(player.Slot);
 
             if (useTriggers == true)
             {
@@ -526,8 +534,9 @@ namespace SharpTimer
             {
                 player.PlayerPawn.Value.Teleport(currentRespawnPos, new QAngle(0, 90, 0), new Vector(0, 0, 0));
             }
-            playerTimers[player.UserId ?? 0].IsTimerRunning = false;
-            playerTimers[player.UserId ?? 0].TimerTicks = 0;
+            playerTimers[player.Slot].IsTimerRunning = false;
+            playerTimers[player.Slot].TimerTicks = 0;
+            playerTimers[player.Slot].sortedCachedRecords = GetSortedRecords();
             player.ExecuteClientCommand($"play {respawnSound}");
         }
 
@@ -537,7 +546,7 @@ namespace SharpTimer
         {
             if (player == null || cpEnabled == false) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -550,7 +559,7 @@ namespace SharpTimer
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
             // Get the player's current position and rotation
             Vector currentPosition = player.Pawn.Value.CBodyComponent?.SceneNode?.AbsOrigin ?? new Vector(0, 0, 0);
@@ -563,12 +572,12 @@ namespace SharpTimer
             string speedString = $"{currentSpeed.X} {currentSpeed.Y} {currentSpeed.Z}";
 
             // Add the current position and rotation strings to the player's checkpoint list
-            if (!playerCheckpoints.ContainsKey(player.UserId ?? 0))
+            if (!playerCheckpoints.ContainsKey(player.Slot))
             {
-                playerCheckpoints[player.UserId ?? 0] = new List<PlayerCheckpoint>();
+                playerCheckpoints[player.Slot] = new List<PlayerCheckpoint>();
             }
 
-            playerCheckpoints[player.UserId ?? 0].Add(new PlayerCheckpoint
+            playerCheckpoints[player.Slot].Add(new PlayerCheckpoint
             {
                 PositionString = positionString,
                 RotationString = rotationString,
@@ -576,7 +585,7 @@ namespace SharpTimer
             });
 
             // Get the count of checkpoints for this player
-            int checkpointCount = playerCheckpoints[player.UserId ?? 0].Count;
+            int checkpointCount = playerCheckpoints[player.Slot].Count;
 
             // Print the chat message with the checkpoint count
             player.PrintToChat(msgPrefix + $"Checkpoint set! {ChatColors.Green}#{checkpointCount}");
@@ -589,23 +598,23 @@ namespace SharpTimer
         {
             if (player == null || cpEnabled == false) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
             // Check if the player has any checkpoints
-            if (!playerCheckpoints.ContainsKey(player.UserId ?? 0) || playerCheckpoints[player.UserId ?? 0].Count == 0)
+            if (!playerCheckpoints.ContainsKey(player.Slot) || playerCheckpoints[player.Slot].Count == 0)
             {
                 player.PrintToChat(msgPrefix + "No checkpoints set!");
                 return;
             }
 
             // Get the most recent checkpoint from the player's list
-            PlayerCheckpoint lastCheckpoint = playerCheckpoints[player.UserId ?? 0].Last();
+            PlayerCheckpoint lastCheckpoint = playerCheckpoints[player.Slot].Last();
 
             // Convert position and rotation strings to Vector and QAngle
             Vector position = ParseVector(lastCheckpoint.PositionString ?? "0 0 0");
@@ -633,21 +642,21 @@ namespace SharpTimer
         {
             if (player == null || !cpEnabled) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
-            if (!playerCheckpoints.TryGetValue(player.UserId ?? 0, out List<PlayerCheckpoint> checkpoints) || checkpoints.Count == 0)
+            if (!playerCheckpoints.TryGetValue(player.Slot, out List<PlayerCheckpoint> checkpoints) || checkpoints.Count == 0)
             {
                 player.PrintToChat(msgPrefix + "No checkpoints set!");
                 return;
             }
 
-            int index = playerTimers.TryGetValue(player.UserId ?? 0, out var timer) ? timer.CheckpointIndex : 0;
+            int index = playerTimers.TryGetValue(player.Slot, out var timer) ? timer.CheckpointIndex : 0;
 
             if (checkpoints.Count == 1)
             {
@@ -661,7 +670,7 @@ namespace SharpTimer
                 PlayerCheckpoint previousCheckpoint = checkpoints[index];
 
                 // Update the player's checkpoint index
-                playerTimers[player.UserId ?? 0].CheckpointIndex = index;
+                playerTimers[player.Slot].CheckpointIndex = index;
 
                 // Convert position and rotation strings to Vector and QAngle
                 Vector position = ParseVector(previousCheckpoint.PositionString ?? "0 0 0");
@@ -682,21 +691,21 @@ namespace SharpTimer
         {
             if (player == null || !cpEnabled) return;
 
-            if (playerTimers[player.UserId ?? 0].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
-            if (!playerCheckpoints.TryGetValue(player.UserId ?? 0, out List<PlayerCheckpoint> checkpoints) || checkpoints.Count == 0)
+            if (!playerCheckpoints.TryGetValue(player.Slot, out List<PlayerCheckpoint> checkpoints) || checkpoints.Count == 0)
             {
                 player.PrintToChat(msgPrefix + "No checkpoints set!");
                 return;
             }
 
-            int index = playerTimers.TryGetValue(player.UserId ?? 0, out var timer) ? timer.CheckpointIndex : 0;
+            int index = playerTimers.TryGetValue(player.Slot, out var timer) ? timer.CheckpointIndex : 0;
 
             if (checkpoints.Count == 1)
             {
@@ -710,7 +719,7 @@ namespace SharpTimer
                 PlayerCheckpoint nextCheckpoint = checkpoints[index];
 
                 // Update the player's checkpoint index
-                playerTimers[player.UserId ?? 0].CheckpointIndex = index;
+                playerTimers[player.Slot].CheckpointIndex = index;
 
                 // Convert position and rotation strings to Vector and QAngle
                 Vector position = ParseVector(nextCheckpoint.PositionString ?? "0 0 0");

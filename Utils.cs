@@ -195,16 +195,16 @@ namespace SharpTimer
 
         public string GetPlayerPlacement(CCSPlayerController? player)
         {
-            if (player == null || !playerTimers.ContainsKey(player.UserId ?? 0) || !playerTimers[player.UserId ?? 0].IsTimerRunning) return "";
+            if (player == null || !playerTimers.ContainsKey(player.Slot) || !playerTimers[player.Slot].IsTimerRunning) return "";
 
-            Dictionary<string, PlayerRecord> sortedRecords = GetSortedRecords();
-            int currentPlayerTime = playerTimers[player.UserId ?? 0].TimerTicks;
+            
+            int currentPlayerTime = playerTimers[player.Slot].TimerTicks;
 
             int placement = 1;
 
-            foreach (var kvp in sortedRecords)
+            foreach (var kvp in playerTimers[player.Slot].sortedCachedRecords)
             {
-                int recordTimerTicks = kvp.Value.TimerTicks; // Get the timer ticks from the dictionary value
+                int recordTimerTicks = kvp.Value.TimerTicks;
 
                 if (currentPlayerTime > recordTimerTicks)
                 {
@@ -215,13 +215,12 @@ namespace SharpTimer
                     break;
                 }
             }
-
             return "#" + placement;
         }
 
         public async Task<string> GetPlayerPlacementWithTotal(CCSPlayerController? player)
         {
-            if (player == null || !playerTimers.ContainsKey(player.UserId ?? 0))
+            if (player == null || !playerTimers.ContainsKey(player.Slot))
             {
                 return "Unranked";
             }
@@ -277,7 +276,7 @@ namespace SharpTimer
         public void SavePlayerTime(CCSPlayerController? player, int timerTicks)
         {
             if (player == null) return;
-            if (playerTimers[player.UserId ?? 0].IsTimerRunning == false) return;
+            if (playerTimers[player.Slot].IsTimerRunning == false) return;
 
             string currentMapName = Server.MapName;
             string steamId = player.SteamID.ToString();
@@ -307,7 +306,7 @@ namespace SharpTimer
                 records[currentMapName][steamId] = new PlayerRecord
                 {
                     PlayerName = playerName,
-                    TimerTicks = playerTimers[player.UserId ?? 0].TimerTicks
+                    TimerTicks = playerTimers[player.Slot].TimerTicks
                 };
 
                 string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
