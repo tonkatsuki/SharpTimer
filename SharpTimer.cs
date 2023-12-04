@@ -261,7 +261,7 @@ namespace SharpTimer
                     return HookResult.Continue;
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
-
+                if (player == null) return HookResult.Continue;
                 if (!connectedPlayers.ContainsKey(player.Slot))
                     return HookResult.Continue;  // Player not in connectedPlayers, do nothing
 
@@ -297,6 +297,9 @@ namespace SharpTimer
                 }
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
+                if (player == null) return HookResult.Continue;
+                if (!connectedPlayers.ContainsKey(player.Slot))
+                    return HookResult.Continue;  // Player not in connectedPlayers, do nothing
 
                 if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
                 {
