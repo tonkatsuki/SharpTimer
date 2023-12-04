@@ -11,13 +11,21 @@ namespace SharpTimer
 {
     public partial class SharpTimer
     {
-        private void ServerRecordADtimer()
+        private async void ServerRecordADtimer()
         {
             if (isADTimerRunning) return;
 
-            var timer = AddTimer(srTimer, () =>
+            var timer = AddTimer(srTimer, async () =>
             {
-                Dictionary<string, int> sortedRecords = GetSortedRecords();
+                Dictionary<string, PlayerRecord> sortedRecords;
+                if (useMySQL == true)
+                {
+                    sortedRecords = GetSortedRecords();
+                }
+                else
+                {
+                    sortedRecords = await GetSortedRecordsFromDatabase();
+                }
 
                 if (sortedRecords.Count == 0)
                 {
@@ -26,10 +34,12 @@ namespace SharpTimer
 
                 Server.PrintToChatAll($"{msgPrefix} Current Server Record on {ChatColors.Green}{Server.MapName}{ChatColors.White}: ");
 
-                foreach (var record in sortedRecords.Take(1))
+                foreach (var kvp in sortedRecords.Take(1))
                 {
-                    string playerName = GetPlayerNameFromSavedSteamID(record.Key); // Get the player name using SteamID 
-                    Server.PrintToChatAll(msgPrefix + $" {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(record.Value)}");
+                    string playerName = kvp.Value.PlayerName; // Get the player name from the dictionary value
+                    int timerTicks = kvp.Value.TimerTicks; // Get the timer ticks from the dictionary value
+
+                    Server.PrintToChatAll(msgPrefix + $" {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(timerTicks)}");
                 }
             }, TimerFlags.REPEAT);
             isADTimerRunning = true;
@@ -124,7 +134,7 @@ namespace SharpTimer
             return new QAngle(0, 0, 0);
         }
 
-        public static Dictionary<string, int> GetSortedRecords()
+        public static Dictionary<string, PlayerRecord> GetSortedRecords()
         {
             string currentMapName = Server.MapName;
 
@@ -146,50 +156,16 @@ namespace SharpTimer
             {
                 var sortedRecords = records[currentMapName]
                     .OrderBy(record => record.Value.TimerTicks)
-                    .ToDictionary(record => record.Key, record => record.Value.TimerTicks);
+                    .ToDictionary(record => record.Key, record => new PlayerRecord
+                    {
+                        PlayerName = record.Value.PlayerName,
+                        TimerTicks = record.Value.TimerTicks
+                    });
 
                 return sortedRecords;
             }
 
-            return new Dictionary<string, int>();
-        }
-
-        private static string GetPlayerNameFromSavedSteamID(string steamId)
-        {
-            string currentMapName = Server.MapName;
-
-            string recordsFileName = "SharpTimer/player_records.json";
-            string recordsPath = Path.Join(Server.GameDirectory + "/csgo/cfg", recordsFileName);
-
-            if (File.Exists(recordsPath))
-            {
-                try
-                {
-                    string json = File.ReadAllText(recordsPath);
-                    var records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json);
-
-                    if (records != null && records.TryGetValue(currentMapName, out var mapRecords) && mapRecords.TryGetValue(steamId, out var playerRecord))
-                    {
-                        return playerRecord.PlayerName;
-                    }
-                }
-                catch (JsonException ex)
-                {
-                    // Handle JSON deserialization errors
-                    Console.WriteLine($"Error deserializing player records: {ex.Message}");
-                }
-                catch (Exception ex)
-                {
-                    // Handle other exceptions
-                    Console.WriteLine($"Error reading player records: {ex.Message}");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Player records file not found: {recordsPath}");
-            }
-
-            return "Unknown"; // Return a default name if the player name is not found or an error occurs
+            return new Dictionary<string, PlayerRecord>();
         }
 
         private static int GetPreviousPlayerRecord(CCSPlayerController? player)
@@ -221,14 +197,16 @@ namespace SharpTimer
         {
             if (player == null || !playerTimers.ContainsKey(player.UserId ?? 0) || !playerTimers[player.UserId ?? 0].IsTimerRunning) return "";
 
-            Dictionary<string, int> sortedRecords = GetSortedRecords();
+            Dictionary<string, PlayerRecord> sortedRecords = GetSortedRecords();
             int currentPlayerTime = playerTimers[player.UserId ?? 0].TimerTicks;
 
             int placement = 1;
 
-            foreach (var record in sortedRecords)
+            foreach (var kvp in sortedRecords)
             {
-                if (currentPlayerTime > record.Value)
+                int recordTimerTicks = kvp.Value.TimerTicks; // Get the timer ticks from the dictionary value
+
+                if (currentPlayerTime > recordTimerTicks)
                 {
                     placement++;
                 }
@@ -241,7 +219,7 @@ namespace SharpTimer
             return "#" + placement;
         }
 
-        public string GetPlayerPlacementWithTotal(CCSPlayerController? player)
+        public async Task<string> GetPlayerPlacementWithTotal(CCSPlayerController? player)
         {
             if (player == null || !playerTimers.ContainsKey(player.UserId ?? 0))
             {
@@ -253,7 +231,7 @@ namespace SharpTimer
             int savedPlayerTime;
             if (useMySQL == true)
             {
-                savedPlayerTime = GetPreviousPlayerRecordFromDatabase(player);
+                savedPlayerTime = await GetPreviousPlayerRecordFromDatabase(player);
             }
             else
             {
@@ -265,10 +243,10 @@ namespace SharpTimer
                 return "Unranked";
             }
 
-            Dictionary<string, int> sortedRecords;
+            Dictionary<string, PlayerRecord> sortedRecords;
             if (useMySQL == true)
             {
-                sortedRecords = GetSortedRecordsFromDatabase();
+                sortedRecords = await GetSortedRecordsFromDatabase();
             }
             else
             {
@@ -277,9 +255,11 @@ namespace SharpTimer
 
             int placement = 1;
 
-            foreach (var record in sortedRecords)
+            foreach (var kvp in sortedRecords)
             {
-                if (savedPlayerTime > record.Value)
+                int recordTimerTicks = kvp.Value.TimerTicks; // Get the timer ticks from the dictionary value
+
+                if (savedPlayerTime > recordTimerTicks)
                 {
                     placement++;
                 }
@@ -322,7 +302,7 @@ namespace SharpTimer
                 records[currentMapName] = new Dictionary<string, PlayerRecord>();
             }
 
-            if (!records[currentMapName].ContainsKey(steamId) || records[currentMapName][steamId].TimerTicks > playerTimers[player.UserId ?? 0].TimerTicks)
+            if (!records[currentMapName].ContainsKey(steamId) || records[currentMapName][steamId].TimerTicks > timerTicks)
             {
                 records[currentMapName][steamId] = new PlayerRecord
                 {

@@ -168,13 +168,6 @@
     "MapEndC2": "351 2270 255 ",
     "RespawnPos": "-55 492 128"
   },
-    "bhop_gottagofast": {
-    "MapStartC1": "2400 -250 64",
-    "MapStartC2": "2542 250 200",
-    "MapEndC1": "2535 63 64",
-    "MapEndC2": "-1376 1520 64",
-    "RespawnPos": "-1519 1044 200"
-  },
     "bhop_kiitovittu": {
     "MapStartC1": "446 255 64",
     "MapStartC2": "23 -191 200",

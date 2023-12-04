@@ -55,7 +55,7 @@ namespace SharpTimer
         private Dictionary<int, CCSPlayerController> connectedPlayers = new Dictionary<int, CCSPlayerController>();
 
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => "0.1";
+        public override string ModuleVersion => "0.1.0";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
@@ -128,7 +128,7 @@ namespace SharpTimer
                         player.PrintToChat($"{msgPrefix}!nextcp (css_nextcp) - Teleports you to the next Checkpoint");
                     }
 
-                    playerTimers[player.UserId ?? 0].TimerRank = GetPlayerPlacementWithTotal(player);
+                    _ = HandleSetPlayerPlacementWithTotal(player);
 
                     playerTimers[player.UserId ?? 0].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
 
@@ -253,7 +253,7 @@ namespace SharpTimer
                 var entity = h.GetParam<CBaseEntity>(1);
 
                 if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false)
-                        return HookResult.Continue;
+                    return HookResult.Continue;
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
@@ -358,9 +358,8 @@ namespace SharpTimer
             int currentTicks = playerTimers[player.UserId ?? 0].TimerTicks;
             int previousRecordTicks = GetPreviousPlayerRecord(player);
 
-
-            SavePlayerTime(player, playerTimers[player.UserId ?? 0].TimerTicks);
-            if (useMySQL == true) SavePlayerTimeToDatabase(player, playerTimers[player.UserId ?? 0].TimerTicks);
+            SavePlayerTime(player, currentTicks);
+            if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks);
             playerTimers[player.UserId ?? 0].IsTimerRunning = false;
 
             string timeDifference = "";
@@ -388,9 +387,14 @@ namespace SharpTimer
                 Server.PrintToChatAll(msgPrefix + $"{ChatColors.Green}{player.PlayerName} {ChatColors.White}just finished the map in: {ChatColors.Yellow}[{FormatTime(currentTicks)}]! (No change in time)");
             }
 
+            if (useMySQL == false) _ = HandleSetPlayerPlacementWithTotal(player);
 
-            playerTimers[player.UserId ?? 0].TimerRank = GetPlayerPlacementWithTotal(player);
             player.ExecuteClientCommand($"play {beepSound}");
+        }
+
+        public async Task HandleSetPlayerPlacementWithTotal(CCSPlayerController? player)
+        {
+            playerTimers[player.UserId ?? 0].TimerRank = await GetPlayerPlacementWithTotal(player);
         }
 
         [ConsoleCommand("css_azerty", "Switches layout to AZERTY")]
@@ -434,12 +438,17 @@ namespace SharpTimer
 
             playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
 
+            _ = PrintTopRecordsHandler(player);
+        }
+
+        public async Task PrintTopRecordsHandler(CCSPlayerController? player)
+        {
             string currentMapName = Server.MapName;
 
-            Dictionary<string, int> sortedRecords;
+            Dictionary<string, PlayerRecord> sortedRecords;
             if (useMySQL == true)
             {
-                sortedRecords = GetSortedRecordsFromDatabase();
+                sortedRecords = await GetSortedRecordsFromDatabase();
             }
             else
             {
@@ -455,10 +464,12 @@ namespace SharpTimer
             player.PrintToChat(msgPrefix + $" Top 10 Records for {currentMapName}:");
             int rank = 1;
 
-            foreach (var record in sortedRecords.Take(10))
+            foreach (var kvp in sortedRecords.Take(10))
             {
-                string playerName = GetPlayerNameFromSavedSteamID(record.Key); // Get the player name using SteamID
-                player.PrintToChat(msgPrefix + $" #{rank}: {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(record.Value)}");
+                string playerName = kvp.Value.PlayerName; // Get the player name from the dictionary value
+                int timerTicks = kvp.Value.TimerTicks; // Get the timer ticks from the dictionary value
+
+                player.PrintToChat(msgPrefix + $" #{rank}: {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(timerTicks)}");
                 rank++;
             }
         }
@@ -475,9 +486,13 @@ namespace SharpTimer
                 return;
             }
 
-            playerTimers[player.UserId ?? 0].TicksSinceLastCmd = 0;
+            _ = RankCommandHandler(player);
+        }
 
-            player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{GetPlayerPlacementWithTotal(player)}");
+        public async Task RankCommandHandler(CCSPlayerController? player)
+        {
+            string ranking = await GetPlayerPlacementWithTotal(player);
+            player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{ranking}");
         }
 
         [ConsoleCommand("css_r", "Teleports you to start")]
