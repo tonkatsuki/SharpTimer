@@ -71,6 +71,32 @@ namespace SharpTimer
             removeCpRestrictEnabled = bool.TryParse(args, out bool removeCpRestrictEnabledValue) ? removeCpRestrictEnabledValue : args != "0" && removeCpRestrictEnabled;
         }
 
+        [ConsoleCommand("sharptimer_max_start_speed_enabled", "Whether the players speed should be limited on exiting the starting trigger or not. Default value: true")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerMaxStartSpeedBoolConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            maxStartingSpeedEnabled = bool.TryParse(args, out bool maxStartingSpeedEnabledValue) ? maxStartingSpeedEnabledValue : args != "0" && maxStartingSpeedEnabled;
+        }
+
+        [ConsoleCommand("sharptimer_max_start_speed", "Defines max speed the player is allowed to have while exiting the start trigger. Default value: 120")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerMaxStartSpeedConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            if (int.TryParse(args, out int speed) && speed > 0)
+            {
+                maxStartingSpeed = speed;
+                Console.WriteLine($"SharpTimer max trigger speed set to {speed}.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid interval value. Please provide a positive integer.");
+            }
+        }
+
         [ConsoleCommand("sharptimer_connectmsg_enabled", "Whether connect/disconnect messages are enabled by default or not. Default value: true")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void SharpTimerConnectMSGConvar(CCSPlayerController? player, CommandInfo command)
@@ -100,7 +126,7 @@ namespace SharpTimer
 
         [ConsoleCommand("sharptimer_sr_ad_timer", "Interval how often SR shall be printed to chat. Default value: 120")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
-        public void SharpTimerSRTimerConvar(CCSPlayerController? player, CommandInfo command)
+        public void SharpTimerMaxSpeedConvar(CCSPlayerController? player, CommandInfo command)
         {
             string args = command.ArgString;
 

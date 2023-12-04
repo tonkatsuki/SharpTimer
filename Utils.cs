@@ -69,6 +69,19 @@ namespace SharpTimer
                    playerVector.Z >= minZ && playerVector.Z <= maxZ + height;
         }
 
+        private void AdjustPlayerVelocity(CCSPlayerController? player, float velocity)
+        {
+            var currentX = player.PlayerPawn.Value.AbsVelocity.X;
+            var currentY = player.PlayerPawn.Value.AbsVelocity.Y;
+            var currentSpeed2D = Math.Sqrt(currentX * currentX + currentY * currentY);
+            var normalizedX = currentX / currentSpeed2D;
+            var normalizedY = currentY / currentSpeed2D;
+            var adjustedX = normalizedX * velocity; // Adjusted speed limit
+            var adjustedY = normalizedY * velocity; // Adjusted speed limit
+            player.PlayerPawn.Value.AbsVelocity.X = (float)adjustedX;
+            player.PlayerPawn.Value.AbsVelocity.Y = (float)adjustedY;
+        }
+
         private Vector FindStartTriggerPos()
         {
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");

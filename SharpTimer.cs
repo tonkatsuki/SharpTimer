@@ -55,7 +55,7 @@ namespace SharpTimer
         private Dictionary<int, CCSPlayerController> connectedPlayers = new Dictionary<int, CCSPlayerController>();
 
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => "0.1.0";
+        public override string ModuleVersion => "0.1";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
@@ -79,6 +79,9 @@ namespace SharpTimer
         public bool connectMsgEnabled = true;
         public bool srEnabled = true;
         public int srTimer = 120;
+        public bool resetTriggerTeleportSpeedEnabled = true;
+        public bool maxStartingSpeedEnabled = true;
+        public int maxStartingSpeed = 320;
         public bool isADTimerRunning = false;
         public bool removeCrouchFatigueEnabled = true;
 
@@ -188,17 +191,17 @@ namespace SharpTimer
                         float playerVel = (float)Math.Sqrt(playerVelV.X * playerVelV.X + playerVelV.Y * playerVelV.Y + playerVelV.Z * playerVelV.Z);
                         string formattedPlayerVel = Math.Round(playerVel).ToString().PadLeft(4, '0');
                         string playerTime = FormatTime(playerTimers[player.UserId ?? 0].TimerTicks);
-                        string forwardKey = "W";
-                        string leftKey = "A";
-                        string backKey = "S";
-                        string rightKey = "D";
+                        string forwardKey = "🆆";
+                        string leftKey = "🅰";
+                        string backKey = "🆂";
+                        string rightKey = "🅳";
 
                         if (playerTimers[player.UserId ?? 0].Azerty == true)
                         {
-                            forwardKey = "Z";
-                            leftKey = "Q";
-                            backKey = "S";
-                            rightKey = "D";
+                            forwardKey = "🆉";
+                            leftKey = "🆀";
+                            backKey = "🆂";
+                            rightKey = "🅳";
                         }
 
                         if (playerTimers[player.UserId ?? 0].IsTimerRunning)
@@ -207,12 +210,12 @@ namespace SharpTimer
                                 $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='green'>{playerTime}</font><br>" +
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.UserId ?? 0].TimerRank}</font><br>" +
-                                $"<font color='white'>{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
+                                $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
-                                $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}</font>");
+                                $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Jump) != 0 ? "🅹" : "_")} " +
+                                $"{((buttons & PlayerButtons.Duck) != 0 ? "🅲" : "_")}</font>");
 
                             playerTimers[player.UserId ?? 0].TimerTicks++;
                         }
@@ -221,12 +224,12 @@ namespace SharpTimer
                             player.PrintToCenterHtml(
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.UserId ?? 0].TimerRank}</font><br>" +
-                                $"<font color='white'>{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
+                                $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
-                                $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}</font>");
+                                $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Jump) != 0 ? "🅹" : "_")} " +
+                                $"{((buttons & PlayerButtons.Duck) != 0 ? "🅲" : "_")}</font>");
                         }
 
                         if (!useTriggers)
@@ -284,6 +287,11 @@ namespace SharpTimer
                 if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0))
                 {
                     OnTimerStart(player);
+
+                    if (maxStartingSpeedEnabled == true && (float)Math.Sqrt(player.PlayerPawn.Value.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z) > maxStartingSpeed)
+                    {
+                        AdjustPlayerVelocity(player, maxStartingSpeed);
+                    }
                     return HookResult.Continue;
                 }
 
@@ -304,6 +312,11 @@ namespace SharpTimer
             if (IsVectorInsideBox(playerPos, currentMapStartC1, currentMapStartC2) && currentMapStartC1 != incorrectVector && currentMapStartC2 != incorrectVector && currentMapEndC1 != incorrectVector && currentMapEndC2 != incorrectVector)
             {
                 OnTimerStart(player);
+                
+                if (maxStartingSpeedEnabled == true && (float)Math.Sqrt(player.PlayerPawn.Value.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z) > maxStartingSpeed)
+                {
+                    AdjustPlayerVelocity(player, maxStartingSpeed);
+                }
             }
 
             if (IsVectorInsideBox(playerPos, currentMapEndC1, currentMapEndC2) && currentMapStartC1 != incorrectVector && currentMapStartC2 != incorrectVector && currentMapEndC1 != incorrectVector && currentMapEndC2 != incorrectVector)
