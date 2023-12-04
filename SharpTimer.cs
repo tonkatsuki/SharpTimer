@@ -79,7 +79,7 @@ namespace SharpTimer
         public bool connectMsgEnabled = true;
         public bool srEnabled = true;
         public int srTimer = 120;
-        public bool resetTriggerTeleportSpeedEnabled = true;
+        public bool resetTriggerTeleportSpeedEnabled = false;
         public bool maxStartingSpeedEnabled = true;
         public int maxStartingSpeed = 320;
         public bool isADTimerRunning = false;
@@ -253,20 +253,20 @@ namespace SharpTimer
                 var entity = h.GetParam<CBaseEntity>(1);
 
                 if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false)
-                    return HookResult.Continue;
+                        return HookResult.Continue;
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
                 if (!connectedPlayers.ContainsKey(player.UserId ?? 0))
                     return HookResult.Continue;  // Player not in connectedPlayers, do nothing
 
-                if (trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0) && playerTimers[player.UserId ?? 0].IsTimerRunning)
+                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0) && playerTimers[player.UserId ?? 0].IsTimerRunning)
                 {
                     OnTimerStop(player);
                     return HookResult.Continue;
                 }
 
-                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0))
+                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.UserId ?? 0))
                 {
                     OnTimerStart(player);
                     return HookResult.Continue;
@@ -280,7 +280,16 @@ namespace SharpTimer
                 var trigger = h.GetParam<CBaseTrigger>(0);
                 var entity = h.GetParam<CBaseEntity>(1);
 
-                if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false) return HookResult.Continue;
+                if (resetTriggerTeleportSpeedEnabled == true)
+                {
+                    if (!(trigger.DesignerName == "trigger_multiple" || trigger.DesignerName == "trigger_teleport") || entity.DesignerName != "player" || useTriggers == false)
+                        return HookResult.Continue;
+                }
+                else
+                {
+                    if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false)
+                        return HookResult.Continue;
+                }
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
@@ -292,6 +301,12 @@ namespace SharpTimer
                     {
                         AdjustPlayerVelocity(player, maxStartingSpeed);
                     }
+                    return HookResult.Continue;
+                }
+
+                if (trigger.DesignerName == "trigger_teleport" && player.IsValid)
+                {
+                    if (resetTriggerTeleportSpeedEnabled == true) AdjustPlayerVelocity(player, 0);
                     return HookResult.Continue;
                 }
 
@@ -312,7 +327,7 @@ namespace SharpTimer
             if (IsVectorInsideBox(playerPos, currentMapStartC1, currentMapStartC2) && currentMapStartC1 != incorrectVector && currentMapStartC2 != incorrectVector && currentMapEndC1 != incorrectVector && currentMapEndC2 != incorrectVector)
             {
                 OnTimerStart(player);
-                
+
                 if (maxStartingSpeedEnabled == true && (float)Math.Sqrt(player.PlayerPawn.Value.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z) > maxStartingSpeed)
                 {
                     AdjustPlayerVelocity(player, maxStartingSpeed);

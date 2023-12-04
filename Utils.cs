@@ -69,7 +69,7 @@ namespace SharpTimer
                    playerVector.Z >= minZ && playerVector.Z <= maxZ + height;
         }
 
-        private void AdjustPlayerVelocity(CCSPlayerController? player, float velocity)
+        private static void AdjustPlayerVelocity(CCSPlayerController? player, float velocity)
         {
             var currentX = player.PlayerPawn.Value.AbsVelocity.X;
             var currentY = player.PlayerPawn.Value.AbsVelocity.Y;
