@@ -516,7 +516,7 @@ namespace SharpTimer
         {
             string ranking = await GetPlayerPlacementWithTotal(player, steamId, playerSlot);
 
-            _ = HandleSetPlayerPlacementWithTotal(player, steamId, playerSlot);
+            playerTimers[playerSlot].TimerRank = ranking;
 
             Server.NextFrame(() => player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{ranking}"));
         }
