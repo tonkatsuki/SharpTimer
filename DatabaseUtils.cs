@@ -197,18 +197,22 @@ namespace SharpTimer
 
         [ConsoleCommand("css_jsontodatabase", " ")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
-        public void AddJsonTimesToDatabase(CCSPlayerController? player, CommandInfo command)
+        public void AddJsonTimesToDatabaseCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            _ = AddJsonTimesToDatabaseAsync(player);
+        }
+
+        public async Task AddJsonTimesToDatabaseAsync(CCSPlayerController? player)
         {
             try
             {
-                
                 if (!File.Exists(playerRecordsPath))
                 {
                     Console.WriteLine($"Error: JSON file not found at {playerRecordsPath}");
                     return;
                 }
 
-                string json = File.ReadAllText(playerRecordsPath);
+                string json = await File.ReadAllTextAsync(playerRecordsPath);
                 var records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json);
 
                 if (records == null)
@@ -221,13 +225,13 @@ namespace SharpTimer
 
                 using (var connection = new MySqlConnection(connectionString))
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
 
                     // Check if the table exists, and create it if necessary
                     string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255), TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
-                        createTableCommand.ExecuteNonQuery();
+                        await createTableCommand.ExecuteNonQueryAsync();
                     }
 
                     foreach (var mapEntry in records)
@@ -240,28 +244,22 @@ namespace SharpTimer
                             PlayerRecord playerRecord = recordEntry.Value;
 
                             // Check if the player is already in the database for the map
-                            string selectQuery = "SELECT TimerTicks FROM PlayerRecords WHERE MapName = @MapName AND SteamID = @SteamID";
-                            using (var selectCommand = new MySqlCommand(selectQuery, connection))
+                            string insertOrUpdateQuery = @"
+                        INSERT INTO PlayerRecords (MapName, SteamID, PlayerName, TimerTicks, FormattedTime)
+                        VALUES (@MapName, @SteamID, @PlayerName, @TimerTicks, @FormattedTime)
+                        ON DUPLICATE KEY UPDATE
+                        TimerTicks = IF(@TimerTicks < TimerTicks, @TimerTicks, TimerTicks),
+                        FormattedTime = IF(@TimerTicks < TimerTicks, @FormattedTime, FormattedTime)";
+
+                            using (var insertOrUpdateCommand = new MySqlCommand(insertOrUpdateQuery, connection))
                             {
-                                selectCommand.Parameters.AddWithValue("@MapName", currentMapName);
-                                selectCommand.Parameters.AddWithValue("@SteamID", steamId);
+                                insertOrUpdateCommand.Parameters.AddWithValue("@MapName", currentMapName);
+                                insertOrUpdateCommand.Parameters.AddWithValue("@SteamID", steamId);
+                                insertOrUpdateCommand.Parameters.AddWithValue("@PlayerName", playerRecord.PlayerName);
+                                insertOrUpdateCommand.Parameters.AddWithValue("@TimerTicks", playerRecord.TimerTicks);
+                                insertOrUpdateCommand.Parameters.AddWithValue("@FormattedTime", FormatTime(playerRecord.TimerTicks));
 
-                                var existingTimerTicks = selectCommand.ExecuteScalar();
-                                if (existingTimerTicks == null || (int)existingTimerTicks > playerRecord.TimerTicks)
-                                {
-                                    // Insert the record into the database
-                                    string insertQuery = "INSERT INTO PlayerRecords (MapName, SteamID, PlayerName, TimerTicks, FormattedTime) VALUES (@MapName, @SteamID, @PlayerName, @TimerTicks, @FormattedTime)";
-                                    using (var insertCommand = new MySqlCommand(insertQuery, connection))
-                                    {
-                                        insertCommand.Parameters.AddWithValue("@MapName", currentMapName);
-                                        insertCommand.Parameters.AddWithValue("@SteamID", steamId);
-                                        insertCommand.Parameters.AddWithValue("@PlayerName", playerRecord.PlayerName);
-                                        insertCommand.Parameters.AddWithValue("@TimerTicks", playerRecord.TimerTicks);
-                                        insertCommand.Parameters.AddWithValue("@FormattedTime", FormatTime(playerRecord.TimerTicks));
-
-                                        insertCommand.ExecuteNonQuery();
-                                    }
-                                }
+                                await insertOrUpdateCommand.ExecuteNonQueryAsync();
                             }
                         }
                     }

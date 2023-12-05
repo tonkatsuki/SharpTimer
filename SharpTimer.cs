@@ -93,9 +93,9 @@ namespace SharpTimer
         public string cpSound = "sounds/ui/counter_beep.vsnd";
         public string cpSoundAir = "sounds/ui/weapon_cant_buy.vsnd";
         public string tpSound = "sounds/ui/buttonclick.vsnd";
-        public string mySQLpath = " ";
-        public string playerRecordsPath = " ";
-        public string currentMapName = " ";
+        public string? mySQLpath;
+        public string? playerRecordsPath;
+        public string? currentMapName;
 
         public override void Load(bool hotReload)
         {

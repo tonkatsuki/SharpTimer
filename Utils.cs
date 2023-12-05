@@ -134,17 +134,14 @@ namespace SharpTimer
             return new QAngle(0, 0, 0);
         }
 
-        public static Dictionary<string, PlayerRecord> GetSortedRecords()
+        public Dictionary<string, PlayerRecord> GetSortedRecords()
         {
             string currentMapName = Server.MapName;
 
-            string recordsFileName = "SharpTimer/player_records.json";
-            string recordsPath = Path.Join(Server.GameDirectory + "/csgo/cfg", recordsFileName);
-
             Dictionary<string, Dictionary<string, PlayerRecord>> records;
-            if (File.Exists(recordsPath))
+            if (File.Exists(playerRecordsPath))
             {
-                string json = File.ReadAllText(recordsPath);
+                string json = File.ReadAllText(playerRecordsPath);
                 records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json) ?? new Dictionary<string, Dictionary<string, PlayerRecord>>();
             }
             else
@@ -168,20 +165,17 @@ namespace SharpTimer
             return new Dictionary<string, PlayerRecord>();
         }
 
-        private static int GetPreviousPlayerRecord(CCSPlayerController? player)
+        private int GetPreviousPlayerRecord(CCSPlayerController? player)
         {
             if (player == null) return 0;
 
             string currentMapName = Server.MapName;
             string steamId = player.SteamID.ToString();
 
-            string recordsFileName = "SharpTimer/player_records.json";
-            string recordsPath = Path.Join(Server.GameDirectory + "/csgo/cfg", recordsFileName);
-
             Dictionary<string, Dictionary<string, PlayerRecord>> records;
-            if (File.Exists(recordsPath))
+            if (File.Exists(playerRecordsPath))
             {
-                string json = File.ReadAllText(recordsPath);
+                string json = File.ReadAllText(playerRecordsPath);
                 records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json) ?? new Dictionary<string, Dictionary<string, PlayerRecord>>();
 
                 if (records.ContainsKey(currentMapName) && records[currentMapName].ContainsKey(steamId))
@@ -280,13 +274,10 @@ namespace SharpTimer
             string steamId = player.SteamID.ToString();
             string playerName = player.PlayerName;
 
-            string recordsFileName = "SharpTimer/player_records.json";
-            string recordsPath = Path.Join(Server.GameDirectory + "/csgo/cfg", recordsFileName);
-
             Dictionary<string, Dictionary<string, PlayerRecord>> records;
-            if (File.Exists(recordsPath))
+            if (File.Exists(playerRecordsPath))
             {
-                string json = File.ReadAllText(recordsPath);
+                string json = File.ReadAllText(playerRecordsPath);
                 records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json) ?? new Dictionary<string, Dictionary<string, PlayerRecord>>();
             }
             else
@@ -308,7 +299,7 @@ namespace SharpTimer
                 };
 
                 string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(recordsPath, updatedJson);
+                File.WriteAllText(playerRecordsPath, updatedJson);
             }
         }
 
