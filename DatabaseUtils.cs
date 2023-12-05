@@ -27,12 +27,12 @@ namespace SharpTimer
                 string password = root.GetProperty("MySqlPassword").GetString();
                 int port = root.GetProperty("MySqlPort").GetInt32();
 
-                return $"Server={host};Database={database};User ID={username};Password={password};Port={port};";
+                return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;";
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error reading MySQL config file: {ex.Message}");
-                return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;";
+                return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;CharSet=utf8mb4;";
             }
         }
 
@@ -50,7 +50,7 @@ namespace SharpTimer
                     string formattedTime = FormatTime(timerTicks); // Assuming FormatTime method is available
 
                     // Check if the table exists, and create it if necessary
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255), TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
                         await createTableCommand.ExecuteNonQueryAsync();
@@ -103,7 +103,7 @@ namespace SharpTimer
                     await connection.OpenAsync();
 
                     // Check if the table exists
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255), TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
                         await createTableCommand.ExecuteNonQueryAsync();
@@ -141,7 +141,7 @@ namespace SharpTimer
                     await connection.OpenAsync();
 
                     // Check if the table exists
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255), TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
                         await createTableCommand.ExecuteNonQueryAsync();
@@ -228,7 +228,7 @@ namespace SharpTimer
                     await connection.OpenAsync();
 
                     // Check if the table exists, and create it if necessary
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255), TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
                         await createTableCommand.ExecuteNonQueryAsync();
