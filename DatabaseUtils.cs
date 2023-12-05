@@ -12,14 +12,11 @@ namespace SharpTimer
 {
     partial class SharpTimer
     {
-        private static string GetConnectionStringFromConfigFile()
+        private static string GetConnectionStringFromConfigFile(string mySQLpath)
         {
             try
             {
-                string mysqlConfigFileName = "SharpTimer/mysqlConfig.json";
-                string mysqlConfigPath = Path.Join(Server.GameDirectory + "/csgo/cfg", mysqlConfigFileName);
-
-                string jsonString = File.ReadAllText(mysqlConfigPath);
+                string jsonString = File.ReadAllText(mySQLpath);
                 JsonDocument jsonConfig = JsonDocument.Parse(jsonString);
 
                 JsonElement root = jsonConfig.RootElement;
@@ -39,20 +36,17 @@ namespace SharpTimer
             }
         }
 
-        public async Task SavePlayerTimeToDatabase(CCSPlayerController? player, int timerTicks)
+        public async Task SavePlayerTimeToDatabase(CCSPlayerController? player, int timerTicks, string steamId, string playerName, int playerSlot)
         {
             if (player == null) return;
-            if (playerTimers[player.Slot].IsTimerRunning == false) return;
+            if (playerTimers[playerSlot].IsTimerRunning == false) return;
 
             try
             {
-                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile()))
+                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
                 {
                     await connection.OpenAsync();
 
-                    string currentMapName = Server.MapName;
-                    string steamId = player.SteamID.ToString();
-                    string playerName = player.PlayerName;
                     string formattedTime = FormatTime(timerTicks); // Assuming FormatTime method is available
 
                     // Check if the table exists, and create it if necessary
@@ -87,7 +81,7 @@ namespace SharpTimer
                         }
                     }
                 }
-                if (useMySQL == true) _ = HandleSetPlayerPlacementWithTotal(player);
+                if (useMySQL == true) _ = HandleSetPlayerPlacementWithTotal(player, steamId, playerSlot);
             }
             catch (Exception ex)
             {
@@ -95,8 +89,7 @@ namespace SharpTimer
             }
         }
 
-
-        public async Task<int> GetPreviousPlayerRecordFromDatabase(CCSPlayerController? player)
+        public async Task<int> GetPreviousPlayerRecordFromDatabase(CCSPlayerController? player, string steamId, string currentMapName)
         {
             if (player == null)
             {
@@ -105,12 +98,9 @@ namespace SharpTimer
 
             try
             {
-                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile()))
+                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
                 {
                     await connection.OpenAsync();
-
-                    string currentMapName = Server.MapName;
-                    string steamId = player.SteamID.ToString();
 
                     // Check if the table exists
                     string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255), TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
@@ -142,13 +132,11 @@ namespace SharpTimer
             return 0;
         }
 
-        public static async Task<Dictionary<string, PlayerRecord>> GetSortedRecordsFromDatabase()
+        public async Task<Dictionary<string, PlayerRecord>> GetSortedRecordsFromDatabase()
         {
-            string currentMapName = Server.MapName;
-
             try
             {
-                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile()))
+                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
                 {
                     await connection.OpenAsync();
 
@@ -164,17 +152,14 @@ namespace SharpTimer
                     using (var selectCommand = new MySqlCommand(selectQuery, connection))
                     {
                         selectCommand.Parameters.AddWithValue("@MapName", currentMapName);
-
                         using (var reader = await selectCommand.ExecuteReaderAsync())
                         {
                             var sortedRecords = new Dictionary<string, PlayerRecord>();
-
                             while (await reader.ReadAsync())
                             {
                                 string steamId = reader.GetString(0);
                                 string playerName = reader.GetString(1);
                                 int timerTicks = reader.GetInt32(2);
-
                                 sortedRecords.Add(steamId, new PlayerRecord
                                 {
                                     PlayerName = playerName,
@@ -216,16 +201,14 @@ namespace SharpTimer
         {
             try
             {
-                string recordsFileName = "SharpTimer/player_records.json";
-                string recordsPath = Path.Join(Server.GameDirectory + "/csgo/cfg", recordsFileName);
-
-                if (!File.Exists(recordsPath))
+                
+                if (!File.Exists(playerRecordsPath))
                 {
-                    Console.WriteLine($"Error: JSON file not found at {recordsPath}");
+                    Console.WriteLine($"Error: JSON file not found at {playerRecordsPath}");
                     return;
                 }
 
-                string json = File.ReadAllText(recordsPath);
+                string json = File.ReadAllText(playerRecordsPath);
                 var records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json);
 
                 if (records == null)
@@ -234,7 +217,7 @@ namespace SharpTimer
                     return;
                 }
 
-                string connectionString = GetConnectionStringFromConfigFile();
+                string connectionString = GetConnectionStringFromConfigFile(mySQLpath);
 
                 using (var connection = new MySqlConnection(connectionString))
                 {

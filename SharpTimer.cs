@@ -12,7 +12,7 @@ using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace SharpTimer
 {
-    [MinimumApiVersion(84)]
+    [MinimumApiVersion(110)]
     public class MapInfo
     {
         public string? MapStartTrigger { get; set; }
@@ -93,9 +93,20 @@ namespace SharpTimer
         public string cpSound = "sounds/ui/counter_beep.vsnd";
         public string cpSoundAir = "sounds/ui/weapon_cant_buy.vsnd";
         public string tpSound = "sounds/ui/buttonclick.vsnd";
+        public string mySQLpath = " ";
+        public string playerRecordsPath = " ";
+        public string currentMapName = " ";
 
         public override void Load(bool hotReload)
         {
+            string recordsFileName = "SharpTimer/player_records.json";
+            playerRecordsPath = Path.Join(Server.GameDirectory + "/csgo/cfg", recordsFileName);
+
+            string mysqlConfigFileName = "SharpTimer/mysqlConfig.json";
+            mySQLpath = Path.Join(Server.GameDirectory + "/csgo/cfg", mysqlConfigFileName);
+
+            currentMapName = Server.MapName;
+
             RegisterListener<Listeners.OnMapStart>(OnMapStartHandler);
 
             RegisterEventHandler<EventPlayerConnectFull>((@event, info) =>
@@ -108,7 +119,7 @@ namespace SharpTimer
                 }
                 else
                 {
-                    
+
                     connectedPlayers[player.Slot] = player;
 
                     Console.WriteLine($"Added player {player.PlayerName} with UserID {player.UserId} to connectedPlayers");
@@ -132,7 +143,7 @@ namespace SharpTimer
                         player.PrintToChat($"{msgPrefix}!nextcp (css_nextcp) - Teleports you to the next Checkpoint");
                     }
 
-                    _ = HandleSetPlayerPlacementWithTotal(player);
+                    _ = HandleSetPlayerPlacementWithTotal(player, player.SteamID.ToString(), player.Slot);
 
                     playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
                     playerTimers[player.Slot].sortedCachedRecords = GetSortedRecords();
@@ -196,17 +207,17 @@ namespace SharpTimer
                         float playerVel = (float)Math.Sqrt(playerVelV.X * playerVelV.X + playerVelV.Y * playerVelV.Y + playerVelV.Z * playerVelV.Z);
                         string formattedPlayerVel = Math.Round(playerVel).ToString().PadLeft(4, '0');
                         string playerTime = FormatTime(playerTimers[player.Slot].TimerTicks);
-                        string forwardKey = "🆆";
-                        string leftKey = "🅰";
-                        string backKey = "🆂";
-                        string rightKey = "🅳";
+                        string forwardKey = "W";
+                        string leftKey = "A";
+                        string backKey = "S";
+                        string rightKey = "D";
 
                         if (playerTimers[player.Slot].Azerty == true)
                         {
-                            forwardKey = "🆉";
-                            leftKey = "🆀";
-                            backKey = "🆂";
-                            rightKey = "🅳";
+                            forwardKey = "Z";
+                            leftKey = "Q";
+                            backKey = "S";
+                            rightKey = "D";
                         }
 
                         if (playerTimers[player.Slot].IsTimerRunning)
@@ -219,8 +230,8 @@ namespace SharpTimer
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Jump) != 0 ? "🅹" : "_")} " +
-                                $"{((buttons & PlayerButtons.Duck) != 0 ? "🅲" : "_")}</font>");
+                                $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
+                                $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}</font>");
 
                             playerTimers[player.Slot].TimerTicks++;
                         }
@@ -233,8 +244,8 @@ namespace SharpTimer
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
-                                $"{((buttons & PlayerButtons.Jump) != 0 ? "🅹" : "_")} " +
-                                $"{((buttons & PlayerButtons.Duck) != 0 ? "🅲" : "_")}</font>");
+                                $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
+                                $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}</font>");
                         }
 
                         if (!useTriggers)
@@ -367,7 +378,7 @@ namespace SharpTimer
             int previousRecordTicks = GetPreviousPlayerRecord(player);
 
             SavePlayerTime(player, currentTicks);
-            if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks);
+            if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks, player.SteamID.ToString(), player.PlayerName, player.Slot);
             playerTimers[player.Slot].IsTimerRunning = false;
 
             string timeDifference = "";
@@ -395,14 +406,14 @@ namespace SharpTimer
                 Server.PrintToChatAll(msgPrefix + $"{ChatColors.Green}{player.PlayerName} {ChatColors.White}just finished the map in: {ChatColors.Yellow}[{FormatTime(currentTicks)}]! (No change in time)");
             }
 
-            if (useMySQL == false) _ = HandleSetPlayerPlacementWithTotal(player);
+            if (useMySQL == false) _ = HandleSetPlayerPlacementWithTotal(player, player.SteamID.ToString(), player.Slot);
 
             player.ExecuteClientCommand($"play {beepSound}");
         }
 
-        public async Task HandleSetPlayerPlacementWithTotal(CCSPlayerController? player)
+        public async Task HandleSetPlayerPlacementWithTotal(CCSPlayerController? player, string steamId, int playerSlot)
         {
-            playerTimers[player.Slot].TimerRank = await GetPlayerPlacementWithTotal(player);
+            playerTimers[playerSlot].TimerRank = await GetPlayerPlacementWithTotal(player, steamId, playerSlot);
         }
 
         [ConsoleCommand("css_azerty", "Switches layout to AZERTY")]
@@ -451,8 +462,6 @@ namespace SharpTimer
 
         public async Task PrintTopRecordsHandler(CCSPlayerController? player)
         {
-            string currentMapName = Server.MapName;
-
             Dictionary<string, PlayerRecord> sortedRecords;
             if (useMySQL == true)
             {
@@ -465,11 +474,14 @@ namespace SharpTimer
 
             if (sortedRecords.Count == 0)
             {
-                player.PrintToChat(msgPrefix + $" No records available for {currentMapName}.");
+                Server.NextFrame(() => player.PrintToChat(msgPrefix + $" No records available for {currentMapName}."));
+                //ReplyToPlayer(player, msgPrefix + $" No records available for {currentMapName}.");
                 return;
             }
 
-            player.PrintToChat(msgPrefix + $" Top 10 Records for {currentMapName}:");
+            
+            Server.NextFrame(() => player.PrintToChat(msgPrefix + $" Top 10 Records for {currentMapName}:"));            
+            //ReplyToPlayer(player, msgPrefix + $" Top 10 Records for {currentMapName}:");
             int rank = 1;
 
             foreach (var kvp in sortedRecords.Take(10))
@@ -477,8 +489,11 @@ namespace SharpTimer
                 string playerName = kvp.Value.PlayerName; // Get the player name from the dictionary value
                 int timerTicks = kvp.Value.TimerTicks; // Get the timer ticks from the dictionary value
 
-                player.PrintToChat(msgPrefix + $" #{rank}: {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(timerTicks)}");
-                rank++;
+                Server.NextFrame(() => {
+                    player.PrintToChat(msgPrefix + $" #{rank}: {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(timerTicks)}");
+                    rank++;
+                    });  
+                //ReplyToPlayer(player, msgPrefix + $" #{rank}: {ChatColors.Green}{playerName} {ChatColors.White}- {ChatColors.Green}{FormatTime(timerTicks)}");
             }
         }
 
@@ -494,16 +509,16 @@ namespace SharpTimer
                 return;
             }
 
-            _ = RankCommandHandler(player);
+            _ = RankCommandHandler(player, player.SteamID.ToString(), player.Slot);
         }
 
-        public async Task RankCommandHandler(CCSPlayerController? player)
+        public async Task RankCommandHandler(CCSPlayerController? player, string steamId, int playerSlot)
         {
-            string ranking = await GetPlayerPlacementWithTotal(player);
+            string ranking = await GetPlayerPlacementWithTotal(player, steamId, playerSlot);
 
-            _ = HandleSetPlayerPlacementWithTotal(player);
+            _ = HandleSetPlayerPlacementWithTotal(player, steamId, playerSlot);
 
-            player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{ranking}");
+            Server.NextFrame(() => player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{ranking}"));
         }
 
         [ConsoleCommand("css_r", "Teleports you to start")]
