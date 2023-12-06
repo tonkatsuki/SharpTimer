@@ -80,13 +80,24 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 | `!r`  | Teleports the player back to Spawn |
 | `!top`  | Prints the top 10 times on the current map |
 | `!rank` | Tells you your rank on the current map |
+| `!pb` | Tells you your PB on the current map |
+| `!hud` | Hides the Timer HUD |
+| `!azerty` | Changes Key Layout to Azerty on the HUD |
 | `!cp` | Sets a checkpoint |
 | `!tp` | Teleports the player to the latest checkpoint |
 | `!prevcp` | Teleports the player to the previous checkpoint |
 | `!nextcp` | Teleports the player to the previous checkpoint |
 
+# Server Console Commands
+
+| Command  | What it does |
+| ------------- | ------------- |
+| `css_jsontodatabase`  | Uploads all saved Records to the MySql Database from the local Json |
+| `css_databasetojson`  | Downloads all saved Records from the MySql Database to Json |
+
 ### Configuration
 * See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *(yes you can enable checkpoints there)*
+* To configure MySql set `sharptimer_mysql_enabled` to `true` and head over to `mysqlConfig.json` to configure the connection.
 * You can add custom server settings to `game/csgo/cfg/SharpTimer/custom_exec.cfg`
 * This plugin will look for `timer_startzone` & `timer_endzone` triggers by default, if the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `mapdata.json`
 
