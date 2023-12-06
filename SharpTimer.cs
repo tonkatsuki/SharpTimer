@@ -29,10 +29,12 @@ namespace SharpTimer
         public bool IsTimerRunning { get; set; }
         public int TimerTicks { get; set; }
         public string? TimerRank { get; set; }
+        public string? PB { get; set; }
         public int CheckpointIndex { get; set; }
         public bool Azerty { get; set; }
+        public bool HideTimerHud { get; set; }
         public int TicksSinceLastCmd { get; set; }
-        public Dictionary<string, PlayerRecord>? sortedCachedRecords { get; set; }
+        public Dictionary<string, PlayerRecord>? SortedCachedRecords { get; set; }
         public CCSPlayer_MovementServices? MovementService { get; set; }
     }
 
@@ -74,6 +76,7 @@ namespace SharpTimer
         public bool respawnEnabled = true;
         public bool topEnabled = true;
         public bool rankEnabled = true;
+        public bool pbComEnabled = true;
         public bool removeLegsEnabled = true;
         public bool cpEnabled = false;
         public bool removeCpRestrictEnabled = false;
@@ -134,6 +137,7 @@ namespace SharpTimer
                     if (respawnEnabled) player.PrintToChat($"{msgPrefix}!r (css_r) - Respawns you");
                     if (topEnabled) player.PrintToChat($"{msgPrefix}!top (css_top) - Lists top 10 records on this map");
                     if (rankEnabled) player.PrintToChat($"{msgPrefix}!rank (css_rank) - Shows your current rank");
+                    if (pbComEnabled) player.PrintToChat($"{msgPrefix}!pb (css_pb) - Shows your current PB");
 
                     if (cpEnabled)
                     {
@@ -146,7 +150,9 @@ namespace SharpTimer
                     _ = HandleSetPlayerPlacementWithTotal(player, player.SteamID.ToString(), player.Slot);
 
                     playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
-                    playerTimers[player.Slot].sortedCachedRecords = GetSortedRecords();
+                    playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
+
+                    //_ = PBCommandHandler(player, player.SteamID.ToString(), player.Slot);
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
@@ -203,9 +209,7 @@ namespace SharpTimer
                     if (player.IsValid && !player.IsBot && player.PawnIsAlive)
                     {
                         var buttons = player.Buttons;
-                        var playerVelV = player.PlayerPawn.Value.AbsVelocity;
-                        float playerVel = (float)Math.Sqrt(playerVelV.X * playerVelV.X + playerVelV.Y * playerVelV.Y + playerVelV.Z * playerVelV.Z);
-                        string formattedPlayerVel = Math.Round(playerVel).ToString().PadLeft(4, '0');
+                        string formattedPlayerVel = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString().PadLeft(4, '0');
                         string playerTime = FormatTime(playerTimers[player.Slot].TimerTicks);
                         string forwardKey = "W";
                         string leftKey = "A";
@@ -222,7 +226,7 @@ namespace SharpTimer
 
                         if (playerTimers[player.Slot].IsTimerRunning)
                         {
-                            player.PrintToCenterHtml(
+                            if(playerTimers[player.Slot].HideTimerHud != true) player.PrintToCenterHtml(
                                 $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='green'>{playerTime}</font><br>" +
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank}</font><br>" +
@@ -237,7 +241,7 @@ namespace SharpTimer
                         }
                         else
                         {
-                            player.PrintToCenterHtml(
+                            if(playerTimers[player.Slot].HideTimerHud != true) player.PrintToCenterHtml(
                                 $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank}</font><br>" +
                                 $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
@@ -440,7 +444,36 @@ namespace SharpTimer
                 playerTimers[player.Slot].Azerty = true;
                 SavePlayerSettingToDatabase(player.SteamID.ToString(), "azerty", true);
             }
+        }
 
+        [ConsoleCommand("css_hud", "Draws/Hides The timer HUD")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void HUDSwitchCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player == null) return;
+
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
+
+            if (playerTimers[player.Slot].HideTimerHud == true)
+            {
+                playerTimers[player.Slot].HideTimerHud = false;
+                player.PrintToChat($"Hide Timer HUD set to: {ChatColors.Green}{playerTimers[player.Slot].HideTimerHud}");
+                SavePlayerSettingToDatabase(player.SteamID.ToString(), "DrawTimerHud", false);
+                return;
+            }
+            else
+            {
+                playerTimers[player.Slot].HideTimerHud = true;
+                player.PrintToChat($"Hide Timer HUD set to: {ChatColors.Green}{playerTimers[player.Slot].HideTimerHud}");
+                SavePlayerSettingToDatabase(player.SteamID.ToString(), "DrawTimerHud", true);
+                return;
+            }
         }
 
         [ConsoleCommand("css_top", "Prints top players of this map")]
@@ -521,6 +554,38 @@ namespace SharpTimer
             Server.NextFrame(() => player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{ranking}"));
         }
 
+        [ConsoleCommand("css_pb", "Tells you your pb on this map")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void PBCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player == null || rankEnabled == false) return;
+
+            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            _ = PBCommandHandler(player, player.SteamID.ToString(), player.Slot);
+        }
+
+        public async Task PBCommandHandler(CCSPlayerController? player, string steamId, int playerSlot)
+        {
+            int pbTicks;
+            if(useMySQL == false)
+            {
+                pbTicks = GetPreviousPlayerRecord(player);
+            }
+            else
+            {
+                pbTicks = await GetPreviousPlayerRecordFromDatabase(player, steamId, currentMapName);
+            }
+
+            playerTimers[playerSlot].PB = FormatTime(pbTicks);
+
+            Server.NextFrame(() => player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{FormatTime(pbTicks)}"));
+        }
+
         [ConsoleCommand("css_r", "Teleports you to start")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void RespawnPlayer(CCSPlayerController? player, CommandInfo command)
@@ -554,7 +619,7 @@ namespace SharpTimer
             }
             playerTimers[player.Slot].IsTimerRunning = false;
             playerTimers[player.Slot].TimerTicks = 0;
-            playerTimers[player.Slot].sortedCachedRecords = GetSortedRecords();
+            playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
             player.ExecuteClientCommand($"play {respawnSound}");
         }
 

@@ -45,7 +45,18 @@ namespace SharpTimer
             isADTimerRunning = true;
         }
 
+
         private static string FormatTime(int ticks)
+        {
+            TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
+
+            // Format seconds with three decimal points
+            string secondsWithMilliseconds = $"{timeSpan.Seconds:D2}.{(ticks % 64) * (1000.0 / 64.0):000}";
+
+            return $"{timeSpan.Minutes:D1}:{secondsWithMilliseconds}";
+        }
+
+        private static string FormatTimeold(int ticks)
         {
             TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
             int centiseconds = (int)((ticks % 64) * (100.0 / 64.0));
@@ -54,6 +65,19 @@ namespace SharpTimer
         }
 
         private static string FormatTimeDifference(int currentTicks, int previousTicks)
+        {
+            int differenceTicks = previousTicks - currentTicks;
+            string sign = (differenceTicks > 0) ? "-" : "+";
+
+            TimeSpan timeDifference = TimeSpan.FromSeconds(Math.Abs(differenceTicks) / 64.0);
+
+            // Format seconds with three decimal points
+            string secondsWithMilliseconds = $"{timeDifference.Seconds:D2}.{(Math.Abs(differenceTicks) % 64) * (1000.0 / 64.0):000}";
+
+            return $"{sign}{timeDifference.Minutes:D1}:{secondsWithMilliseconds}";
+        }
+
+        private static string FormatTimeDifferenceold(int currentTicks, int previousTicks)
         {
             int differenceTicks = previousTicks - currentTicks;
             string sign = (differenceTicks > 0) ? "-" : "+";
@@ -191,12 +215,12 @@ namespace SharpTimer
         {
             if (player == null || !playerTimers.ContainsKey(player.Slot) || !playerTimers[player.Slot].IsTimerRunning) return "";
 
-            
+
             int currentPlayerTime = playerTimers[player.Slot].TimerTicks;
 
             int placement = 1;
 
-            foreach (var kvp in playerTimers[player.Slot].sortedCachedRecords)
+            foreach (var kvp in playerTimers[player.Slot].SortedCachedRecords.Take(100))
             {
                 int recordTimerTicks = kvp.Value.TimerTicks;
 
@@ -209,7 +233,14 @@ namespace SharpTimer
                     break;
                 }
             }
-            return "#" + placement;
+            if(placement > 100)
+            {
+                return "#100" + "+";
+            }
+            else
+            {
+                return "#" + placement;
+            }        
         }
 
         public async Task<string> GetPlayerPlacementWithTotal(CCSPlayerController? player, string steamId, int playerSlot)

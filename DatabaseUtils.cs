@@ -117,9 +117,11 @@ namespace SharpTimer
                         selectCommand.Parameters.AddWithValue("@SteamID", steamId);
 
                         var result = await selectCommand.ExecuteScalarAsync();
-                        if (result != null)
+
+                        // Check for DBNull
+                        if (result != null && result != DBNull.Value)
                         {
-                            return (int)result;
+                            return Convert.ToInt32(result);
                         }
                     }
                 }
@@ -158,7 +160,7 @@ namespace SharpTimer
                             while (await reader.ReadAsync())
                             {
                                 string steamId = reader.GetString(0);
-                                string playerName = reader.GetString(1);
+                                string playerName = reader.IsDBNull(1) ? "Unknown" : reader.GetString(1);
                                 int timerTicks = reader.GetInt32(2);
                                 sortedRecords.Add(steamId, new PlayerRecord
                                 {
@@ -270,6 +272,69 @@ namespace SharpTimer
             catch (Exception ex)
             {
                 Console.WriteLine($"Error adding JSON times to the database: {ex.Message}");
+            }
+        }
+
+        [ConsoleCommand("css_databasetojson", " ")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void ExportDatabaseToJsonCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            _ = ExportDatabaseToJsonAsync(player);
+        }
+
+        public async Task ExportDatabaseToJsonAsync(CCSPlayerController? player)
+        {
+            try
+            {
+                string connectionString = GetConnectionStringFromConfigFile(mySQLpath);
+
+                using (var connection = new MySqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    string selectQuery = "SELECT MapName, SteamID, PlayerName, TimerTicks FROM PlayerRecords";
+                    using (var selectCommand = new MySqlCommand(selectQuery, connection))
+                    {
+                        using (var reader = await selectCommand.ExecuteReaderAsync())
+                        {
+                            var records = new Dictionary<string, Dictionary<string, PlayerRecord>>();
+
+                            while (await reader.ReadAsync())
+                            {
+                                string mapName = reader.GetString(0);
+                                string steamId = reader.GetString(1);
+                                string playerName = reader.GetString(2);
+                                int timerTicks = reader.GetInt32(3);
+
+                                if (!records.ContainsKey(mapName))
+                                {
+                                    records[mapName] = new Dictionary<string, PlayerRecord>();
+                                }
+
+                                records[mapName][steamId] = new PlayerRecord
+                                {
+                                    PlayerName = playerName,
+                                    TimerTicks = timerTicks
+                                };
+                            }
+
+                            // Convert records to JSON
+                            string json = JsonSerializer.Serialize(records, new JsonSerializerOptions
+                            {
+                                WriteIndented = true
+                            });
+
+                            // Save JSON to file
+                            await File.WriteAllTextAsync(playerRecordsPath, json);
+
+                            Console.WriteLine("Player records successfully exported to JSON.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting player records to JSON: {ex.Message}");
             }
         }
     }
