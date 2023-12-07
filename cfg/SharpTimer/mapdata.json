@@ -31,11 +31,8 @@
     "RespawnPos": "-64 -1040 8992"
   },
   "surf_utopia_njv": {
-    "MapStartC1": "-13769 512 12800",
-    "MapStartC2": "-14319 -512 12800",
-    "MapEndC1": "-13825 -512 -6223",
-    "MapEndC2": "-14319 527 -6223",
-    "RespawnPos": "-13904 336 12864"
+    "MapStartTrigger": "zone_start",
+    "MapEndTrigger": "zone_end"
   },
     "surf_benevolent": {
     "MapStartTrigger": "z_stage1",
