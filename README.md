@@ -63,6 +63,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 * Unzip into your servers `game/csgo/` dir
   
+
 * Its recommended to have a custom server cfg with your desired settings (for example surf or kz)
 
 * Here a collection of maps supported by default: https://steamcommunity.com/sharedfiles/filedetails/?id=3095738559
