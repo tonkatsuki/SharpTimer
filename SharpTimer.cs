@@ -12,7 +12,7 @@ using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace SharpTimer
 {
-    [MinimumApiVersion(110)]
+    [MinimumApiVersion(116)]
     public class MapInfo
     {
         public string? MapStartTrigger { get; set; }
@@ -267,7 +267,7 @@ namespace SharpTimer
                 }
             });
 
-            VirtualFunctions.CBaseTrigger_StartTouchFunc.Hook(h =>
+            /* VirtualFunctions.CBaseTrigger_StartTouchFunc.Hook(h =>
             {
                 var trigger = h.GetParam<CBaseTrigger>(0);
                 var entity = h.GetParam<CBaseEntity>(1);
@@ -334,7 +334,86 @@ namespace SharpTimer
                 }
 
                 return HookResult.Continue;
-            }, HookMode.Post);
+            }, HookMode.Post); */
+
+            HookEntityOutput("trigger_multiple", "OnStartTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
+                    {
+                        //Console.WriteLine($"[EntityOutputHook Attribute] Trigger touched! ({name}, {activator}, {caller.Entity.Name}, {delay})");
+
+                        if (activator.DesignerName != "player" || useTriggers == false)
+                            return HookResult.Continue;
+
+                        var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
+                        if (player == null) return HookResult.Continue;
+                        if (!connectedPlayers.ContainsKey(player.Slot))
+                            return HookResult.Continue;  // Player not in connectedPlayers, do nothing
+
+                        if (caller.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
+                        {
+                            OnTimerStop(player);
+                            return HookResult.Continue;
+                        }
+
+                        if (caller.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
+                        {
+                            OnTimerStart(player);
+                            return HookResult.Continue;
+                        }
+
+                        return HookResult.Continue;
+                    });
+
+            HookEntityOutput("trigger_multiple", "OnEndTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
+                    {
+                        //Console.WriteLine($"[EntityOutputHook Attribute] Trigger touched ended! ({name}, {activator}, {caller.Entity.Name}, {delay})");
+
+                        if (activator.DesignerName != "player" || useTriggers == false)
+                            return HookResult.Continue;
+
+                        var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
+                        if (player == null) return HookResult.Continue;
+                        if (!connectedPlayers.ContainsKey(player.Slot))
+                            return HookResult.Continue;  // Player not in connectedPlayers, do nothing
+
+                        if (caller.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
+                        {
+                            OnTimerStop(player);
+                            if (maxStartingSpeedEnabled == true && (float)Math.Sqrt(player.PlayerPawn.Value.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z) > maxStartingSpeed)
+                            {
+                                AdjustPlayerVelocity(player, maxStartingSpeed);
+                            }
+                            return HookResult.Continue;
+                        }
+
+                        if (caller.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
+                        {
+                            OnTimerStart(player);
+                            return HookResult.Continue;
+                        }
+
+                        return HookResult.Continue;
+                    });
+
+            HookEntityOutput("trigger_teleport", "OnEndTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
+                    {
+                        //Console.WriteLine($"[EntityOutputHook Attribute] Trigger teleport touched ended! ({name}, {activator}, {caller.Entity.Name}, {delay})");
+
+                        if (activator.DesignerName != "player" || resetTriggerTeleportSpeedEnabled == false)
+                            return HookResult.Continue;
+
+                        var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
+                        if (player == null) return HookResult.Continue;
+                        if (!connectedPlayers.ContainsKey(player.Slot))
+                            return HookResult.Continue;  // Player not in connectedPlayers, do nothing
+
+                        if (player.IsValid && resetTriggerTeleportSpeedEnabled == true)
+                        {
+                            AdjustPlayerVelocity(player, 0);
+                            return HookResult.Continue;
+                        }
+
+                        return HookResult.Continue;
+                    });
 
             Console.WriteLine("[SharpTimer] Plugin Loaded");
         }

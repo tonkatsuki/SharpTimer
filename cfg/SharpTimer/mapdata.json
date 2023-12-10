@@ -16,7 +16,7 @@
     "MapEndTrigger": "endm"
   },
   "surf_rookie": {
-    "MapStartTrigger": "stage1_trigger ",
+    "MapStartTrigger": "stage1_trigger",
     "MapEndTrigger": "end_trigger"
   },
   "surf_deathstar": {
