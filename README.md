@@ -5,11 +5,9 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 [**MetaMod**](https://cs2.poggu.me/metamod/installation/)
 
-[**CounterStrikeSharp** *(at least v84)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
+[**CounterStrikeSharp** *(at least v110)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
 
 [**MovementUnlocker** *(optional but recommended)*](https://github.com/Source2ZE/MovementUnlocker)
-
-⚠️ **Linux only**
 
 ⚠️ **CS2Fixes** does clash with **CSS** there fore the plugin might not work correctly with it
 
@@ -65,6 +63,9 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 * Unzip into your servers `game/csgo/` dir
   
+
+* Its recommended to have a custom server cfg with your desired settings (for example surf or kz)
+
 * Here a collection of maps supported by default: https://steamcommunity.com/sharedfiles/filedetails/?id=3095738559
 
 # Commands
@@ -74,10 +75,20 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 | `!r`  | Teleports the player back to Spawn |
 | `!top`  | Prints the top 10 times on the current map |
 | `!rank` | Tells you your rank on the current map |
+| `!pb` | Tells you your PB on the current map |
+| `!hud` | Hides the Timer HUD |
+| `!azerty` | Changes Key Layout to Azerty on the HUD |
 | `!cp` | Sets a checkpoint |
 | `!tp` | Teleports the player to the latest checkpoint |
 | `!prevcp` | Teleports the player to the previous checkpoint |
 | `!nextcp` | Teleports the player to the previous checkpoint |
+
+# Server Console Commands
+
+| Command  | What it does |
+| ------------- | ------------- |
+| `css_jsontodatabase`  | Uploads all saved Records to the MySql Database from the local Json |
+| `css_databasetojson`  | Downloads all saved Records from the MySql Database to Json |
 
 ### Configuration
 * See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *(yes you can enable checkpoints there)*

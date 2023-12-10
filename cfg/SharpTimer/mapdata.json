@@ -16,7 +16,7 @@
     "MapEndTrigger": "endm"
   },
   "surf_rookie": {
-    "MapStartTrigger": "stage1_trigger ",
+    "MapStartTrigger": "stage1_trigger",
     "MapEndTrigger": "end_trigger"
   },
   "surf_deathstar": {
@@ -31,11 +31,8 @@
     "RespawnPos": "-64 -1040 8992"
   },
   "surf_utopia_njv": {
-    "MapStartC1": "-13769 512 12800",
-    "MapStartC2": "-14319 -512 12800",
-    "MapEndC1": "-13825 -512 -6223",
-    "MapEndC2": "-14319 527 -6223",
-    "RespawnPos": "-13904 336 12864"
+    "MapStartTrigger": "zone_start",
+    "MapEndTrigger": "zone_end"
   },
     "surf_benevolent": {
     "MapStartTrigger": "z_stage1",
@@ -167,13 +164,6 @@
     "MapEndC1": "128 3007 128",
     "MapEndC2": "351 2270 255 ",
     "RespawnPos": "-55 492 128"
-  },
-    "bhop_gottagofast": {
-    "MapStartC1": "2400 -250 64",
-    "MapStartC2": "2542 250 200",
-    "MapEndC1": "2535 63 64",
-    "MapEndC2": "-1376 1520 64",
-    "RespawnPos": "-1519 1044 200"
   },
     "bhop_kiitovittu": {
     "MapStartC1": "446 255 64",
