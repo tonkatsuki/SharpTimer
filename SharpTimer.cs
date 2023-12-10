@@ -3,7 +3,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
@@ -132,7 +131,7 @@ namespace SharpTimer
 
                     player.PrintToChat($"{msgPrefix}Welcome {ChatColors.Red}{player.PlayerName} {ChatColors.White}to the server!");
 
-                    player.PrintToChat($"{msgPrefix}Avalible Commands:");
+                    player.PrintToChat($"{msgPrefix}Available Commands:");
 
                     if (respawnEnabled) player.PrintToChat($"{msgPrefix}!r (css_r) - Respawns you");
                     if (topEnabled) player.PrintToChat($"{msgPrefix}!top (css_top) - Lists top 10 records on this map");
@@ -191,7 +190,6 @@ namespace SharpTimer
                         connectedPlayers.Remove(player.Slot);
                         playerTimers.Remove(player.Slot);
                         Console.WriteLine($"Removed player {connectedPlayer.PlayerName} with UserID {connectedPlayer.UserId} from connectedPlayers");
-                        Console.WriteLine(string.Join(", ", connectedPlayers.Values));
 
                         if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{connectedPlayer.PlayerName} {ChatColors.White}disconnected!");
                     }
@@ -267,86 +265,14 @@ namespace SharpTimer
                 }
             });
 
-            /* VirtualFunctions.CBaseTrigger_StartTouchFunc.Hook(h =>
-            {
-                var trigger = h.GetParam<CBaseTrigger>(0);
-                var entity = h.GetParam<CBaseEntity>(1);
-
-                if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false)
-                    return HookResult.Continue;
-
-                var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
-                if (player == null) return HookResult.Continue;
-                if (!connectedPlayers.ContainsKey(player.Slot))
-                    return HookResult.Continue;  // Player not in connectedPlayers, do nothing
-
-                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
-                {
-                    OnTimerStop(player);
-                    return HookResult.Continue;
-                }
-
-                if (trigger.DesignerName == "trigger_multiple" && trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
-                {
-                    OnTimerStart(player);
-                    return HookResult.Continue;
-                }
-
-                return HookResult.Continue;
-            }, HookMode.Post);
-
-            VirtualFunctions.CBaseTrigger_EndTouchFunc.Hook(h =>
-            {
-                var trigger = h.GetParam<CBaseTrigger>(0);
-                var entity = h.GetParam<CBaseEntity>(1);
-
-                if (resetTriggerTeleportSpeedEnabled == true)
-                {
-                    if (!(trigger.DesignerName == "trigger_multiple" || trigger.DesignerName == "trigger_teleport") || entity.DesignerName != "player" || useTriggers == false)
-                        return HookResult.Continue;
-                }
-                else
-                {
-                    if (trigger.DesignerName != "trigger_multiple" || entity.DesignerName != "player" || useTriggers == false)
-                        return HookResult.Continue;
-                }
-
-                var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
-                if (player == null) return HookResult.Continue;
-                if (!connectedPlayers.ContainsKey(player.Slot))
-                    return HookResult.Continue;  // Player not in connectedPlayers, do nothing
-
-                if (trigger.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
-                {
-                    OnTimerStart(player);
-
-                    if (maxStartingSpeedEnabled == true && (float)Math.Sqrt(player.PlayerPawn.Value.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z) > maxStartingSpeed)
-                    {
-                        AdjustPlayerVelocity(player, maxStartingSpeed);
-                    }
-                    return HookResult.Continue;
-                }
-
-                if (trigger.DesignerName == "trigger_teleport" && player.IsValid)
-                {
-                    if (resetTriggerTeleportSpeedEnabled == true) AdjustPlayerVelocity(player, 0);
-                    return HookResult.Continue;
-                }
-
-                return HookResult.Continue;
-            }, HookMode.Post); */
-
             HookEntityOutput("trigger_multiple", "OnStartTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
                     {
-                        //Console.WriteLine($"[EntityOutputHook Attribute] Trigger touched! ({name}, {activator}, {caller.Entity.Name}, {delay})");
-
                         if (activator.DesignerName != "player" || useTriggers == false)
                             return HookResult.Continue;
 
                         var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
-                        if (player == null) return HookResult.Continue;
-                        if (!connectedPlayers.ContainsKey(player.Slot))
-                            return HookResult.Continue;  // Player not in connectedPlayers, do nothing
+
+                        if (player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
 
                         if (caller.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
                         {
@@ -356,7 +282,9 @@ namespace SharpTimer
 
                         if (caller.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
                         {
-                            OnTimerStart(player);
+                            playerTimers[player.Slot].IsTimerRunning = false;
+                            playerTimers[player.Slot].TimerTicks = 0;
+                            playerCheckpoints.Remove(player.Slot);
                             return HookResult.Continue;
                         }
 
@@ -365,15 +293,12 @@ namespace SharpTimer
 
             HookEntityOutput("trigger_multiple", "OnEndTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
                     {
-                        //Console.WriteLine($"[EntityOutputHook Attribute] Trigger touched ended! ({name}, {activator}, {caller.Entity.Name}, {delay})");
-
                         if (activator.DesignerName != "player" || useTriggers == false)
                             return HookResult.Continue;
 
                         var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
-                        if (player == null) return HookResult.Continue;
-                        if (!connectedPlayers.ContainsKey(player.Slot))
-                            return HookResult.Continue;  // Player not in connectedPlayers, do nothing
+
+                        if (player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
 
                         if (caller.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
                         {
@@ -396,15 +321,12 @@ namespace SharpTimer
 
             HookEntityOutput("trigger_teleport", "OnEndTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
                     {
-                        //Console.WriteLine($"[EntityOutputHook Attribute] Trigger teleport touched ended! ({name}, {activator}, {caller.Entity.Name}, {delay})");
-
                         if (activator.DesignerName != "player" || resetTriggerTeleportSpeedEnabled == false)
                             return HookResult.Continue;
 
                         var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
-                        if (player == null) return HookResult.Continue;
-                        if (!connectedPlayers.ContainsKey(player.Slot))
-                            return HookResult.Continue;  // Player not in connectedPlayers, do nothing
+
+                        if (player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
 
                         if (player.IsValid && resetTriggerTeleportSpeedEnabled == true)
                         {
