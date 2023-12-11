@@ -5,7 +5,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 [**MetaMod**](https://cs2.poggu.me/metamod/installation/)
 
-[**CounterStrikeSharp** *(at least v110)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
+[**CounterStrikeSharp** *(at least v116)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
 
 [**MovementUnlocker** *(optional but recommended)*](https://github.com/Source2ZE/MovementUnlocker)
 
@@ -62,7 +62,6 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 ### Installing
 
 * Unzip into your servers `game/csgo/` dir
-  
 
 * Its recommended to have a custom server cfg with your desired settings (for example surf or kz)
 
@@ -76,6 +75,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 | `!top`  | Prints the top 10 times on the current map |
 | `!rank` | Tells you your rank on the current map |
 | `!pb` | Tells you your PB on the current map |
+| `!sr` | Tells you the current server record of the map |
 | `!hud` | Hides the Timer HUD |
 | `!azerty` | Changes Key Layout to Azerty on the HUD |
 | `!cp` | Sets a checkpoint |
@@ -137,17 +137,13 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
     "MapEndC1": "-393 14047 -13759",
     "MapEndC2": "378.517792 13067.639648 -13759",
     "RespawnPos": "-64 -1040 8992"
-  },
-  "surf_utopia_njv": {
-    "MapStartC1": "-13769 512 12800",
-    "MapStartC2": "-14319 -512 12800",
-    "MapEndC1": "-13825 -512 -6223",
-    "MapEndC2": "-14319 527 -6223",
-    "RespawnPos": "-13904 336 12864"
-  },
+  }
 }
 ```
-* I will try to add more map data by default in the future :) pull requests are also welcome
+### MySQL
+* Head over to `game/csgo/cfg/SharpTimer/config.cfg` and enable `sharptimer_mysql_enabled`
+
+  After that configure your MySQL connection in `mysqlConfig.json` that is located in the same dir
 
 ## Author
 [@DEAFPS_](https://twitter.com/deafps_)
