@@ -83,12 +83,17 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 | `!prevcp` | Teleports the player to the previous checkpoint |
 | `!nextcp` | Teleports the player to the previous checkpoint |
 
-# Server Console Commands
+# Admin Commands
+These commands require the `@css/root` admin flag
 
 | Command  | What it does |
 | ------------- | ------------- |
-| `css_jsontodatabase`  | Uploads all saved Records to the MySql Database from the local Json |
-| `css_databasetojson`  | Downloads all saved Records from the MySql Database to Json |
+| `!jsontodatabase`  | Uploads all saved Records to the MySql Database from the local Json |
+| `!databasetojson`  | Downloads all saved Records from the MySql Database to Json |
+| `!addrespawnpos`  | Adds a manual respawn pos |
+| `!addstartzone`  | Adds a manual start zone to |
+| `!addendzone`  | Adds a manual end zone |
+| `!savezones`  | Saves manually set zones to mapdata.json |
 
 ### Configuration
 * See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *(yes you can enable checkpoints there)*
@@ -112,7 +117,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
   ```
 
 
-  Many maps do not contain any `startzone` or `endzone` triggers. As a workaround you can setup the trigger manually be defining its opposite corner coordinates with `MapStartC1` and `MapStartC2`! if you are using the `getpos` or `cl_showpos 1` to get the coordinates you will have to subtract `64 units` from the Z axis since the coordinates given are at the height of your camera and not your feet! You also need to define the `RespawnPos` for the `!r` command using `RespawmPos`
+  Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
 
   Here is a Example of what the `mapdata.json` can look like with both map triggers and manual triggers:
 
