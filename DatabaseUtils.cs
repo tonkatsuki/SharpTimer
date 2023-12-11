@@ -3,6 +3,7 @@ using System.Text.Json;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using MySqlConnector;
 using Nexd.MySQL;
@@ -198,7 +199,8 @@ namespace SharpTimer
         }
 
         [ConsoleCommand("css_jsontodatabase", " ")]
-        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        [RequiresPermissions("@css/root")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void AddJsonTimesToDatabaseCommand(CCSPlayerController? player, CommandInfo command)
         {
             _ = AddJsonTimesToDatabaseAsync(player);
@@ -276,7 +278,8 @@ namespace SharpTimer
         }
 
         [ConsoleCommand("css_databasetojson", " ")]
-        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        [RequiresPermissions("@css/root")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void ExportDatabaseToJsonCommand(CCSPlayerController? player, CommandInfo command)
         {
             _ = ExportDatabaseToJsonAsync(player);
