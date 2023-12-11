@@ -592,7 +592,7 @@ namespace SharpTimer
             Server.NextFrame(() => player.PrintToChat(msgPrefix + $" You are currently {ChatColors.Green}{FormatTime(pbTicks)}"));
         }
 
-        [ConsoleCommand("css_pb", "Tells you the Server record on this map")]
+        [ConsoleCommand("css_sr", "Tells you the Server record on this map")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void SRCommand(CCSPlayerController? player, CommandInfo command)
         {
