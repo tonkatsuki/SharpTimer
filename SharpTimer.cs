@@ -112,6 +112,7 @@ namespace SharpTimer
         public bool isADTimerRunning = false;
         public bool isRankHUDTimerRunning = false;
         public bool removeCrouchFatigueEnabled = true;
+        public int cmdCooldown = 64;
 
         public string beepSound = "sounds/ui/csgo_ui_button_rollover_large.vsnd";
         public string respawnSound = "sounds/ui/menu_accept.vsnd";
@@ -624,7 +625,7 @@ namespace SharpTimer
         {
             if (player == null) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -650,7 +651,7 @@ namespace SharpTimer
         {
             if (player == null) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -680,7 +681,7 @@ namespace SharpTimer
         {
             if (player == null || topEnabled == false) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -735,7 +736,7 @@ namespace SharpTimer
         {
             if (player == null || rankEnabled == false) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -759,7 +760,7 @@ namespace SharpTimer
         {
             if (player == null || rankEnabled == false) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -791,7 +792,7 @@ namespace SharpTimer
         {
             if (player == null || rankEnabled == false) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -834,7 +835,7 @@ namespace SharpTimer
         {
             if (player == null || respawnEnabled == false) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -871,7 +872,7 @@ namespace SharpTimer
         {
             if (player == null || cpEnabled == false) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -923,7 +924,7 @@ namespace SharpTimer
         {
             if (player == null || cpEnabled == false) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -967,7 +968,7 @@ namespace SharpTimer
         {
             if (player == null || !cpEnabled) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;
@@ -1016,7 +1017,7 @@ namespace SharpTimer
         {
             if (player == null || !cpEnabled) return;
 
-            if (playerTimers[player.Slot].TicksSinceLastCmd < 64)
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
                 player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
                 return;

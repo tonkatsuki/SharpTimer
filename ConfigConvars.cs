@@ -17,6 +17,23 @@ namespace SharpTimer
             useMySQL = bool.TryParse(args, out bool useMySQLValue) ? useMySQLValue : args != "0" && useMySQL;
         }
 
+        [ConsoleCommand("sharptimer_command_spam_cooldown", "Defines the time between commands can be called. Default value: 1")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerCmdCooldownConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            if (float.TryParse(args, out float cooldown) && cooldown > 0)
+            {
+                cmdCooldown = (int)(cooldown * 64);
+                Console.WriteLine($"SharpTimer command cooldown set to {cooldown} seconds.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid interval value. Please provide a positive integer.");
+            }
+        }
+
         [ConsoleCommand("sharptimer_respawn_enabled", "Whether !r is enabled by default or not. Default value: true")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void SharpTimerRespawnConvar(CCSPlayerController? player, CommandInfo command)
