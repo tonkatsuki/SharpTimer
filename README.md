@@ -118,9 +118,9 @@ These commands require the `@css/root` admin flag
   ```
 
 ### Adding "Fake" Zone Triggers
-  Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
+* Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
 
-  Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:
+* Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:
 
 ### surf_utopia_njv.json
 ```
