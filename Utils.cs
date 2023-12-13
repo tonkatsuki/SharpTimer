@@ -233,14 +233,14 @@ namespace SharpTimer
                     break;
                 }
             }
-            if(placement > 100)
+            if (placement > 100)
             {
                 return "#100" + "+";
             }
             else
             {
                 return "#" + placement;
-            }        
+            }
         }
 
         public async Task<string> GetPlayerPlacementWithTotal(CCSPlayerController? player, string steamId, int playerSlot)
@@ -345,7 +345,7 @@ namespace SharpTimer
 
         private void LoadConfig()
         {
-            Server.ExecuteCommand("execifexists SharpTimer/config.cfg");
+            Server.ExecuteCommand($"execifexists SharpTimer/config.cfg");
 
             if (srEnabled == true) ServerRecordADtimer();
 
@@ -357,44 +357,41 @@ namespace SharpTimer
 
             currentMapName = Server.MapName;
 
-            string mapdataFileName = "SharpTimer/mapdata.json";
+            string mapdataFileName = $"SharpTimer/MapData/{currentMapName}.json"; // Assuming the map JSON files are in the SharpTimer folder
             string mapdataPath = Path.Join(Server.GameDirectory + "/csgo/cfg", mapdataFileName);
 
             if (File.Exists(mapdataPath))
             {
                 string json = File.ReadAllText(mapdataPath);
-                var mapData = JsonSerializer.Deserialize<Dictionary<string, MapInfo>>(json);
+                var mapInfo = JsonSerializer.Deserialize<MapInfo>(json);
 
-                if (mapData != null && mapData.TryGetValue(currentMapName, out var mapInfo))
+                if (!string.IsNullOrEmpty(mapInfo.RespawnPos))
                 {
-                    if (!string.IsNullOrEmpty(mapInfo.RespawnPos))
-                    {
-                        currentRespawnPos = ParseVector(mapInfo.RespawnPos);
-                    }
-
-                    if (!string.IsNullOrEmpty(mapInfo.MapStartC1) && !string.IsNullOrEmpty(mapInfo.MapStartC2) && !string.IsNullOrEmpty(mapInfo.MapEndC1) && !string.IsNullOrEmpty(mapInfo.MapEndC2))
-                    {
-                        currentMapStartC1 = ParseVector(mapInfo.MapStartC1);
-                        currentMapStartC2 = ParseVector(mapInfo.MapStartC2);
-                        currentMapEndC1 = ParseVector(mapInfo.MapEndC1);
-                        currentMapEndC2 = ParseVector(mapInfo.MapEndC2);
-                        useTriggers = false;
-                    }
-
-                    if (!string.IsNullOrEmpty(mapInfo.MapStartTrigger) && !string.IsNullOrEmpty(mapInfo.MapEndTrigger))
-                    {
-                        currentMapStartTrigger = mapInfo.MapStartTrigger;
-                        currentMapEndTrigger = mapInfo.MapEndTrigger;
-                        useTriggers = true;
-                    }
+                    currentRespawnPos = ParseVector(mapInfo.RespawnPos);
                 }
-                else
+
+                if (!string.IsNullOrEmpty(mapInfo.MapStartC1) && !string.IsNullOrEmpty(mapInfo.MapStartC2) && !string.IsNullOrEmpty(mapInfo.MapEndC1) && !string.IsNullOrEmpty(mapInfo.MapEndC2))
                 {
-                    Console.WriteLine($"Map data not found for map: {currentMapName}! Using default trigger names instead!");
-                    currentMapStartTrigger = "timer_startzone";
-                    currentMapEndTrigger = "timer_endzone";
+                    currentMapStartC1 = ParseVector(mapInfo.MapStartC1);
+                    currentMapStartC2 = ParseVector(mapInfo.MapStartC2);
+                    currentMapEndC1 = ParseVector(mapInfo.MapEndC1);
+                    currentMapEndC2 = ParseVector(mapInfo.MapEndC2);
+                    useTriggers = false;
+                }
+
+                if (!string.IsNullOrEmpty(mapInfo.MapStartTrigger) && !string.IsNullOrEmpty(mapInfo.MapEndTrigger))
+                {
+                    currentMapStartTrigger = mapInfo.MapStartTrigger;
+                    currentMapEndTrigger = mapInfo.MapEndTrigger;
                     useTriggers = true;
                 }
+            }
+            else
+            {
+                Console.WriteLine($"Map data not found for map: {currentMapName}! Using default trigger names instead!");
+                currentMapStartTrigger = "timer_startzone";
+                currentMapEndTrigger = "timer_endzone";
+                useTriggers = true;
             }
         }
     }
