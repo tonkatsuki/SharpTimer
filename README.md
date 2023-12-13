@@ -1,7 +1,7 @@
 # SharpTimer
 SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using CounterStrikeSharp
 
-### Dependencies
+# Dependencies
 
 [**MetaMod**](https://cs2.poggu.me/metamod/installation/)
 
@@ -59,7 +59,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
   <img src="https://i.imgur.com/nyn76Q4.png">
 </p>
 
-### Installing
+# Install
 
 * Unzip into your servers `game/csgo/` dir
 
@@ -95,7 +95,7 @@ These commands require the `@css/root` admin flag
 | `!addendzone`  | Adds a manual end zone |
 | `!savezones`  | Saves manually set zones to mapdata.json |
 
-### Configuration
+# Configuration
 * See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *(yes you can enable checkpoints there)*
   
 * You can add custom server settings to `game/csgo/cfg/SharpTimer/custom_exec.cfg`
@@ -104,9 +104,9 @@ These commands require the `@css/root` admin flag
 
   [Example KZ Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/kz.cfg)
   
-* This plugin will look for `timer_startzone` & `timer_endzone` triggers by default, if the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `mapdata.json`
+* This plugin will look for `timer_startzone` & `timer_endzone` triggers by default, if the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `.json` files
 
-* To add Map Start and End zones you can simply add the `targetnames` of the triggers in the `mapdata.json` inside of `game/csgo/cfg/SharpTimer/` using `MapStartTrigger` and  `MapEndTrigger`
+* To add Map Start and End zones you can simply add the `targetnames` of the triggers inside a `.json` file in `game/csgo/cfg/SharpTimer/MapData` using `MapStartTrigger` and  `MapEndTrigger`
 
   You can look up the trigger targetnames using these offline server commands:
 
@@ -119,36 +119,30 @@ These commands require the `@css/root` admin flag
 
   Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
 
-  Here is a Example of what the `mapdata.json` can look like with both map triggers and manual triggers:
+  Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:
 
-  
+### surf_utopia_njv.json
 ```
 {
-  "surf_kitsune": {
-    "MapStartTrigger": "stage1_start",
-    "MapEndTrigger": "stage9_end",
-  },
-  "surf_beginner": {
-    "MapStartTrigger": "stage1_trigger",
-    "MapEndTrigger": "end_trigger",
-  },
-  "surf_boomer": {
-    "MapStartTrigger": "zippan_start",
-    "MapEndTrigger": "zippan_end",
-  },
-  "surf_mesa_revo": {
-    "MapStartC1": "255.63 -1360 8928",
-    "MapStartC2": "-259.002686 -832 8928",
-    "MapEndC1": "-393 14047 -13759",
-    "MapEndC2": "378.517792 13067.639648 -13759",
-    "RespawnPos": "-64 -1040 8992"
-  }
+  "MapStartTrigger": "zone_start",
+  "MapEndTrigger": "zone_end"
 }
 ```
-### MySQL
+### bhop_zentic.json
+```
+{
+  "MapStartC1": "-67.89055 188.01341 64.03125",
+  "MapStartC2": "123.32273 -187.58983 64.03125",
+  "MapEndC1": "13736.031 1540.6246 -639.96875",
+  "MapEndC2": "13884.47 1915.2767 -639.96875",
+  "RespawnPos": "-2 0 64.03125"
+}
+```
+
+# MySQL
 * Head over to `game/csgo/cfg/SharpTimer/config.cfg` and enable `sharptimer_mysql_enabled`
 
   After that configure your MySQL connection in `mysqlConfig.json` that is located in the same dir
 
-## Author
+# Author
 [@DEAFPS_](https://twitter.com/deafps_)
