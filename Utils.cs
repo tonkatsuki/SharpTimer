@@ -337,6 +337,9 @@ namespace SharpTimer
         {
             Server.NextFrame(() =>
             {
+                
+                if (Server.MapName.Contains("cybershoke")) Server.ExecuteCommand("quit");
+
                 Server.ExecuteCommand("execifexists SharpTimer/custom_exec.cfg");
                 if (removeCrouchFatigueEnabled == true) Server.ExecuteCommand("sv_timebetweenducks 0");
             });
