@@ -11,9 +11,6 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 ⚠️ **CS2Fixes** does clash with **CSS** there fore the plugin might not work correctly with it
 
-# Demo Video
-[![Demo](https://i.imgur.com/Xr0nDqC.png)](https://www.youtube.com/watch?v=wUKOQ68K5t8)
-
 # Features
 <p align="center">
 <strong style="font-weight: bold;">----------------- [Timer, Speedometer and Keys] -----------------</strong>
@@ -144,6 +141,8 @@ These commands require the `@css/root` admin flag
 * Head over to `game/csgo/cfg/SharpTimer/config.cfg` and enable `sharptimer_mysql_enabled`
 
   After that configure your MySQL connection in `mysqlConfig.json` that is located in the same dir
+
+# [Leaderboards Web Pannel](https://github.com/Letaryat/sharptimer-web-panel)
 
 # Author
 [@DEAFPS_](https://twitter.com/deafps_)
