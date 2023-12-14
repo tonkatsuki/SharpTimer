@@ -102,17 +102,22 @@ These commands require the `@css/root` admin flag
 
   [Example KZ Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/kz.cfg)
   
-* This plugin will look for `timer_startzone` & `timer_endzone` triggers by default, if the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `.json` files
-  
 ### Adding Zone Triggers
+* This plugin will look for trigger_multiple entities by default depending what map is being played. By default the plugin tries to hook the followint target names:
+
+| Map Name  | trigger_multiple targetnames |
+| ------------- | ------------- |
+| kz_*  | timer_startzone & timer_endzone  |
+| surf_* | s1_start & map_end  |
+
+* If the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `.json` files
+
 * To add Map Start and End zones you can simply add the `targetnames` of the triggers inside a `.json` file in `game/csgo/cfg/SharpTimer/MapData` using `MapStartTrigger` and  `MapEndTrigger`
 
-  You can look up the trigger targetnames using these offline server commands:
-
+  You can check if a map has built in triggers with the following server commands:
   ```
   sv_cheats true
-  ent_find trigger_multiple (will list all 'zoning' triggers that mapper/port has put in)
-  ent_bbox <targetname> (will draw it in game)
+  ent_find trigger_multiple
   ```
 
 ### Adding "Fake" Zone Triggers
