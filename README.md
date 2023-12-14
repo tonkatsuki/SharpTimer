@@ -57,6 +57,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 </p>
 
 # Install
+* Download the [latest release](https://github.com/DEAFPS/SharpTimer/releases)
 
 * Unzip into your servers `game/csgo/` dir
 
