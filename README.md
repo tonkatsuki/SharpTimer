@@ -5,14 +5,11 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 [**MetaMod**](https://cs2.poggu.me/metamod/installation/)
 
-[**CounterStrikeSharp** *(at least v116)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
+[**CounterStrikeSharp** *(at least v126)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
 
 [**MovementUnlocker** *(optional but recommended)*](https://github.com/Source2ZE/MovementUnlocker)
 
 ⚠️ **CS2Fixes** does clash with **CSS** there fore the plugin might not work correctly with it
-
-# Demo Video
-[![Demo](https://i.imgur.com/Xr0nDqC.png)](https://www.youtube.com/watch?v=wUKOQ68K5t8)
 
 # Features
 <p align="center">
@@ -60,6 +57,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 </p>
 
 # Install
+* Download the [latest release](https://github.com/DEAFPS/SharpTimer/releases)
 
 * Unzip into your servers `game/csgo/` dir
 
@@ -144,6 +142,8 @@ These commands require the `@css/root` admin flag
 * Head over to `game/csgo/cfg/SharpTimer/config.cfg` and enable `sharptimer_mysql_enabled`
 
   After that configure your MySQL connection in `mysqlConfig.json` that is located in the same dir
+
+# [Leaderboards Web Pannel](https://github.com/Letaryat/sharptimer-web-panel)
 
 # Author
 [@DEAFPS_](https://twitter.com/deafps_)
