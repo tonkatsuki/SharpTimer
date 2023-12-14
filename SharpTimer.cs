@@ -784,7 +784,7 @@ namespace SharpTimer
 
             playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
-            if (useTriggers == false && currentRespawnPos == null)
+            if (currentRespawnPos == null)
             {
                 player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnPos found for current map!");
                 return;
