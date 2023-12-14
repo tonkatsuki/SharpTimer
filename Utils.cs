@@ -115,7 +115,7 @@ namespace SharpTimer
             player.PlayerPawn.Value.AbsVelocity.Y = (float)adjustedY;
         }
 
-        private Vector FindStartTriggerPos()
+        private Vector? FindStartTriggerPos()
         {
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
 
@@ -126,7 +126,7 @@ namespace SharpTimer
                     return trigger.CBodyComponent?.SceneNode?.AbsOrigin;
                 }
             }
-            return new Vector(0, 0, 0);
+            return null;
         }
 
         private static Vector ParseVector(string vectorString)

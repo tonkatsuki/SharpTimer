@@ -784,21 +784,25 @@ namespace SharpTimer
 
             playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
-            if (currentRespawnPos == null)
-            {
-                player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnPos found for current map!");
-                return;
-            }
-
             // Remove checkpoints for the current player
             playerCheckpoints.Remove(player.Slot);
 
             if (useTriggers == true)
             {
+                if (FindStartTriggerPos() == null)
+                {
+                    player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnPos found for current map!");
+                    return;
+                }
                 player.PlayerPawn.Value.Teleport(FindStartTriggerPos(), new QAngle(0, 90, 0), new Vector(0, 0, 0));
             }
             else
             {
+                if (currentRespawnPos == null)
+                {
+                    player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnPos found for current map!");
+                    return;
+                }
                 player.PlayerPawn.Value.Teleport(currentRespawnPos, new QAngle(0, 90, 0), new Vector(0, 0, 0));
             }
             playerTimers[player.Slot].IsTimerRunning = false;
