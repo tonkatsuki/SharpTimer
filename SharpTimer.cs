@@ -31,7 +31,7 @@ namespace SharpTimer
         public Vector currentMapStartC2 = new Vector(0, 0, 0);
         public Vector currentMapEndC1 = new Vector(0, 0, 0);
         public Vector currentMapEndC2 = new Vector(0, 0, 0);
-        public Vector currentRespawnPos = new Vector(0, 0, 0);
+        public Vector? currentRespawnPos = null;
 
         public bool useMySQL = false;
 
@@ -784,7 +784,7 @@ namespace SharpTimer
 
             playerTimers[player.Slot].TicksSinceLastCmd = 0;
 
-            if (currentRespawnPos == new Vector(0, 0, 0))
+            if (useTriggers == false && currentRespawnPos == null)
             {
                 player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnPos found for current map!");
                 return;

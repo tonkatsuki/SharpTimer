@@ -388,9 +388,18 @@ namespace SharpTimer
             else
             {
                 Console.WriteLine($"Map data not found for map: {currentMapName}! Using default trigger names instead!");
-                currentMapStartTrigger = "timer_startzone";
-                currentMapEndTrigger = "timer_endzone";
                 useTriggers = true;
+                if(currentMapName.StartsWith("kz_", StringComparison.OrdinalIgnoreCase))
+                {
+                    currentMapStartTrigger = "timer_startzone";
+                    currentMapEndTrigger = "timer_endzone";
+                }
+
+                if(currentMapName.StartsWith("surf_", StringComparison.OrdinalIgnoreCase))
+                {
+                    currentMapStartTrigger = "s1_start";
+                    currentMapEndTrigger = "map_end";
+                }
             }
         }
     }
