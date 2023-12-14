@@ -45,7 +45,6 @@ namespace SharpTimer
             isADTimerRunning = true;
         }
 
-
         private static string FormatTime(int ticks)
         {
             TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
