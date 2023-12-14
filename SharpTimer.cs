@@ -403,7 +403,7 @@ namespace SharpTimer
                 playerTimers[player.Slot].IsAddingEndZone = false;
                 playerTimers[player.Slot].StartZoneC1 = "";
                 playerTimers[player.Slot].StartZoneC2 = "";
-                player.PrintToChat(msgPrefix + $" {ChatColors.Grey}Startzone cancelled...");
+                player.PrintToChat($" {ChatColors.LightPurple}[ZONE TOOL]{ChatColors.Grey}Startzone cancelled...");
             }
             else
             {
@@ -412,8 +412,8 @@ namespace SharpTimer
                 playerTimers[player.Slot].IsAddingStartZone = true;
                 playerTimers[player.Slot].IsAddingEndZone = false;
                 player.PrintToChat($" {ChatColors.LightPurple}[ZONE TOOL]{ChatColors.Default} Please stand on one of opposite the start zone corners and type {ChatColors.Green}!c1 & !c2");
-                player.PrintToCenter(msgPrefix + $" Please stand on one of opposite the start zone corners and type !c1 & !c2");
-                player.PrintToChat(msgPrefix + $" {ChatColors.Grey}Type !addendzone again to cancel...");
+                player.PrintToCenter($" {ChatColors.Grey}Please stand on one of opposite the start zone corners and type !c1 & !c2");
+                player.PrintToChat($" {ChatColors.Grey}Type !addendzone again to cancel...");
                 player.PrintToChat($" {ChatColors.Grey}Commands:!addstartzone, !addendzone,");
                 player.PrintToChat($" {ChatColors.Grey}!addrespawnpos, !savezones");
             }
@@ -432,7 +432,7 @@ namespace SharpTimer
                 playerTimers[player.Slot].IsAddingEndZone = false;
                 playerTimers[player.Slot].EndZoneC1 = "";
                 playerTimers[player.Slot].EndZoneC2 = "";
-                player.PrintToChat(msgPrefix + $" {ChatColors.Grey}Endzone cancelled...");
+                player.PrintToChat($" {ChatColors.LightPurple}[ZONE TOOL]{ChatColors.Grey}Endzone cancelled...");
             }
             else
             {
@@ -496,7 +496,7 @@ namespace SharpTimer
             File.WriteAllText(mapdataPath, updatedJson);
 
             // For example, you might want to print a message to the player
-            player.PrintToChat(msgPrefix + $" Zones saved successfully! {ChatColors.Grey}Reloading data...");
+            player.PrintToChat($" {ChatColors.LightPurple}[ZONE TOOL]{ChatColors.Default}Zones saved successfully! {ChatColors.Grey}Reloading data...");
             Server.ExecuteCommand("mp_restartgame 1");
         }
 
@@ -554,7 +554,7 @@ namespace SharpTimer
             if (playerTimers[player.Slot].IsAddingEndZone == true)
             {
                 playerTimers[player.Slot].EndZoneC2 = positionString;
-                player.PrintToChat(msgPrefix + $" End Zone Corner 2 added!");
+                player.PrintToChat($" {ChatColors.LightPurple}[ZONE TOOL]{ChatColors.Default}End Zone Corner 2 added!");
                 player.PrintToChat($" {ChatColors.Grey}Commands:!addstartzone, !addendzone, !addrespawnpos, !savezones");
                 playerTimers[player.Slot].IsAddingEndZone = false;
             }
