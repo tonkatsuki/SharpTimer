@@ -74,14 +74,13 @@ namespace SharpTimer
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
-                    string SteamID = player.SteamID.ToString();
-                    if (GetPlayerSettingFromDatabase(SteamID, "azerty") == true)
+                    //PlayerSettings
+                    if(useMySQL == true)
                     {
-                        playerTimers[player.Slot].Azerty = true;
-                    }
-                    else
-                    {
-                        playerTimers[player.Slot].Azerty = false;
+                        _ = GetPlayerSettingFromDatabase(player, "Azerty");
+                        _ = GetPlayerSettingFromDatabase(player, "HideTimerHud");
+                        _ = GetPlayerSettingFromDatabase(player, "TimesConnected");
+                        _ = GetPlayerSettingFromDatabase(player, "SoundsEnabled");
                     }
 
                     return HookResult.Continue;
@@ -127,6 +126,7 @@ namespace SharpTimer
                     {
                         var buttons = player.Buttons;
                         string formattedPlayerVel = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString().PadLeft(4, '0');
+                        string formattedPlayerPre = Math.Round(ParseVector(playerTimers[player.Slot].PreSpeed ?? "0 0 0").Length2D()).ToString();
                         string playerTime = FormatTime(playerTimers[player.Slot].TimerTicks);
                         string forwardKey = "W";
                         string leftKey = "A";
@@ -145,7 +145,7 @@ namespace SharpTimer
                         {
                             if (playerTimers[player.Slot].HideTimerHud != true) player.PrintToCenterHtml(
                                 $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='green'>{playerTime}</font><br>" +
-                                $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
+                                $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank}</font><br>" +
                                 $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
@@ -159,7 +159,7 @@ namespace SharpTimer
                         else
                         {
                             if (playerTimers[player.Slot].HideTimerHud != true) player.PrintToCenterHtml(
-                                $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font><br>" +
+                                $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank}</font><br>" +
                                 $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
@@ -177,6 +177,20 @@ namespace SharpTimer
                         if (playerTimers[player.Slot].MovementService != null && removeCrouchFatigueEnabled == true)
                         {
                             if (playerTimers[player.Slot].MovementService.DuckSpeed != 7.0f) playerTimers[player.Slot].MovementService.DuckSpeed = 7.0f;
+                        }
+
+                        if(!player.PlayerPawn.Value.OnGroundLastTick)
+                        {
+                            playerTimers[player.Slot].TicksInAir++;
+                            if(playerTimers[player.Slot].TicksInAir == 1)
+                            {
+                                playerTimers[player.Slot].PreSpeed = $"{player.PlayerPawn.Value.AbsVelocity.X} {player.PlayerPawn.Value.AbsVelocity.Y} {player.PlayerPawn.Value.AbsVelocity.Z}";
+                                //playerTimers[player.Slot].JumpPos = $"{player.Pawn.Value.CBodyComponent?.SceneNode?.AbsOrigin.X} {player.Pawn.Value.CBodyComponent?.SceneNode?.AbsOrigin.Y} {player.Pawn.Value.CBodyComponent?.SceneNode?.AbsOrigin.Z}";
+                            }
+                        }
+                        else
+                        {
+                            playerTimers[player.Slot].TicksInAir = 0;
                         }
 
                         playerTimers[player.Slot].TicksSinceLastCmd++;
@@ -268,7 +282,7 @@ namespace SharpTimer
         private HookResult OnTakeDamage(DynamicHook hook)
             {
                 if (disableDamage == false) return HookResult.Continue;
-                
+
                 var entity = hook.GetParam<CEntityInstance>(0);
                 var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
 
@@ -567,12 +581,12 @@ namespace SharpTimer
             if (playerTimers[player.Slot].Azerty == true)
             {
                 playerTimers[player.Slot].Azerty = false;
-                SavePlayerSettingToDatabase(player.SteamID.ToString(), "azerty", false);
+                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "Azerty", "false");
             }
             else
             {
                 playerTimers[player.Slot].Azerty = true;
-                SavePlayerSettingToDatabase(player.SteamID.ToString(), "azerty", true);
+                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "Azerty", "true");
             }
         }
 
@@ -594,14 +608,44 @@ namespace SharpTimer
             {
                 playerTimers[player.Slot].HideTimerHud = false;
                 player.PrintToChat($"Hide Timer HUD set to: {ChatColors.Green}{playerTimers[player.Slot].HideTimerHud}");
-                SavePlayerSettingToDatabase(player.SteamID.ToString(), "DrawTimerHud", false);
+                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "HideTimerHud", "false");
                 return;
             }
             else
             {
                 playerTimers[player.Slot].HideTimerHud = true;
                 player.PrintToChat($"Hide Timer HUD set to: {ChatColors.Green}{playerTimers[player.Slot].HideTimerHud}");
-                SavePlayerSettingToDatabase(player.SteamID.ToString(), "DrawTimerHud", true);
+                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "HideTimerHud", "true");
+                return;
+            }
+        }
+
+        [ConsoleCommand("css_sounds", "Toggles Sounds")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void SoundsSwitchCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player == null) return;
+
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
+
+            if (playerTimers[player.Slot].SoundsEnabled == true)
+            {
+                playerTimers[player.Slot].SoundsEnabled = false;
+                player.PrintToChat($"Sounds set to: {ChatColors.Green}{playerTimers[player.Slot].SoundsEnabled}");
+                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "SoundsEnabled", "false");
+                return;
+            }
+            else
+            {
+                playerTimers[player.Slot].SoundsEnabled = true;
+                player.PrintToChat($"Sounds set to: {ChatColors.Green}{playerTimers[player.Slot].SoundsEnabled}");
+                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "SoundsEnabled", "true");
                 return;
             }
         }

@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Reflection;
 using System.Text.Json;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -51,37 +52,67 @@ namespace SharpTimer
                     string formattedTime = FormatTime(timerTicks); // Assuming FormatTime method is available
 
                     // Check if the table exists, and create it if necessary
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+                    string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS PlayerRecords (
+                    MapName VARCHAR(255),
+                    SteamID VARCHAR(255),
+                    PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                    TimerTicks INT,
+                    TimesCompleted INT,
+                    FormattedTime VARCHAR(255),
+                    PRIMARY KEY (MapName, SteamID)
+                )";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
                         await createTableCommand.ExecuteNonQueryAsync();
                     }
 
-                    // Check if the record already exists or has a higher timer value
-                    string selectQuery = "SELECT TimerTicks FROM PlayerRecords WHERE MapName = @MapName AND SteamID = @SteamID";
-                    using (var selectCommand = new MySqlCommand(selectQuery, connection))
+                    // Check if all columns from createTableQuery exist
+                    var tableColumnsQuery = "SHOW COLUMNS FROM PlayerRecords";
+                    using (var tableColumnsCommand = new MySqlCommand(tableColumnsQuery, connection))
                     {
-                        selectCommand.Parameters.AddWithValue("@MapName", currentMapName);
-                        selectCommand.Parameters.AddWithValue("@SteamID", steamId);
-
-                        var existingTimerTicks = await selectCommand.ExecuteScalarAsync();
-                        if (existingTimerTicks == null || (int)existingTimerTicks > timerTicks)
+                        using (var reader = await tableColumnsCommand.ExecuteReaderAsync())
                         {
-                            // Update or insert the record
-                            string upsertQuery = "REPLACE INTO PlayerRecords (MapName, SteamID, PlayerName, TimerTicks, FormattedTime) VALUES (@MapName, @SteamID, @PlayerName, @TimerTicks, @FormattedTime)";
-                            using (var upsertCommand = new MySqlCommand(upsertQuery, connection))
-                            {
-                                upsertCommand.Parameters.AddWithValue("@MapName", currentMapName);
-                                upsertCommand.Parameters.AddWithValue("@SteamID", steamId);
-                                upsertCommand.Parameters.AddWithValue("@PlayerName", playerName);
-                                upsertCommand.Parameters.AddWithValue("@TimerTicks", timerTicks);
-                                upsertCommand.Parameters.AddWithValue("@FormattedTime", formattedTime);
+                            var columnsToCheck = new List<string> { "MapName", "SteamID", "PlayerName", "TimerTicks", "TimesCompleted", "FormattedTime" };
 
-                                await upsertCommand.ExecuteNonQueryAsync();
+                            while (await reader.ReadAsync())
+                            {
+                                string columnName = reader["Field"].ToString();
+                                columnsToCheck.Remove(columnName); // Remove the checked columns
+
+                                if (columnsToCheck.Count == 0)
+                                {
+                                    // All columns are present, break the loop
+                                    break;
+                                }
+                            }
+
+                            // If any columns are not present, add them
+                            foreach (var missingColumn in columnsToCheck)
+                            {
+                                var addColumnQuery = $"ALTER TABLE PlayerRecords ADD COLUMN {missingColumn} VARCHAR(255) DEFAULT NULL";
+                                using (var addColumnCommand = new MySqlCommand(addColumnQuery, connection))
+                                {
+                                    await addColumnCommand.ExecuteNonQueryAsync();
+                                }
                             }
                         }
                     }
+
+                    // Update or insert the record
+                    string upsertQuery = "INSERT INTO PlayerRecords (MapName, SteamID, PlayerName, TimerTicks, TimesCompleted, FormattedTime) VALUES (@MapName, @SteamID, @PlayerName, @TimerTicks, 1, @FormattedTime) ON DUPLICATE KEY UPDATE TimesCompleted = TimesCompleted + 1, TimerTicks = IF(@TimerTicks < TimerTicks, @TimerTicks, TimerTicks), FormattedTime = IF(@TimerTicks < TimerTicks, @FormattedTime, FormattedTime)";
+                    using (var upsertCommand = new MySqlCommand(upsertQuery, connection))
+                    {
+                        upsertCommand.Parameters.AddWithValue("@MapName", currentMapName);
+                        upsertCommand.Parameters.AddWithValue("@SteamID", steamId);
+                        upsertCommand.Parameters.AddWithValue("@PlayerName", playerName);
+                        upsertCommand.Parameters.AddWithValue("@TimerTicks", timerTicks);
+                        upsertCommand.Parameters.AddWithValue("@FormattedTime", formattedTime);
+
+                        await upsertCommand.ExecuteNonQueryAsync();
+                    }
                 }
+
                 if (useMySQL == true) _ = HandleSetPlayerPlacementWithTotal(player, steamId, playerSlot);
             }
             catch (Exception ex)
@@ -104,7 +135,7 @@ namespace SharpTimer
                     await connection.OpenAsync();
 
                     // Check if the table exists
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, TimesCompleated INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
                         await createTableCommand.ExecuteNonQueryAsync();
@@ -187,15 +218,112 @@ namespace SharpTimer
             return new Dictionary<string, PlayerRecord>();
         }
 
-        public void SavePlayerSettingToDatabase(string SteamID, string setting, bool state)
+        public async Task SavePlayerStatToDatabase(string SteamID, string stat, string state)
         {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
+                    {
+                        connection.Open();
 
+                        // Check if the table exists, and create it if necessary
+                        string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerSettings (SteamID VARCHAR(255), TimesConnected INT, Azerty bool, HideTimerHud bool, SoundsEnabled bool, PRIMARY KEY (SteamID))";
+                        using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
+                        {
+                            createTableCommand.ExecuteNonQuery();
+                        }
+
+                        // Use SteamID and stat to locate a player in the table and then set stat to the state
+                        string upsertQuery = $"INSERT INTO PlayerSettings (SteamID, {stat}) VALUES (@SteamID, @State) ON DUPLICATE KEY UPDATE {stat} = @State";
+                        using (var upsertCommand = new MySqlCommand(upsertQuery, connection))
+                        {
+                            upsertCommand.Parameters.AddWithValue("@SteamID", SteamID);
+                            upsertCommand.Parameters.AddWithValue("@State", state);
+
+                            upsertCommand.ExecuteNonQuery();
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving player stat to MySQL: {ex.Message}");
+            }
         }
 
-        public bool GetPlayerSettingFromDatabase(string SteamID, string setting)
+        public async Task GetPlayerSettingFromDatabase(CCSPlayerController? player, string setting)
         {
+            // Ensure player is not null
+            if (player != null)
+            {
+                try
+                {
+                    // Fetch the setting state from the database
+                    bool settingState = await Task.Run(() =>
+                    {
+                        using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
+                        {
+                            connection.Open();
 
-            return false;
+                            // Check if the table exists, and create it if necessary
+                            string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerSettings (SteamID VARCHAR(255), TimesConnected INT, PlayerPoints INT, Azerty bool, HideTimerHud bool, SoundsEnabled bool, PRIMARY KEY (SteamID))";
+                            using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
+                            {
+                                createTableCommand.ExecuteNonQuery();
+                            }
+
+                            // Retrieve the setting state for the specified SteamID and setting
+                            string selectQuery = "SELECT SettingState FROM PlayerSettings WHERE SteamID = @SteamID AND SettingName = @SettingName";
+                            using (var selectCommand = new MySqlCommand(selectQuery, connection))
+                            {
+                                selectCommand.Parameters.AddWithValue("@SteamID", player.SteamID);
+                                selectCommand.Parameters.AddWithValue("@SettingName", setting);
+
+                                var result = selectCommand.ExecuteScalar();
+
+                                // Check for DBNull
+                                if (result != null && result != DBNull.Value)
+                                {
+                                    return Convert.ToBoolean(result);
+                                }
+                            }
+
+                            // Default to false if the setting is not found
+                            return false;
+                        }
+                    });
+
+                    // Set the player setting
+                    SetPlayerSetting(player.Slot, setting, settingState);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error getting player setting from database: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Player is null");
+            }
+        }
+
+        public void SetPlayerSetting(int playerSlot, string setting, bool settingState)
+        {
+            // Use reflection to get the property with the specified setting name
+            var property = typeof(PlayerTimerInfo).GetProperty(setting, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+
+            if (property != null && property.PropertyType == typeof(bool))
+            {
+                // Set the value of the property for the specified player slot
+                property.SetValue(playerTimers[playerSlot], settingState);
+            }
+            else
+            {
+                Console.WriteLine($"Invalid setting: {setting}");
+            }
+
         }
 
         [ConsoleCommand("css_jsontodatabase", " ")]

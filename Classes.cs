@@ -33,12 +33,18 @@ namespace SharpTimer
         public int TimerTicks { get; set; }
         public string? TimerRank { get; set; }
         public string? PB { get; set; }
+        public string? PreSpeed { get; set; }
+        public int? TicksInAir { get; set; }
         public int CheckpointIndex { get; set; }
         public bool Azerty { get; set; }
         public bool HideTimerHud { get; set; }
+        public bool SoundsEnabled { get; set; }
+        public int TimesConnected { get; set; }
         public int TicksSinceLastCmd { get; set; }
         public Dictionary<string, PlayerRecord>? SortedCachedRecords { get; set; }
         public CCSPlayer_MovementServices? MovementService { get; set; }
+
+        //admin stuff
         public bool IsAddingStartZone { get; set; }
         public string? StartZoneC1 { get; set; }
         public string? StartZoneC2 { get; set; }
