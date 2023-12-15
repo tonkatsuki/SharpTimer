@@ -4,6 +4,8 @@ using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
 using System.Text.Json;
@@ -16,54 +18,6 @@ namespace SharpTimer
     [MinimumApiVersion(125)]
     public partial class SharpTimer : BasePlugin
     {
-        private Dictionary<int, PlayerTimerInfo> playerTimers = new Dictionary<int, PlayerTimerInfo>();
-        private Dictionary<int, List<PlayerCheckpoint>> playerCheckpoints = new Dictionary<int, List<PlayerCheckpoint>>();
-        private Dictionary<int, CCSPlayerController> connectedPlayers = new Dictionary<int, CCSPlayerController>();
-
-        public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => "0.1.1";
-        public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
-        public override string ModuleDescription => "A simple CSS Timer Plugin";
-        public string msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
-        public string currentMapStartTrigger = "trigger_startzone";
-        public string currentMapEndTrigger = "trigger_endzone";
-        public Vector currentMapStartC1 = new Vector(0, 0, 0);
-        public Vector currentMapStartC2 = new Vector(0, 0, 0);
-        public Vector currentMapEndC1 = new Vector(0, 0, 0);
-        public Vector currentMapEndC2 = new Vector(0, 0, 0);
-        public Vector? currentRespawnPos = null;
-
-        public bool useMySQL = false;
-
-        public bool useTriggers = true;
-        public bool respawnEnabled = true;
-        public bool topEnabled = true;
-        public bool rankEnabled = true;
-        public bool pbComEnabled = true;
-        public bool removeLegsEnabled = true;
-        public bool cpEnabled = false;
-        public bool removeCpRestrictEnabled = false;
-        public bool connectMsgEnabled = true;
-        public bool srEnabled = true;
-        public int srTimer = 120;
-        public int rankHUDTimer = 170;
-        public bool resetTriggerTeleportSpeedEnabled = false;
-        public bool maxStartingSpeedEnabled = true;
-        public int maxStartingSpeed = 320;
-        public bool isADTimerRunning = false;
-        public bool isRankHUDTimerRunning = false;
-        public bool removeCrouchFatigueEnabled = true;
-        public int cmdCooldown = 64;
-
-        public string beepSound = "sounds/ui/csgo_ui_button_rollover_large.vsnd";
-        public string respawnSound = "sounds/ui/menu_accept.vsnd";
-        public string cpSound = "sounds/ui/counter_beep.vsnd";
-        public string cpSoundAir = "sounds/ui/weapon_cant_buy.vsnd";
-        public string tpSound = "sounds/ui/buttonclick.vsnd";
-        public string? mySQLpath;
-        public string? playerRecordsPath;
-        public string? currentMapName;
-
         public override void Load(bool hotReload)
         {
             string recordsFileName = "SharpTimer/player_records.json";
@@ -306,8 +260,27 @@ namespace SharpTimer
                         return HookResult.Continue;
                     });
 
+            VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
+
             Console.WriteLine("[SharpTimer] Plugin Loaded");
         }
+
+        private HookResult OnTakeDamage(DynamicHook hook)
+            {
+                if (disableDamage == false) return HookResult.Continue;
+                
+                var entity = hook.GetParam<CEntityInstance>(0);
+                var player = new CCSPlayerController(new CCSPlayerPawn(entity.Handle).Controller.Value.Handle);
+
+                if(!player.IsValid || player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
+
+                if (disableDamage == true)
+                {
+                    hook.GetParam<CTakeDamageInfo>(1).Damage = 0;
+                }
+
+                return HookResult.Continue;
+            }
 
         private void CheckPlayerActions(CCSPlayerController? player)
         {
@@ -559,6 +532,23 @@ namespace SharpTimer
                 playerTimers[player.Slot].IsAddingEndZone = false;
             }
         }
+
+        /* [ConsoleCommand("css_noclip", "toggles noclip for admin")]
+        [RequiresPermissions("@css/root")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public static void AdminNoclipCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player == null) return;
+
+            if (player.MoveType == (MoveType_t)8)
+            {
+                player.MoveType = (MoveType_t)2;
+            }
+            else
+            {
+                player.MoveType = (MoveType_t)8;
+            }
+        } */
 
         [ConsoleCommand("css_azerty", "Switches layout to AZERTY")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
