@@ -270,12 +270,12 @@ namespace SharpTimer
                         return HookResult.Continue;
                     });
 
-            VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
+            /* VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre); */
 
             Console.WriteLine("[SharpTimer] Plugin Loaded");
         }
 
-        private HookResult OnTakeDamage(DynamicHook hook)
+        /* private HookResult OnTakeDamage(DynamicHook hook)
             {
                 if (disableDamage == false) return HookResult.Continue;
 
@@ -290,7 +290,7 @@ namespace SharpTimer
                 }
 
                 return HookResult.Continue;
-            }
+            } */
 
         private void CheckPlayerActions(CCSPlayerController? player)
         {
