@@ -2,6 +2,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using System.Drawing;
 using System.Text.Json;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
@@ -55,14 +56,6 @@ namespace SharpTimer
             return $"{timeSpan.Minutes:D1}:{secondsWithMilliseconds}";
         }
 
-        private static string FormatTimeold(int ticks)
-        {
-            TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
-            int centiseconds = (int)((ticks % 64) * (100.0 / 64.0));
-
-            return $"{timeSpan.Minutes:D1}:{timeSpan.Seconds:D2}.{centiseconds:D2}";
-        }
-
         private static string FormatTimeDifference(int currentTicks, int previousTicks)
         {
             int differenceTicks = previousTicks - currentTicks;
@@ -76,15 +69,34 @@ namespace SharpTimer
             return $"{sign}{timeDifference.Minutes:D1}:{secondsWithMilliseconds}";
         }
 
-        private static string FormatTimeDifferenceold(int currentTicks, int previousTicks)
+        public void DrawLaserBetween(Vector startPos, Vector endPos)
         {
-            int differenceTicks = previousTicks - currentTicks;
-            string sign = (differenceTicks > 0) ? "-" : "+";
+            CBeam beam = Utilities.CreateEntityByName<CBeam>("beam");
+            if (beam == null)
+            {
+                Console.WriteLine($"Failed to create beam...");
+                return;
+            }
 
-            TimeSpan timeDifference = TimeSpan.FromSeconds(Math.Abs(differenceTicks) / 64.0);
-            int centiseconds = (int)((Math.Abs(differenceTicks) % 64) * (100.0 / 64.0));
+            beam.Render = Color.Blue;
+            beam.Width = 2.0f;
 
-            return $"{sign}{timeDifference.Minutes:D1}:{timeDifference.Seconds:D2}.{centiseconds:D2}";
+            beam.Teleport(startPos, new QAngle(0,0,0), new Vector(0,0,0));
+
+            beam.EndPos.X = endPos.X;
+            beam.EndPos.Y = endPos.Y;
+            beam.EndPos.Z = endPos.Z;
+
+            beam.DispatchSpawn();
+            AddTimer(1.0f, () => { beam.Remove(); }); // destroy after 1s
+        }
+
+        public void DrawLinesOnBoxEdges(Vector corner1, Vector corner2, float height = 50)
+        {
+            DrawLaserBetween(corner1, new Vector(corner2.X, corner1.Y, corner1.Z + height));
+            DrawLaserBetween(corner1, new Vector(corner1.X, corner2.Y, corner1.Z + height));
+            DrawLaserBetween(corner2, new Vector(corner2.X, corner1.Y, corner2.Z + height));
+            DrawLaserBetween(corner2, new Vector(corner1.X, corner2.Y, corner2.Z + height));
         }
 
         static bool IsVectorInsideBox(Vector playerVector, Vector corner1, Vector corner2, float height = 50)
@@ -389,18 +401,25 @@ namespace SharpTimer
             {
                 Console.WriteLine($"Map data not found for map: {currentMapName}! Using default trigger names instead!");
                 useTriggers = true;
-                if(currentMapName.StartsWith("kz_", StringComparison.OrdinalIgnoreCase))
+                if (currentMapName.StartsWith("kz_", StringComparison.OrdinalIgnoreCase))
                 {
                     currentMapStartTrigger = "timer_startzone";
                     currentMapEndTrigger = "timer_endzone";
                 }
 
-                if(currentMapName.StartsWith("surf_", StringComparison.OrdinalIgnoreCase))
+                if (currentMapName.StartsWith("surf_", StringComparison.OrdinalIgnoreCase))
                 {
                     currentMapStartTrigger = "s1_start";
                     currentMapEndTrigger = "map_end";
                 }
             }
+
+            if(useTriggers == false)
+            {
+                DrawLinesOnBoxEdges(currentMapStartC1, currentMapStartC2, 50);
+                DrawLinesOnBoxEdges(currentMapEndC1, currentMapEndC2, 50);
+            }
+
         }
     }
 }

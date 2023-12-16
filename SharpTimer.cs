@@ -77,10 +77,11 @@ namespace SharpTimer
                     //PlayerSettings
                     if(useMySQL == true)
                     {
-                        _ = GetPlayerSettingFromDatabase(player, "Azerty");
-                        _ = GetPlayerSettingFromDatabase(player, "HideTimerHud");
-                        _ = GetPlayerSettingFromDatabase(player, "TimesConnected");
-                        _ = GetPlayerSettingFromDatabase(player, "SoundsEnabled");
+                        //_ = GetPlayerSettingFromDatabase(player, "Azerty");
+                        //_ = GetPlayerSettingFromDatabase(player, "HideTimerHud");
+                        //_ = GetPlayerSettingFromDatabase(player, "TimesConnected");
+                        //_ = GetPlayerSettingFromDatabase(player, "SoundsEnabled");
+                        //_ = SavePlayerStatToDatabase(player.SteamID.ToString(), "MouseSens", player.GetConVarValue("sensitivity").ToString());
                     }
 
                     return HookResult.Continue;
@@ -107,6 +108,7 @@ namespace SharpTimer
                     {
                         connectedPlayers.Remove(player.Slot);
                         playerTimers.Remove(player.Slot);
+                        playerCheckpoints.Remove(player.Slot);
                         Console.WriteLine($"Removed player {connectedPlayer.PlayerName} with UserID {connectedPlayer.UserId} from connectedPlayers");
 
                         if (connectMsgEnabled == true) Server.PrintToChatAll($"{msgPrefix}Player {ChatColors.Red}{connectedPlayer.PlayerName} {ChatColors.White}disconnected!");
@@ -271,6 +273,13 @@ namespace SharpTimer
                             return HookResult.Continue;
                         }
 
+                        return HookResult.Continue;
+                    });
+
+            HookEntityOutput("logic_auto", "*", (CEntityIOOutput? output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
+                    {
+                        
+                        output = null;
                         return HookResult.Continue;
                     });
 
@@ -581,13 +590,36 @@ namespace SharpTimer
             if (playerTimers[player.Slot].Azerty == true)
             {
                 playerTimers[player.Slot].Azerty = false;
-                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "Azerty", "false");
+                //if(useMySQL == true) _ = SavePlayerBoolStatToDatabase(player.SteamID.ToString(), "Azerty", false);
             }
             else
             {
                 playerTimers[player.Slot].Azerty = true;
-                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "Azerty", "true");
+                //if(useMySQL == true) _ = SavePlayerBoolStatToDatabase(player.SteamID.ToString(), "Azerty", true);
             }
+        }
+
+        [ConsoleCommand("css_sens", "changes your sens")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void SensCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player == null) return;
+
+            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
+            {
+                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                return;
+            }
+
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
+
+            var sens = command.GetArg(1);
+
+            player.ExecuteClientCommand($"sensitivity {sens}");
+
+            //if(useMySQL == true) _ = SavePlayerFloatStatToDatabase(player.SteamID.ToString(), "MouseSens", sens);
+
+            player.PrintToChat($"Your sens is now: {sens}");
         }
 
         [ConsoleCommand("css_hud", "Draws/Hides The timer HUD")]
@@ -608,14 +640,14 @@ namespace SharpTimer
             {
                 playerTimers[player.Slot].HideTimerHud = false;
                 player.PrintToChat($"Hide Timer HUD set to: {ChatColors.Green}{playerTimers[player.Slot].HideTimerHud}");
-                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "HideTimerHud", "false");
+                //if(useMySQL == true) _ = SavePlayerBoolStatToDatabase(player.SteamID.ToString(), "HideTimerHud", false);
                 return;
             }
             else
             {
                 playerTimers[player.Slot].HideTimerHud = true;
                 player.PrintToChat($"Hide Timer HUD set to: {ChatColors.Green}{playerTimers[player.Slot].HideTimerHud}");
-                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "HideTimerHud", "true");
+                //if(useMySQL == true) _ = SavePlayerBoolStatToDatabase(player.SteamID.ToString(), "HideTimerHud", true);
                 return;
             }
         }
@@ -638,14 +670,14 @@ namespace SharpTimer
             {
                 playerTimers[player.Slot].SoundsEnabled = false;
                 player.PrintToChat($"Sounds set to: {ChatColors.Green}{playerTimers[player.Slot].SoundsEnabled}");
-                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "SoundsEnabled", "false");
+                //if(useMySQL == true) _ = SavePlayerBoolStatToDatabase(player.SteamID.ToString(), "SoundsEnabled", false);
                 return;
             }
             else
             {
                 playerTimers[player.Slot].SoundsEnabled = true;
                 player.PrintToChat($"Sounds set to: {ChatColors.Green}{playerTimers[player.Slot].SoundsEnabled}");
-                _ = SavePlayerStatToDatabase(player.SteamID.ToString(), "SoundsEnabled", "true");
+                //if(useMySQL == true) _ = SavePlayerBoolStatToDatabase(player.SteamID.ToString(), "SoundsEnabled", true);
                 return;
             }
         }
