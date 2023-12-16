@@ -78,25 +78,43 @@ namespace SharpTimer
                 return;
             }
 
-            beam.Render = Color.Blue;
-            beam.Width = 2.0f;
+            beam.Render = Color.LimeGreen;
+            beam.Width = 1.5f;
 
-            beam.Teleport(startPos, new QAngle(0,0,0), new Vector(0,0,0));
+            beam.Teleport(startPos, new QAngle(0, 0, 0), new Vector(0, 0, 0));
 
             beam.EndPos.X = endPos.X;
             beam.EndPos.Y = endPos.Y;
             beam.EndPos.Z = endPos.Z;
 
             beam.DispatchSpawn();
-            AddTimer(1.0f, () => { beam.Remove(); }); // destroy after 1s
+            Console.WriteLine("Laser spawned");
         }
 
-        public void DrawLinesOnBoxEdges(Vector corner1, Vector corner2, float height = 50)
+        public void DrawWireframe(Vector corner1, Vector corner2, float height = 50)
         {
-            DrawLaserBetween(corner1, new Vector(corner2.X, corner1.Y, corner1.Z + height));
-            DrawLaserBetween(corner1, new Vector(corner1.X, corner2.Y, corner1.Z + height));
-            DrawLaserBetween(corner2, new Vector(corner2.X, corner1.Y, corner2.Z + height));
-            DrawLaserBetween(corner2, new Vector(corner1.X, corner2.Y, corner2.Z + height));
+            Vector corner3 = new Vector(corner2.X, corner1.Y, corner1.Z);
+            Vector corner4 = new Vector(corner1.X, corner2.Y, corner1.Z);
+
+            Vector corner1_top = new Vector(corner1.X, corner1.Y, corner1.Z + height);
+            Vector corner2_top = new Vector(corner2.X, corner2.Y, corner2.Z + height);
+            Vector corner3_top = new Vector(corner2.X, corner1.Y, corner1.Z + height);
+            Vector corner4_top = new Vector(corner1.X, corner2.Y, corner1.Z + height);
+
+            DrawLaserBetween(corner1, corner3);
+            DrawLaserBetween(corner1, corner4);
+            DrawLaserBetween(corner2, corner3);
+            DrawLaserBetween(corner2, corner4);
+
+            DrawLaserBetween(corner1_top, corner3_top);
+            DrawLaserBetween(corner1_top, corner4_top);
+            DrawLaserBetween(corner2_top, corner3_top);
+            DrawLaserBetween(corner2_top, corner4_top);
+
+            DrawLaserBetween(corner1, corner1_top);
+            DrawLaserBetween(corner2, corner2_top);
+            DrawLaserBetween(corner3, corner3_top);
+            DrawLaserBetween(corner4, corner4_top);
         }
 
         static bool IsVectorInsideBox(Vector playerVector, Vector corner1, Vector corner2, float height = 50)
@@ -136,6 +154,20 @@ namespace SharpTimer
                 if (trigger.Entity.Name == currentMapStartTrigger)
                 {
                     return trigger.CBodyComponent?.SceneNode?.AbsOrigin;
+                }
+            }
+            return null;
+        }
+
+        private QAngle? FindStartTriggerAng()
+        {
+            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+
+            foreach (var trigger in triggers)
+            {
+                if (trigger.Entity.Name == currentMapStartTrigger)
+                {
+                    return trigger.CBodyComponent?.SceneNode?.AbsRotation;
                 }
             }
             return null;
@@ -414,10 +446,25 @@ namespace SharpTimer
                 }
             }
 
-            if(useTriggers == false)
+            if (useTriggers == false)
             {
-                DrawLinesOnBoxEdges(currentMapStartC1, currentMapStartC2, 50);
-                DrawLinesOnBoxEdges(currentMapEndC1, currentMapEndC2, 50);
+                DrawWireframe(currentMapStartC1, currentMapStartC2, 50);
+                DrawWireframe(currentMapEndC1, currentMapEndC2, 50);
+            }
+            else
+            {
+                //find a way to bbox triggers
+
+                var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+
+                foreach (var trigger in triggers)
+                {
+                    if (trigger.Entity.Name == currentMapStartTrigger)
+                    {
+                        trigger.Effects = 0;
+                        Console.WriteLine($"{trigger.Effects}");
+                    }
+                }
             }
 
         }

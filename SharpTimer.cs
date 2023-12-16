@@ -323,7 +323,7 @@ namespace SharpTimer
                 }
             }
 
-            if (IsVectorInsideBox(playerPos, currentMapEndC1, currentMapEndC2) && currentMapStartC1 != incorrectVector && currentMapStartC2 != incorrectVector && currentMapEndC1 != incorrectVector && currentMapEndC2 != incorrectVector)
+            if (IsVectorInsideBox(playerPos, currentMapEndC1, currentMapEndC2) && !IsVectorInsideBox(playerPos, currentMapStartC1, currentMapStartC2) && currentMapStartC1 != incorrectVector && currentMapStartC2 != incorrectVector && currentMapEndC1 != incorrectVector && currentMapEndC2 != incorrectVector)
             {
                 OnTimerStop(player);
             }
@@ -860,7 +860,7 @@ namespace SharpTimer
                     player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnPos found for current map!");
                     return;
                 }
-                player.PlayerPawn.Value.Teleport(FindStartTriggerPos(), new QAngle(0, 90, 0), new Vector(0, 0, 0));
+                player.PlayerPawn.Value.Teleport(FindStartTriggerPos(), FindStartTriggerAng(), new Vector(0, 0, 0));
             }
             else
             {
