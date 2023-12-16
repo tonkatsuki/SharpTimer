@@ -2,6 +2,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using System.Drawing;
 using System.Text.Json;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
@@ -45,6 +46,38 @@ namespace SharpTimer
             isADTimerRunning = true;
         }
 
+        private bool IsValidStartTriggerName(string triggerName)
+        {
+            if (triggerName.Contains("map_start") || 
+                triggerName.Contains("s1_start") || 
+                triggerName.Contains("stage1_start") ||
+                triggerName.Contains("timer_startzone") ||
+                triggerName.Contains("zone_start") ||
+                triggerName.Contains(currentMapStartTrigger))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+        }
+
+        private bool IsValidEndTriggerName(string triggerName)
+        {
+            if (triggerName.Contains("map_end") || 
+                triggerName.Contains("timer_endzone") ||
+                triggerName.Contains("zone_end") ||
+                triggerName.Contains(currentMapEndTrigger))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+        }
+
         private static string FormatTime(int ticks)
         {
             TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
@@ -53,14 +86,6 @@ namespace SharpTimer
             string secondsWithMilliseconds = $"{timeSpan.Seconds:D2}.{(ticks % 64) * (1000.0 / 64.0):000}";
 
             return $"{timeSpan.Minutes:D1}:{secondsWithMilliseconds}";
-        }
-
-        private static string FormatTimeold(int ticks)
-        {
-            TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
-            int centiseconds = (int)((ticks % 64) * (100.0 / 64.0));
-
-            return $"{timeSpan.Minutes:D1}:{timeSpan.Seconds:D2}.{centiseconds:D2}";
         }
 
         private static string FormatTimeDifference(int currentTicks, int previousTicks)
@@ -76,15 +101,52 @@ namespace SharpTimer
             return $"{sign}{timeDifference.Minutes:D1}:{secondsWithMilliseconds}";
         }
 
-        private static string FormatTimeDifferenceold(int currentTicks, int previousTicks)
+        public static void DrawLaserBetween(Vector startPos, Vector endPos)
         {
-            int differenceTicks = previousTicks - currentTicks;
-            string sign = (differenceTicks > 0) ? "-" : "+";
+            CBeam beam = Utilities.CreateEntityByName<CBeam>("beam");
+            if (beam == null)
+            {
+                Console.WriteLine($"Failed to create beam...");
+                return;
+            }
 
-            TimeSpan timeDifference = TimeSpan.FromSeconds(Math.Abs(differenceTicks) / 64.0);
-            int centiseconds = (int)((Math.Abs(differenceTicks) % 64) * (100.0 / 64.0));
+            beam.Render = Color.LimeGreen;
+            beam.Width = 1.5f;
 
-            return $"{sign}{timeDifference.Minutes:D1}:{timeDifference.Seconds:D2}.{centiseconds:D2}";
+            beam.Teleport(startPos, new QAngle(0, 0, 0), new Vector(0, 0, 0));
+
+            beam.EndPos.X = endPos.X;
+            beam.EndPos.Y = endPos.Y;
+            beam.EndPos.Z = endPos.Z;
+
+            beam.DispatchSpawn();
+            Console.WriteLine("Laser spawned");
+        }
+
+        public void DrawWireframe(Vector corner1, Vector corner2, float height = 50)
+        {
+            Vector corner3 = new Vector(corner2.X, corner1.Y, corner1.Z);
+            Vector corner4 = new Vector(corner1.X, corner2.Y, corner1.Z);
+
+            Vector corner1_top = new Vector(corner1.X, corner1.Y, corner1.Z + height);
+            Vector corner2_top = new Vector(corner2.X, corner2.Y, corner2.Z + height);
+            Vector corner3_top = new Vector(corner2.X, corner1.Y, corner1.Z + height);
+            Vector corner4_top = new Vector(corner1.X, corner2.Y, corner1.Z + height);
+
+            DrawLaserBetween(corner1, corner3);
+            DrawLaserBetween(corner1, corner4);
+            DrawLaserBetween(corner2, corner3);
+            DrawLaserBetween(corner2, corner4);
+
+            DrawLaserBetween(corner1_top, corner3_top);
+            DrawLaserBetween(corner1_top, corner4_top);
+            DrawLaserBetween(corner2_top, corner3_top);
+            DrawLaserBetween(corner2_top, corner4_top);
+
+            DrawLaserBetween(corner1, corner1_top);
+            DrawLaserBetween(corner2, corner2_top);
+            DrawLaserBetween(corner3, corner3_top);
+            DrawLaserBetween(corner4, corner4_top);
         }
 
         static bool IsVectorInsideBox(Vector playerVector, Vector corner1, Vector corner2, float height = 50)
@@ -387,20 +449,31 @@ namespace SharpTimer
             }
             else
             {
-                Console.WriteLine($"Map data not found for map: {currentMapName}! Using default trigger names instead!");
+                Console.WriteLine($"Map data json not found for map: {currentMapName}! Using default trigger names instead!");
                 useTriggers = true;
-                if(currentMapName.StartsWith("kz_", StringComparison.OrdinalIgnoreCase))
-                {
-                    currentMapStartTrigger = "timer_startzone";
-                    currentMapEndTrigger = "timer_endzone";
-                }
+            }
 
-                if(currentMapName.StartsWith("surf_", StringComparison.OrdinalIgnoreCase))
+            if (useTriggers == false)
+            {
+                DrawWireframe(currentMapStartC1, currentMapStartC2, 50);
+                DrawWireframe(currentMapEndC1, currentMapEndC2, 50);
+            }
+            else
+            {
+                //find a way to bbox triggers
+
+                var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+
+                foreach (var trigger in triggers)
                 {
-                    currentMapStartTrigger = "s1_start";
-                    currentMapEndTrigger = "map_end";
+                    if (trigger.Entity.Name == currentMapStartTrigger)
+                    {
+                        trigger.Effects = 0;
+                        Console.WriteLine($"{trigger.Effects}");
+                    }
                 }
             }
+
         }
     }
 }

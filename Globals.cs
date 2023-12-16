@@ -11,10 +11,13 @@ namespace SharpTimer
         private Dictionary<int, CCSPlayerController> connectedPlayers = new Dictionary<int, CCSPlayerController>();
 
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => "0.1.1";
+        public override string ModuleVersion => "0.1.2";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
+        public string primaryHUDcolor = "green";
+        public string secondaryHUDcolor = "orange";
+        public string tertiaryHUDcolor = "white";
         public string currentMapStartTrigger = "trigger_startzone";
         public string currentMapEndTrigger = "trigger_endzone";
         public Vector currentMapStartC1 = new Vector(0, 0, 0);

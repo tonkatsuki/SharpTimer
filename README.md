@@ -103,12 +103,16 @@ These commands require the `@css/root` admin flag
   [Example KZ Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/kz.cfg)
   
 ### Adding Zone Triggers
-* This plugin will look for trigger_multiple entities by default depending what map is being played. By default the plugin tries to hook the followint target names:
+* This plugin will look for trigger_multiple entities by default depending what map is being played. By default the plugin tries to hook the following target names:
 
-| Map Name  | trigger_multiple targetnames |
+| Start targetname  | End targetname |
 | ------------- | ------------- |
-| kz_*  | timer_startzone & timer_endzone  |
-| surf_* | s1_start & map_end  |
+| timer_startzone  | timer_endzone  |
+| zone_start | zone_end |
+| map_start | map_end  |
+| s1_start |   |
+| stage1_start |   |
+
 
 * If the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `.json` files
 
