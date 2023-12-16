@@ -69,7 +69,7 @@ namespace SharpTimer
             return $"{sign}{timeDifference.Minutes:D1}:{secondsWithMilliseconds}";
         }
 
-        public void DrawLaserBetween(Vector startPos, Vector endPos)
+        public static void DrawLaserBetween(Vector startPos, Vector endPos)
         {
             CBeam beam = Utilities.CreateEntityByName<CBeam>("beam");
             if (beam == null)
@@ -154,20 +154,6 @@ namespace SharpTimer
                 if (trigger.Entity.Name == currentMapStartTrigger)
                 {
                     return trigger.CBodyComponent?.SceneNode?.AbsOrigin;
-                }
-            }
-            return null;
-        }
-
-        private QAngle? FindStartTriggerAng()
-        {
-            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
-
-            foreach (var trigger in triggers)
-            {
-                if (trigger.Entity.Name == currentMapStartTrigger)
-                {
-                    return trigger.CBodyComponent?.SceneNode?.AbsRotation;
                 }
             }
             return null;

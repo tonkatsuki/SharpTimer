@@ -82,7 +82,7 @@ namespace SharpTimer
                         }
                     }
                 }
-                if (useMySQL == true) _ = HandleSetPlayerPlacementWithTotal(player, steamId, playerSlot);
+                if (useMySQL == true) _ = RankCommandHandler(player, player.SteamID.ToString(), player.Slot, true);
             }
             catch (Exception ex)
             {
