@@ -146,10 +146,10 @@ namespace SharpTimer
                         if (playerTimers[player.Slot].IsTimerRunning)
                         {
                             if (playerTimers[player.Slot].HideTimerHud != true) player.PrintToCenterHtml(
-                                $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='green'>{playerTime}</font><br>" +
-                                $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>" +
+                                $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font><br>" +
+                                $"<font color='{tertiaryHUDcolor}'>Speed:</font> <font color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank} | PB: {playerTimers[player.Slot].PB}</font><br>" +
-                                $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
+                                $"<font color='{tertiaryHUDcolor}'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
@@ -161,9 +161,9 @@ namespace SharpTimer
                         else
                         {
                             if (playerTimers[player.Slot].HideTimerHud != true) player.PrintToCenterHtml(
-                                $"<font color='white'>Speed:</font> <font color='orange'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>" +
+                                $"<font color='{tertiaryHUDcolor}'>Speed:</font> <font color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>" +
                                 $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank} | PB: {playerTimers[player.Slot].PB}</font><br>" +
-                                $"<font color='white'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
+                                $"<font color='{tertiaryHUDcolor}'>{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
                                 $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +

@@ -15,6 +15,9 @@ namespace SharpTimer
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
+        public string primaryHUDcolor = "green";
+        public string secondaryHUDcolor = "orange";
+        public string tertiaryHUDcolor = "white";
         public string currentMapStartTrigger = "trigger_startzone";
         public string currentMapEndTrigger = "trigger_endzone";
         public Vector currentMapStartC1 = new Vector(0, 0, 0);

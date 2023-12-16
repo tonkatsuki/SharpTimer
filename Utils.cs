@@ -430,6 +430,12 @@ namespace SharpTimer
                     currentMapStartTrigger = "s1_start";
                     currentMapEndTrigger = "map_end";
                 }
+
+                if (currentMapName.StartsWith("bhop_", StringComparison.OrdinalIgnoreCase))
+                {
+                    currentMapStartTrigger = "s1_start";
+                    currentMapEndTrigger = "map_end";
+                }
             }
 
             if (useTriggers == false)

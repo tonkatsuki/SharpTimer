@@ -200,5 +200,53 @@ namespace SharpTimer
 
             msgPrefix = $" {ChatColors.Green} {args} {ChatColors.White}";
         }
+
+        [ConsoleCommand("sharptimer_hud_primary_color", "Primary Color for Timer HUD. Default value: green")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerPrimaryHUDcolor(CCSPlayerController? player, CommandInfo command)
+        {
+
+            string args = command.ArgString.Trim();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                primaryHUDcolor = $"green";
+                return;
+            }
+
+            primaryHUDcolor = $"{args}";
+        }
+
+        [ConsoleCommand("sharptimer_hud_secondary_color", "Secondary Color for Timer HUD. Default value: orange")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerSecondaryHUDcolor(CCSPlayerController? player, CommandInfo command)
+        {
+
+            string args = command.ArgString.Trim();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                secondaryHUDcolor = $"orange";
+                return;
+            }
+
+            secondaryHUDcolor = $"{args}";
+        }
+
+        [ConsoleCommand("sharptimer_hud_tertiary_color", "Tertiary Color for Timer HUD. Default value: white")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerTertiaryHUDcolor(CCSPlayerController? player, CommandInfo command)
+        {
+
+            string args = command.ArgString.Trim();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                tertiaryHUDcolor = $"white";
+                return;
+            }
+
+            tertiaryHUDcolor = $"{args}";
+        }
     }
 }
