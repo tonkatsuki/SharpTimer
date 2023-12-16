@@ -52,6 +52,7 @@ namespace SharpTimer
                 triggerName.Contains("s1_start") || 
                 triggerName.Contains("stage1_start") ||
                 triggerName.Contains("timer_startzone") ||
+                triggerName.Contains("zone_start") ||
                 triggerName.Contains(currentMapStartTrigger))
                 {
                     return true;
@@ -66,6 +67,7 @@ namespace SharpTimer
         {
             if (triggerName.Contains("map_end") || 
                 triggerName.Contains("timer_endzone") ||
+                triggerName.Contains("zone_end") ||
                 triggerName.Contains(currentMapEndTrigger))
                 {
                     return true;
