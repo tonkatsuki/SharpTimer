@@ -46,6 +46,36 @@ namespace SharpTimer
             isADTimerRunning = true;
         }
 
+        private bool IsValidStartTriggerName(string triggerName)
+        {
+            if (triggerName.Contains("map_start") || 
+                triggerName.Contains("s1_start") || 
+                triggerName.Contains("stage1_start") ||
+                triggerName.Contains("timer_startzone") ||
+                triggerName.Contains(currentMapStartTrigger))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+        }
+
+        private bool IsValidEndTriggerName(string triggerName)
+        {
+            if (triggerName.Contains("map_end") || 
+                triggerName.Contains("timer_endzone") ||
+                triggerName.Contains(currentMapEndTrigger))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+        }
+
         private static string FormatTime(int ticks)
         {
             TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
@@ -417,25 +447,8 @@ namespace SharpTimer
             }
             else
             {
-                Console.WriteLine($"Map data not found for map: {currentMapName}! Using default trigger names instead!");
+                Console.WriteLine($"Map data json not found for map: {currentMapName}! Using default trigger names instead!");
                 useTriggers = true;
-                if (currentMapName.StartsWith("kz_", StringComparison.OrdinalIgnoreCase))
-                {
-                    currentMapStartTrigger = "timer_startzone";
-                    currentMapEndTrigger = "timer_endzone";
-                }
-
-                if (currentMapName.StartsWith("surf_", StringComparison.OrdinalIgnoreCase))
-                {
-                    currentMapStartTrigger = "s1_start";
-                    currentMapEndTrigger = "map_end";
-                }
-
-                if (currentMapName.StartsWith("bhop_", StringComparison.OrdinalIgnoreCase))
-                {
-                    currentMapStartTrigger = "s1_start";
-                    currentMapEndTrigger = "map_end";
-                }
             }
 
             if (useTriggers == false)

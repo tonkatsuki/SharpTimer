@@ -209,13 +209,13 @@ namespace SharpTimer
 
                         if (!player.PawnIsAlive || player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
 
-                        if (caller.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
+                        if (IsValidEndTriggerName(caller.Entity.Name) && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
                         {
                             OnTimerStop(player);
                             return HookResult.Continue;
                         }
 
-                        if (caller.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
+                        if (IsValidStartTriggerName(caller.Entity.Name) && player.IsValid && playerTimers.ContainsKey(player.Slot))
                         {
                             playerTimers[player.Slot].IsTimerRunning = false;
                             playerTimers[player.Slot].TimerTicks = 0;
@@ -239,13 +239,7 @@ namespace SharpTimer
 
                         if (!player.PawnIsAlive || player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
 
-                        if (caller.Entity.Name == currentMapEndTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
-                        {
-                            OnTimerStop(player);
-                            return HookResult.Continue;
-                        }
-
-                        if (caller.Entity.Name == currentMapStartTrigger && player.IsValid && playerTimers.ContainsKey(player.Slot))
+                        if (IsValidStartTriggerName(caller.Entity.Name) && player.IsValid && playerTimers.ContainsKey(player.Slot))
                         {
                             OnTimerStart(player);
                             if (maxStartingSpeedEnabled == true && (float)Math.Sqrt(player.PlayerPawn.Value.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z) > maxStartingSpeed)
