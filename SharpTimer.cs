@@ -33,7 +33,7 @@ namespace SharpTimer
             RegisterEventHandler<EventPlayerConnectFull>((@event, info) =>
             {
                 var player = @event.Userid;
-                
+
 
                 if (player.IsBot || !player.IsValid)
                 {
@@ -70,9 +70,6 @@ namespace SharpTimer
 
                     playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
                     playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
-
-                    player.Pawn.Value.Glow.Glowing = true;
-                    player.Pawn.Value.Glow.GlowColorOverride = Color.OrangeRed;
 
                     //_ = PBCommandHandler(player, player.SteamID.ToString(), player.Slot);
 
