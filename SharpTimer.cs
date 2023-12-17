@@ -33,6 +33,7 @@ namespace SharpTimer
             RegisterEventHandler<EventPlayerConnectFull>((@event, info) =>
             {
                 var player = @event.Userid;
+                
 
                 if (player.IsBot || !player.IsValid)
                 {
@@ -69,6 +70,9 @@ namespace SharpTimer
 
                     playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
                     playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
+
+                    player.Pawn.Value.Glow.Glowing = true;
+                    player.Pawn.Value.Glow.GlowColorOverride = Color.OrangeRed;
 
                     //_ = PBCommandHandler(player, player.SteamID.ToString(), player.Slot);
 
@@ -202,20 +206,20 @@ namespace SharpTimer
 
             HookEntityOutput("trigger_multiple", "OnStartTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
                     {
-                        if (activator.DesignerName != "player" || useTriggers == false)
+                        if (activator.DesignerName != "player" || useTriggers == false || activator == null || caller == null)
                             return HookResult.Continue;
 
                         var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
 
-                        if (!player.PawnIsAlive || player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
+                        if (!player.PawnIsAlive || player == null || !connectedPlayers.ContainsKey(player.Slot) || caller.Entity.Name == null) return HookResult.Continue;
 
-                        if (IsValidEndTriggerName(caller.Entity.Name) && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
+                        if (IsValidEndTriggerName(caller.Entity.Name.ToString()) && player.IsValid && playerTimers.ContainsKey(player.Slot) && playerTimers[player.Slot].IsTimerRunning)
                         {
                             OnTimerStop(player);
                             return HookResult.Continue;
                         }
 
-                        if (IsValidStartTriggerName(caller.Entity.Name) && player.IsValid && playerTimers.ContainsKey(player.Slot))
+                        if (IsValidStartTriggerName(caller.Entity.Name.ToString()) && player.IsValid && playerTimers.ContainsKey(player.Slot))
                         {
                             playerTimers[player.Slot].IsTimerRunning = false;
                             playerTimers[player.Slot].TimerTicks = 0;
@@ -232,14 +236,14 @@ namespace SharpTimer
 
             HookEntityOutput("trigger_multiple", "OnEndTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
                     {
-                        if (activator.DesignerName != "player" || useTriggers == false)
+                        if (activator.DesignerName != "player" || useTriggers == false || activator == null || caller == null)
                             return HookResult.Continue;
 
                         var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value.Handle);
 
-                        if (!player.PawnIsAlive || player == null || !connectedPlayers.ContainsKey(player.Slot)) return HookResult.Continue;
+                        if (!player.PawnIsAlive || player == null || !connectedPlayers.ContainsKey(player.Slot) || caller.Entity.Name == null) return HookResult.Continue;
 
-                        if (IsValidStartTriggerName(caller.Entity.Name) && player.IsValid && playerTimers.ContainsKey(player.Slot))
+                        if (IsValidStartTriggerName(caller.Entity.Name.ToString()) && player.IsValid && playerTimers.ContainsKey(player.Slot))
                         {
                             OnTimerStart(player);
                             if (maxStartingSpeedEnabled == true && (float)Math.Sqrt(player.PlayerPawn.Value.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z) > maxStartingSpeed)

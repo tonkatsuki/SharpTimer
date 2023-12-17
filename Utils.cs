@@ -183,12 +183,14 @@ namespace SharpTimer
 
             foreach (var trigger in triggers)
             {
-                if (trigger.Entity.Name == currentMapStartTrigger)
+                if(trigger == null || trigger.Entity.Name == null) continue;
+
+                if (IsValidStartTriggerName(trigger.Entity.Name.ToString()))
                 {
                     return trigger.CBodyComponent?.SceneNode?.AbsOrigin;
                 }
             }
-            return null;
+            return new Vector(0,0,0);
         }
 
         private static Vector ParseVector(string vectorString)
