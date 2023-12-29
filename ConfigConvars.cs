@@ -8,6 +8,40 @@ namespace SharpTimer
 {
     public partial class SharpTimer
     {
+        [ConsoleCommand("sharptimer_hostname", "Default Server Hostname.")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerServerHostname(CCSPlayerController? player, CommandInfo command)
+        {
+
+            string args = command.ArgString.Trim();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                defaultServerHostname = $"A SharpTimer Server";
+                return;
+            }
+
+            defaultServerHostname = $"{args}";
+        }
+
+        [ConsoleCommand("sharptimer_autoset_mapinfo_hostname_enabled", "Whether Map Name and Map Tier (if available) should be put into the hostname or not. Default value: false")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerHostnameConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            autosetHostname = bool.TryParse(args, out bool autosetHostnameValue) ? autosetHostnameValue : args != "0" && autosetHostname;
+        }
+
+        [ConsoleCommand("sharptimer_debug_enabled", "Default value: false")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerConPrintConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            enableDebug = bool.TryParse(args, out bool enableDebugValue) ? enableDebugValue : args != "0" && enableDebug;
+        }
+        
         [ConsoleCommand("sharptimer_mysql_enabled", "Whether player times should be put into a mysql database by default or not. Default value: false")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void SharpTimerMySQLConvar(CCSPlayerController? player, CommandInfo command)
@@ -26,11 +60,11 @@ namespace SharpTimer
             if (float.TryParse(args, out float cooldown) && cooldown > 0)
             {
                 cmdCooldown = (int)(cooldown * 64);
-                Console.WriteLine($"SharpTimer command cooldown set to {cooldown} seconds.");
+                SharpTimerConPrint($"SharpTimer command cooldown set to {cooldown} seconds.");
             }
             else
             {
-                Console.WriteLine("Invalid interval value. Please provide a positive integer.");
+                SharpTimerConPrint("Invalid command cooldown value. Please provide a positive integer.");
             }
         }
 
@@ -61,6 +95,15 @@ namespace SharpTimer
             rankEnabled = bool.TryParse(args, out bool rankEnabledValue) ? rankEnabledValue : args != "0" && rankEnabled;
         }
 
+        [ConsoleCommand("sharptimer_goto_enabled", "Whether !goto is enabled by default or not. Default value: false")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerGoToConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            goToEnabled = bool.TryParse(args, out bool goToEnabledValue) ? goToEnabledValue : args != "0" && goToEnabled;
+        }
+
         [ConsoleCommand("sharptimer_remove_legs", "Whether Legs should be removed or not. Default value: true")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void SharpTimerRemoveLegsConvar(CCSPlayerController? player, CommandInfo command)
@@ -79,14 +122,14 @@ namespace SharpTimer
             disableDamage = bool.TryParse(args, out bool disableDamageValue) ? disableDamageValue : args != "0" && disableDamage;
         }
 
-        /* [ConsoleCommand("sharptimer_remove_collision", "Whether Player collision should be removed or not. Default value: true")]
+        [ConsoleCommand("sharptimer_remove_collision", "Whether Player collision should be removed or not. Default value: true")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void SharpTimerRemoveCollisionConvar(CCSPlayerController? player, CommandInfo command)
         {
             string args = command.ArgString;
 
             removeCollisionEnabled = bool.TryParse(args, out bool removeCollisionEnabledValue) ? removeCollisionEnabledValue : args != "0" && removeCollisionEnabled;
-        } */
+        }
 
         [ConsoleCommand("sharptimer_checkpoints_enabled", "Whether !cp, !tp and !prevcp are enabled by default or not. Default value: false")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
@@ -133,12 +176,21 @@ namespace SharpTimer
             if (int.TryParse(args, out int speed) && speed > 0)
             {
                 maxStartingSpeed = speed;
-                Console.WriteLine($"SharpTimer max trigger speed set to {speed}.");
+                SharpTimerConPrint($"SharpTimer max trigger speed set to {speed}.");
             }
             else
             {
-                Console.WriteLine("Invalid interval value. Please provide a positive integer.");
+                SharpTimerConPrint("Invalid max trigger speed value. Please provide a positive integer.");
             }
+        }
+
+        [ConsoleCommand("sharptimer_connect_commands_msg_enabled", "Whether commands on join messages are enabled by default or not. Default value: true")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerConnectCmdMSGConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            cmdJoinMsgEnabled = bool.TryParse(args, out bool cmdJoinMsgEnabledValue) ? cmdJoinMsgEnabledValue : args != "0" && cmdJoinMsgEnabled;
         }
 
         [ConsoleCommand("sharptimer_connectmsg_enabled", "Whether connect/disconnect messages are enabled by default or not. Default value: true")]
@@ -168,20 +220,46 @@ namespace SharpTimer
             srEnabled = bool.TryParse(args, out bool srEnabledValue) ? srEnabledValue : args != "0" && srEnabled;
         }
 
+        [ConsoleCommand("sharptimer_velo_bar_enabled", "Whether the alternative speedometer is enabled by default or not. Default value: false")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerAltVeloConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            alternativeSpeedometer = bool.TryParse(args, out bool alternativeSpeedometerValue) ? alternativeSpeedometerValue : args != "0" && alternativeSpeedometer;
+        }
+
+        [ConsoleCommand("sharptimer_velo_bar_max_speed", "The alternative speedometer max speed. Default value: 3000")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerAltVeloMaxSpeedConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            if (int.TryParse(args, out int interval) && interval > 0)
+            {
+                altVeloMaxSpeed = interval;
+                SharpTimerConPrint($"SharpTimer Alternative Velo Max Speed set to {interval} units/s.");
+            }
+            else
+            {
+                SharpTimerConPrint("Invalid Alternative Velo Max Speed. Please provide a positive integer.");
+            }
+        }
+
         [ConsoleCommand("sharptimer_sr_ad_timer", "Interval how often SR shall be printed to chat. Default value: 120")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
-        public void SharpTimerMaxSpeedConvar(CCSPlayerController? player, CommandInfo command)
+        public void SharpTimerMaxSRSpeedConvar(CCSPlayerController? player, CommandInfo command)
         {
             string args = command.ArgString;
 
             if (int.TryParse(args, out int interval) && interval > 0)
             {
                 srTimer = interval;
-                Console.WriteLine($"SharpTimer interval set to {interval} seconds.");
+                SharpTimerConPrint($"SharpTimer sr ad interval set to {interval} seconds.");
             }
             else
             {
-                Console.WriteLine("Invalid interval value. Please provide a positive integer.");
+                SharpTimerConPrint("Invalid sr ad interval value. Please provide a positive integer.");
             }
         }
 
@@ -194,11 +272,11 @@ namespace SharpTimer
 
             if (string.IsNullOrEmpty(args))
             {
-                msgPrefix = $" {ChatColors.Green} [SharpTimer] {ChatColors.White}";
+                msgPrefix = $" {ParseColorToSymbol(primaryHUDcolor)} [SharpTimer] {ChatColors.White}";
                 return;
             }
 
-            msgPrefix = $" {ChatColors.Green} {args} {ChatColors.White}";
+            msgPrefix = $" {ParseColorToSymbol(primaryHUDcolor)} {args} {ChatColors.White}";
         }
 
         [ConsoleCommand("sharptimer_hud_primary_color", "Primary Color for Timer HUD. Default value: green")]
@@ -247,6 +325,71 @@ namespace SharpTimer
             }
 
             tertiaryHUDcolor = $"{args}";
+        }
+
+        [ConsoleCommand("sharptimer_fake_trigger_height", " ")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerFakeTriggerHeightConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            if (float.TryParse(args, out float height) && height > 0)
+            {
+                fakeTriggerHeight = height;
+                SharpTimerConPrint($"SharpTimer fake trigger height set to {height} units.");
+            }
+            else
+            {
+                SharpTimerConPrint("Invalid fake trigger height value. Please provide a positive integer.");
+            }
+        }
+
+        [ConsoleCommand("sharptimer_remote_data_bhop", "Override for bhop remote_data")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerRemoteDataOverrideBhop(CCSPlayerController? player, CommandInfo command)
+        {
+
+            string args = command.ArgString.Trim();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                remoteBhopDataSource = $"https://raw.githubusercontent.com/DEAFPS/SharpTimer/remote_data/bhop_.json";
+                return;
+            }
+
+            remoteBhopDataSource = $"{args}";
+        }
+
+        [ConsoleCommand("sharptimer_remote_data_kz", "Override for kz remote_data")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerRemoteDataOverrideKZ(CCSPlayerController? player, CommandInfo command)
+        {
+
+            string args = command.ArgString.Trim();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                remoteBhopDataSource = $"https://raw.githubusercontent.com/DEAFPS/SharpTimer/remote_data/kz_.json";
+                return;
+            }
+
+            remoteKZDataSource = $"{args}";
+        }
+
+        [ConsoleCommand("sharptimer_remote_data_surf", "Override for surf remote_data")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerRemoteDataOverrideSurf(CCSPlayerController? player, CommandInfo command)
+        {
+
+            string args = command.ArgString.Trim();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                remoteBhopDataSource = $"https://raw.githubusercontent.com/DEAFPS/SharpTimer/remote_data/surf_.json";
+                return;
+            }
+
+            remoteSurfDataSource = $"{args}";
         }
     }
 }
