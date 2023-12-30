@@ -56,6 +56,7 @@ namespace SharpTimer
 
                     playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
                     playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
+                    playerTimers[player.Slot].StageRecords = new Dictionary<int, int>();
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
@@ -162,6 +163,8 @@ namespace SharpTimer
                     }
 
                     if (!IsAllowedPlayer(player) || caller.Entity.Name == null) return HookResult.Continue;
+
+                    HandlePlayerStageTimes(player, caller.Handle);
 
                     if (IsValidEndTriggerName(caller.Entity.Name.ToString()) && IsAllowedPlayer(player) && playerTimers[player.Slot].IsTimerRunning && !playerTimers[player.Slot].IsTimerBlocked)
                     {
@@ -433,29 +436,9 @@ namespace SharpTimer
             playerTimers[player.Slot].IsTimerRunning = false;
 
             string timeDifference = "";
-            char ifFirstTimeColor;
-            if (previousRecordTicks != 0)
-            {
-                timeDifference = FormatTimeDifference(currentTicks, previousRecordTicks);
-                ifFirstTimeColor = ChatColors.Red;
-            }
-            else
-            {
-                ifFirstTimeColor = ChatColors.Yellow;
-            }
+            if (previousRecordTicks != 0) timeDifference = FormatTimeDifference(currentTicks, previousRecordTicks);
 
-            if (currentTicks < previousRecordTicks)
-            {
-                Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the map in: {ChatColors.Green}[{FormatTime(currentTicks)}]! {timeDifference}");
-            }
-            else if (currentTicks > previousRecordTicks)
-            {
-                Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the map in: {ifFirstTimeColor}[{FormatTime(currentTicks)}]! {timeDifference}");
-            }
-            else
-            {
-                Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the map in: {ChatColors.Yellow}[{FormatTime(currentTicks)}]! (No change in time)");
-            }
+            Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the map in: {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(currentTicks)}]{ChatColors.White}! {timeDifference}");
 
             if (useMySQL == false) _ = RankCommandHandler(player, player.SteamID.ToString(), player.Slot, player.PlayerName, true);
 
@@ -476,29 +459,9 @@ namespace SharpTimer
             playerTimers[player.Slot].IsBonusTimerRunning = false;
 
             string timeDifference = "";
-            char ifFirstTimeColor;
-            if (previousRecordTicks != 0)
-            {
-                timeDifference = FormatTimeDifference(currentTicks, previousRecordTicks);
-                ifFirstTimeColor = ChatColors.Red;
-            }
-            else
-            {
-                ifFirstTimeColor = ChatColors.Yellow;
-            }
+            if (previousRecordTicks != 0) timeDifference = FormatTimeDifference(currentTicks, previousRecordTicks);
 
-            if (currentTicks < previousRecordTicks)
-            {
-                Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the Bonus{bonusX} in: {ChatColors.Green}[{FormatTime(currentTicks)}]! {timeDifference}");
-            }
-            else if (currentTicks > previousRecordTicks)
-            {
-                Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the Bonus{bonusX} in: {ifFirstTimeColor}[{FormatTime(currentTicks)}]! {timeDifference}");
-            }
-            else
-            {
-                Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the Bonus{bonusX} in: {ChatColors.Yellow}[{FormatTime(currentTicks)}]! (No change in time)");
-            }
+            Server.PrintToChatAll(msgPrefix + $"{ParseColorToSymbol(primaryHUDcolor)}{player.PlayerName} {ChatColors.White}just finished the Bonus{bonusX} in: {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(currentTicks)}]{ChatColors.White}! {timeDifference}");
 
             if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {beepSound}");
         }

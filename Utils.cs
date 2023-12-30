@@ -234,6 +234,38 @@ namespace SharpTimer
             }
         }
 
+        private void HandlePlayerStageTimes(CCSPlayerController player, nint triggerHandle)
+        {
+            if (stageTriggers.ContainsKey(triggerHandle) && IsAllowedPlayer(player))
+            {
+                SharpTimerDebug($"Player {player.PlayerName} has a stage trigger with handle {triggerHandle}");
+                if (playerTimers[player.Slot].StageRecords != null)
+                {
+                    SharpTimerDebug($"Player {player.PlayerName} has Stage Records dictionary.");
+
+                    if (stageTriggers[triggerHandle] != 1 && stageTriggers[triggerHandle] != null) // skip stage 1
+                    {
+                        // compare current stage with last stage time
+                        int previousStageTime = playerTimers[player.Slot].StageRecords.ContainsKey(stageTriggers[triggerHandle])
+                            ? playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]]
+                            : 0;
+
+                        if (previousStageTime != 0)
+                        {
+                            player.PrintToChat(msgPrefix + $"Entering stage {stageTriggers[triggerHandle]}: {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}][{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                        }
+                    }
+
+                    playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
+                    SharpTimerDebug($"Player {player.PlayerName} Entering stage {stageTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]]}");
+                }
+                else
+                {
+                    SharpTimerDebug($"Player {player.PlayerName} Stage Records is null");
+                }
+            }
+        }
+
         private string GetSpeedBar(double speed)
         {
             const int barLength = 80;
@@ -313,6 +345,32 @@ namespace SharpTimer
             catch (Exception ex)
             {
                 SharpTimerDebug($"Exception in IsValidStartBonusTriggerName: {ex.Message}");
+                return (false, 0);
+            }
+        }
+
+        private (bool valid, int X) IsValidStageTriggerName(string triggerName)
+        {
+            try
+            {
+                var match = Regex.Match(triggerName, @"^s([1-9][0-9]?|tage[1-9][0-9]?)_start$");
+
+                if (match.Success)
+                {
+                    string numberStr = match.Groups[1].Value;
+                    int X = int.Parse(numberStr);
+                    SharpTimerDebug($"IsValidStageTriggerName: {(true, X)}");
+                    return (true, X);
+                }
+                else
+                {
+                    SharpTimerDebug($"IsValidStageTriggerName: (false, 0)");
+                    return (false, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                SharpTimerDebug($"Exception in IsValidStageTriggerName: {ex.Message}");
                 return (false, 0);
             }
         }
@@ -397,6 +455,7 @@ namespace SharpTimer
         {
             int differenceTicks = previousTicks - currentTicks;
             string sign = (differenceTicks > 0) ? "-" : "+";
+            char signColor = (differenceTicks > 0) ? ChatColors.Green : ChatColors.Red;
 
             TimeSpan timeDifference = TimeSpan.FromSeconds(Math.Abs(differenceTicks) / 64.0);
 
@@ -406,10 +465,10 @@ namespace SharpTimer
             int totalDifferenceMinutes = (int)timeDifference.TotalMinutes;
             if (totalDifferenceMinutes >= 60)
             {
-                return $"{sign}{totalDifferenceMinutes / 60:D1}:{totalDifferenceMinutes % 60:D2}:{secondsWithMilliseconds}";
+                return $"{signColor}{sign}{totalDifferenceMinutes / 60:D1}:{totalDifferenceMinutes % 60:D2}:{secondsWithMilliseconds}";
             }
 
-            return $"{sign}{totalDifferenceMinutes:D1}:{secondsWithMilliseconds}";
+            return $"{signColor}{sign}{totalDifferenceMinutes:D1}:{secondsWithMilliseconds}";
         }
 
         string ParseColorToSymbol(string input)
@@ -666,7 +725,7 @@ namespace SharpTimer
             foreach (var trigger in triggers)
             {
                 if (trigger == null || trigger.Entity.Name == null) continue;
-                
+
                 if (IsValidStartTriggerName(trigger.Entity.Name.ToString()))
                 {
                     return trigger.CBodyComponent?.SceneNode?.AbsOrigin;
@@ -675,16 +734,36 @@ namespace SharpTimer
             return null;
         }
 
+        private void FindStageTriggers()
+        {
+            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+
+            foreach (var trigger in triggers)
+            {
+                if (trigger == null || trigger.Entity.Name == null) continue;
+
+                var (validStage, X) = IsValidStageTriggerName(trigger.Entity.Name.ToString());
+                if (validStage)
+                {
+                    stageTriggers[trigger.Handle] = X;
+                    SharpTimerDebug($"Added Stage {X} Trigger {stageTriggers[trigger.Handle]}");
+                }
+            }
+        }
+
         private void FindBonusStartTriggerPos()
         {
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
 
             foreach (var trigger in triggers)
             {
+                if (trigger == null || trigger.Entity.Name == null) continue;
+
                 var (validStartBonus, bonusX) = IsValidStartBonusTriggerName(trigger.Entity.Name.ToString());
                 if (validStartBonus)
                 {
-                    bonusRespawnPoses[bonusX] = trigger.CBodyComponent?.SceneNode?.AbsOrigin ?? null;
+                    if (trigger.CBodyComponent?.SceneNode?.AbsOrigin == null) continue;
+                    bonusRespawnPoses[bonusX] = trigger.CBodyComponent?.SceneNode?.AbsOrigin;
                     SharpTimerDebug($"Added Bonus !rb {bonusX} pos {bonusRespawnPoses[bonusX]}");
                 }
             }
@@ -1011,9 +1090,6 @@ namespace SharpTimer
 
         private async Task AddMapInfoToHostname()
         {
-            currentMapTier = null; //making sure previous map tier and type are wiped
-            currentMapType = null;
-
             string mapInfoSource = GetMapInfoSource();
             var (mapTier, mapType) = await FineMapInfoFromHTTP(mapInfoSource);
             currentMapTier = mapTier;
@@ -1079,6 +1155,9 @@ namespace SharpTimer
             string mapdataFileName = $"SharpTimer/MapData/{currentMapName}.json";
             string mapdataPath = Path.Join(gameDir + "/csgo/cfg", mapdataFileName);
 
+            currentMapTier = null; //making sure previous map tier and type are wiped
+            currentMapType = null;
+
             _ = AddMapInfoToHostname();
 
             if (triggerPushFixEnabled == true) FindTriggerPushData();
@@ -1116,6 +1195,7 @@ namespace SharpTimer
                 {
                     currentRespawnPos = FindStartTriggerPos();
                     FindBonusStartTriggerPos();
+                    FindStageTriggers();
                     SharpTimerConPrint($"RespawnPos not found, trying to hook trigger pos instead");
                     if (currentRespawnPos == null)
                     {
@@ -1133,6 +1213,7 @@ namespace SharpTimer
                 SharpTimerConPrint($"Trying to hook Triggers supported by default!");
                 currentRespawnPos = FindStartTriggerPos();
                 FindBonusStartTriggerPos();
+                FindStageTriggers();
                 if (currentRespawnPos == null)
                 {
                     SharpTimerConPrint($"Hooking Trigger RespawnPos Failed!");
