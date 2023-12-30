@@ -236,34 +236,108 @@ namespace SharpTimer
 
         private void HandlePlayerStageTimes(CCSPlayerController player, nint triggerHandle)
         {
-            if (stageTriggers.ContainsKey(triggerHandle) && IsAllowedPlayer(player))
+            if(!IsAllowedPlayer(player)) return;
+            
+            if(playerTimers[player.Slot].CurrentStage == stageTriggers[triggerHandle])
             {
-                SharpTimerDebug($"Player {player.PlayerName} has a stage trigger with handle {triggerHandle}");
-                if (playerTimers[player.Slot].StageRecords != null)
+                playerTimers[player.Slot].CurrentStage = stageTriggers[triggerHandle];
+                return;
+            }
+
+            SharpTimerDebug($"Player {player.PlayerName} has a stage trigger with handle {triggerHandle}");
+            int previousStageTime = GetStageTime(player.SteamID.ToString(), stageTriggers[triggerHandle]);
+
+            if (previousStageTime != 0)
+            {
+                player.PrintToChat(msgPrefix + $"Entering stage {stageTriggers[triggerHandle]}: {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}][{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+            }
+
+            if (playerTimers[player.Slot].StageRecords != null && playerTimers[player.Slot].IsTimerRunning == true)
+            {
+                playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
+                SharpTimerDebug($"Player {player.PlayerName} Entering stage {stageTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]]}");
+            }
+
+            playerTimers[player.Slot].CurrentStage = stageTriggers[triggerHandle];
+        }
+
+        public int GetStageTime(string steamId, int stageIndex)
+        {
+            try
+            {
+                string fileName = $"{currentMapName.ToLower()}_stage_times.json";
+                string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/StagePlayerData", fileName);
+                using (var stream = File.OpenRead(playerStageRecordsPath))
+                using (var document = JsonDocument.Parse(stream))
                 {
-                    SharpTimerDebug($"Player {player.PlayerName} has Stage Records dictionary.");
-
-                    if (stageTriggers[triggerHandle] != 1 && stageTriggers[triggerHandle] != null) // skip stage 1
+                    var root = document.RootElement;
+                    if (root.TryGetProperty(steamId, out var playerRecord))
                     {
-                        // compare current stage with last stage time
-                        int previousStageTime = playerTimers[player.Slot].StageRecords.ContainsKey(stageTriggers[triggerHandle])
-                            ? playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]]
-                            : 0;
-
-                        if (previousStageTime != 0)
+                        if (playerRecord.TryGetProperty("StageRecords", out var stageRecords) &&
+                            stageRecords.TryGetProperty(stageIndex.ToString(), out var stageTime))
                         {
-                            player.PrintToChat(msgPrefix + $"Entering stage {stageTriggers[triggerHandle]}: {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}][{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                            return stageTime.GetInt32();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Stage {stageIndex} not found for SteamID {steamId}");
                         }
                     }
-
-                    playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
-                    SharpTimerDebug($"Player {player.PlayerName} Entering stage {stageTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]]}");
-                }
-                else
-                {
-                    SharpTimerDebug($"Player {player.PlayerName} Stage Records is null");
+                    else
+                    {
+                        Console.WriteLine($"SteamID {steamId} not found");
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+
+            return 0;
+        }
+
+        private void DumpPlayerStageTimesToJson(CCSPlayerController player)
+        {
+            string fileName = $"{currentMapName.ToLower()}_stage_times.json";
+            string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/StagePlayerData", fileName);
+
+            var stageTimes = playerTimers[player.Slot].StageRecords;
+
+            var playerStageData = new Dictionary<string, object>
+            {
+                { "StageRecords", stageTimes }
+            };
+
+            if (File.Exists(playerStageRecordsPath))
+            {
+                var existingData = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(playerStageRecordsPath));
+
+                existingData[player.SteamID.ToString()] = playerStageData;
+
+                string jsonData = JsonSerializer.Serialize(existingData, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                File.WriteAllText(playerStageRecordsPath, jsonData);
+            }
+            else
+            {
+                var newData = new Dictionary<string, object>
+                {
+                    { player.SteamID.ToString(), playerStageData }
+                };
+
+                string jsonData = JsonSerializer.Serialize(newData, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                File.WriteAllText(playerStageRecordsPath, jsonData);
+            }
+
+            SharpTimerDebug($"Player {player.PlayerName} stage times for map {currentMapName} dumped to {playerStageRecordsPath}");
         }
 
         private string GetSpeedBar(double speed)
@@ -736,6 +810,7 @@ namespace SharpTimer
 
         private void FindStageTriggers()
         {
+            stageTriggers.Clear();
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
 
             foreach (var trigger in triggers)
@@ -746,13 +821,14 @@ namespace SharpTimer
                 if (validStage)
                 {
                     stageTriggers[trigger.Handle] = X;
-                    SharpTimerDebug($"Added Stage {X} Trigger {stageTriggers[trigger.Handle]}");
+                    SharpTimerDebug($"Added Stage {X} Trigger {trigger.Handle}");
                 }
             }
         }
 
         private void FindBonusStartTriggerPos()
         {
+            bonusRespawnPoses.Clear();
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
 
             foreach (var trigger in triggers)
@@ -773,6 +849,7 @@ namespace SharpTimer
         {
             if (triggerPushFixEnabled)
             {
+                triggerPushData.Clear();
                 var trigger_pushers = Utilities.FindAllEntitiesByDesignerName<CTriggerPush>("trigger_push");
 
                 foreach (var trigger_push in trigger_pushers)

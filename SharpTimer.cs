@@ -164,7 +164,14 @@ namespace SharpTimer
 
                     if (!IsAllowedPlayer(player) || caller.Entity.Name == null) return HookResult.Continue;
 
-                    HandlePlayerStageTimes(player, caller.Handle);
+                    if (stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] != 1 && IsAllowedPlayer(player))
+                    {
+                        HandlePlayerStageTimes(player, caller.Handle);
+                    }
+                    else if (stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] == 1)
+                    {
+                        playerTimers[player.Slot].CurrentStage = stageTriggers[caller.Handle];
+                    }
 
                     if (IsValidEndTriggerName(caller.Entity.Name.ToString()) && IsAllowedPlayer(player) && playerTimers[player.Slot].IsTimerRunning && !playerTimers[player.Slot].IsTimerBlocked)
                     {
@@ -433,6 +440,7 @@ namespace SharpTimer
 
             SavePlayerTime(player, currentTicks);
             if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks, player.SteamID.ToString(), player.PlayerName, player.Slot);
+            if (stageTriggers.Any()) DumpPlayerStageTimesToJson(player);
             playerTimers[player.Slot].IsTimerRunning = false;
 
             string timeDifference = "";
