@@ -1,7 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
@@ -57,6 +56,7 @@ namespace SharpTimer
                     playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
                     playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
                     playerTimers[player.Slot].StageRecords = new Dictionary<int, int>();
+                    playerTimers[player.Slot].CurrentStage = 0;
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
@@ -187,6 +187,7 @@ namespace SharpTimer
                         playerTimers[player.Slot].IsBonusTimerRunning = false;
                         playerTimers[player.Slot].BonusTimerTicks = 0;
                         playerCheckpoints.Remove(player.Slot);
+                        if (stageTriggers.Any()) playerTimers[player.Slot].StageRecords.Clear(); //remove previous stage times if the map has stages
 
                         if (maxStartingSpeedEnabled == true && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed)
                         {
@@ -209,7 +210,7 @@ namespace SharpTimer
 
                     var (validStartBonus, startBonusX) = IsValidStartBonusTriggerName(caller.Entity.Name.ToString());
 
-                    if (validStartBonus && IsAllowedPlayer(player) && playerTimers[player.Slot].IsBonusTimerRunning && !playerTimers[player.Slot].IsTimerBlocked)
+                    if (validStartBonus && IsAllowedPlayer(player) && !playerTimers[player.Slot].IsTimerBlocked)
                     {
                         playerTimers[player.Slot].IsTimerRunning = false;
                         playerTimers[player.Slot].TimerTicks = 0;
@@ -433,6 +434,13 @@ namespace SharpTimer
         {
             if (!IsAllowedPlayer(player) || playerTimers[player.Slot].IsTimerRunning == false) return;
 
+            if (stageTriggers.Any() && stageTriggers.Keys.Count != playerTimers[player.Slot].CurrentStage)
+            {
+                player.PrintToChat(msgPrefix + $"Error Saving Time: Player stage does not match final map stage {stageTriggers.Keys.Count}");
+                playerTimers[player.Slot].IsTimerRunning = false;
+                return;
+            }
+
             if (useTriggers) SharpTimerDebug($"Stopping Timer for {player.PlayerName}");
 
             int currentTicks = playerTimers[player.Slot].TimerTicks;
@@ -440,7 +448,6 @@ namespace SharpTimer
 
             SavePlayerTime(player, currentTicks);
             if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks, player.SteamID.ToString(), player.PlayerName, player.Slot);
-            if (stageTriggers.Any()) DumpPlayerStageTimesToJson(player);
             playerTimers[player.Slot].IsTimerRunning = false;
 
             string timeDifference = "";

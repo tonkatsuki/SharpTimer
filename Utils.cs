@@ -106,7 +106,7 @@ namespace SharpTimer
             var timerLine = playerTimers[player.Slot].IsBonusTimerRunning
                 ? $"<font color='gray'>Bonus: {playerTimers[player.Slot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font><br>"
                 : playerTimers[player.Slot].IsTimerRunning
-                    ? $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font><br>"
+                    ? $"<font class='fontSize-s' color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font> {(playerTimers[player.Slot].CurrentStage != 0 ? $"<font class='fontSize-s' color='gray'>Stage: {playerTimers[player.Slot].CurrentStage}/{stageTriggerCount}</font>" : "")}<br>"
                     : "";
 
             var veloLine = $"<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>";
@@ -236,9 +236,9 @@ namespace SharpTimer
 
         private void HandlePlayerStageTimes(CCSPlayerController player, nint triggerHandle)
         {
-            if(!IsAllowedPlayer(player)) return;
-            
-            if(playerTimers[player.Slot].CurrentStage == stageTriggers[triggerHandle])
+            if (!IsAllowedPlayer(player)) return;
+
+            if (playerTimers[player.Slot].CurrentStage == stageTriggers[triggerHandle])
             {
                 playerTimers[player.Slot].CurrentStage = stageTriggers[triggerHandle];
                 return;
@@ -267,6 +267,13 @@ namespace SharpTimer
             {
                 string fileName = $"{currentMapName.ToLower()}_stage_times.json";
                 string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/StagePlayerData", fileName);
+
+                if (!File.Exists(playerStageRecordsPath))
+                {
+                    //file doesnt exist so create it
+                    File.WriteAllText(playerStageRecordsPath, "{}");
+                }
+
                 using (var stream = File.OpenRead(playerStageRecordsPath))
                 using (var document = JsonDocument.Parse(stream))
                 {
@@ -280,18 +287,14 @@ namespace SharpTimer
                         }
                         else
                         {
-                            Console.WriteLine($"Stage {stageIndex} not found for SteamID {steamId}");
+                            SharpTimerDebug($"Stage {stageIndex} not found for SteamID {steamId}");
                         }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"SteamID {steamId} not found");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                SharpTimerDebug($"An error occurred in GetStageTime: {ex.Message}");
             }
 
             return 0;
@@ -382,6 +385,7 @@ namespace SharpTimer
         {
             try
             {
+                if (string.IsNullOrEmpty(triggerName)) return false;
                 string[] validStartTriggers = { "map_start", "s1_start", "stage1_start", "timer_startzone", "zone_start", currentMapStartTrigger };
                 return validStartTriggers.Contains(triggerName);
             }
@@ -398,16 +402,25 @@ namespace SharpTimer
         }
 
         private (bool valid, int X) IsValidStartBonusTriggerName(string triggerName)
-        {
+        {         
             try
             {
-                var match = Regex.Match(triggerName, @"^b([1-9][0-9]?|onus[1-9][0-9]?)_start$");
+                if (string.IsNullOrEmpty(triggerName)) return (false, 0);
+                var match_surf = Regex.Match(triggerName, @"^b([1-9][0-9]?|onus[1-9][0-9]?)_start$");
+                var match_kz = Regex.Match(triggerName, @"^timer_bonus([1-9][0-9]?)_startzone$");
 
-                if (match.Success)
+                if (match_surf.Success)
                 {
-                    string numberStr = match.Groups[1].Value;
+                    string numberStr = match_surf.Groups[1].Value;
                     int X = int.Parse(numberStr);
-                    SharpTimerDebug($"IsValidStartBonusTriggerName: {(true, X)}");
+                    SharpTimerDebug($"IsValidStartBonusTriggerName Surf: {(true, X)}");
+                    return (true, X);
+                }
+                else if (match_kz.Success)
+                {
+                    string numberStr = match_kz.Groups[1].Value;
+                    int X = int.Parse(numberStr);
+                    SharpTimerDebug($"IsValidStartBonusTriggerName KZ: {(true, X)}");
                     return (true, X);
                 }
                 else
@@ -427,6 +440,7 @@ namespace SharpTimer
         {
             try
             {
+                if (string.IsNullOrEmpty(triggerName)) return (false, 0);
                 var match = Regex.Match(triggerName, @"^s([1-9][0-9]?|tage[1-9][0-9]?)_start$");
 
                 if (match.Success)
@@ -450,9 +464,10 @@ namespace SharpTimer
         }
 
         private bool IsValidEndTriggerName(string triggerName)
-        {
+        {          
             try
             {
+                if (string.IsNullOrEmpty(triggerName)) return false;
                 string[] validEndTriggers = { "map_end", "timer_endzone", "zone_end", currentMapEndTrigger };
                 return validEndTriggers.Contains(triggerName);
             }
@@ -472,11 +487,20 @@ namespace SharpTimer
         {
             try
             {
-                var match = Regex.Match(triggerName, @"^b([1-9][0-9]?|onus[1-9][0-9]?)_end$");
+                if (string.IsNullOrEmpty(triggerName)) return (false, 0);
+                var match_surf = Regex.Match(triggerName, @"^b([1-9][0-9]?|onus[1-9][0-9]?)_end$");
+                var match_kz = Regex.Match(triggerName, @"^timer_bonus([1-9][0-9]?)_endzone$");
 
-                if (match.Success)
+                if (match_surf.Success)
                 {
-                    string numberStr = match.Groups[1].Value;
+                    string numberStr = match_surf.Groups[1].Value;
+                    int X = int.Parse(numberStr);
+                    if (X != playerTimers[playerSlot].BonusStage) return (false, 0);
+                    return (true, X);
+                }
+                else if (match_kz.Success)
+                {
+                    string numberStr = match_kz.Groups[1].Value;
                     int X = int.Parse(numberStr);
                     if (X != playerTimers[playerSlot].BonusStage) return (false, 0);
                     return (true, X);
@@ -824,6 +848,8 @@ namespace SharpTimer
                     SharpTimerDebug($"Added Stage {X} Trigger {trigger.Handle}");
                 }
             }
+            stageTriggerCount = stageTriggers.Count;
+            SharpTimerDebug($"Found a max of {stageTriggerCount} Stage triggers");
         }
 
         private void FindBonusStartTriggerPos()
@@ -1122,6 +1148,7 @@ namespace SharpTimer
 
                 string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(playerRecordsPath, updatedJson);
+                if (stageTriggers.Any()) DumpPlayerStageTimesToJson(player);
             }
         }
 

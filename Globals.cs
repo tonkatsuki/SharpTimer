@@ -28,6 +28,7 @@ namespace SharpTimer
         public Vector? currentRespawnPos = null;
         private Dictionary<int, Vector?> bonusRespawnPoses = new Dictionary<int, Vector?>();
         private Dictionary<nint, int> stageTriggers = new Dictionary<nint, int>();
+        private int stageTriggerCount;
         public string? currentMapType = null;
         public int? currentMapTier = null;
 

@@ -582,6 +582,7 @@ namespace SharpTimer
 
                 // Remove checkpoints for the current player
                 playerCheckpoints.Remove(player.Slot);
+                if (stageTriggers.Any()) playerTimers[player.Slot].StageRecords.Clear(); //remove previous stage times if the map has stages
 
                 if (currentRespawnPos != null)
                 {
@@ -609,12 +610,12 @@ namespace SharpTimer
             }
         }
 
-        [ConsoleCommand("css_stop", "Stops your timer")]
+        [ConsoleCommand("css_timer", "Stops your timer")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void StopTimer(CCSPlayerController? player, CommandInfo command)
         {
             if (!IsAllowedPlayer(player)) return;
-            SharpTimerDebug($"{player.PlayerName} calling css_stop...");
+            SharpTimerDebug($"{player.PlayerName} calling css_timer...");
 
             if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
             {
@@ -633,7 +634,7 @@ namespace SharpTimer
             playerTimers[player.Slot].TimerTicks = 0;
             playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
             if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {beepSound}");
-            SharpTimerDebug($"{player.PlayerName} css_stop to {playerTimers[player.Slot].IsTimerBlocked}");
+            SharpTimerDebug($"{player.PlayerName} css_timer to {playerTimers[player.Slot].IsTimerBlocked}");
         }
 
         [ConsoleCommand("css_stver", "Prints SharpTimer Version")]
@@ -672,7 +673,7 @@ namespace SharpTimer
 
             if (!playerTimers[player.Slot].IsTimerBlocked)
             {
-                player.PrintToChat(msgPrefix + $" Please stop your timer using {ParseColorToSymbol(primaryHUDcolor)}!stop{ChatColors.White} first!");
+                player.PrintToChat(msgPrefix + $" Please stop your timer using {ParseColorToSymbol(primaryHUDcolor)}!timer{ChatColors.White} first!");
                 return;
             }
 

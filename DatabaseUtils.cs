@@ -34,7 +34,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Error reading MySQL config file: {ex.Message}");
+                SharpTimerDebug($"Error GetConnectionString: {ex.Message}");
                 return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;CharSet=utf8mb4;";
             }
         }
