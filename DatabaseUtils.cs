@@ -15,7 +15,6 @@ namespace SharpTimer
     {
         private string GetConnectionStringFromConfigFile(string mySQLpath)
         {
-            SharpTimerDebug($"Trying to get a MySQL Connection string from {mySQLpath}");
             try
             {
                 string jsonString = File.ReadAllText(mySQLpath);
@@ -28,13 +27,11 @@ namespace SharpTimer
                 string username = root.GetProperty("MySqlUsername").GetString();
                 string password = root.GetProperty("MySqlPassword").GetString();
                 int port = root.GetProperty("MySqlPort").GetInt32();
-
-                SharpTimerDebug($"Got Connection String!");
                 return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;";
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Error GetConnectionString: {ex.Message}");
+                SharpTimerError($"Error GetConnectionString: {ex.Message}");
                 return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;CharSet=utf8mb4;";
             }
         }
@@ -92,7 +89,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                Server.NextFrame(() => SharpTimerDebug($"Error saving player {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} to MySQL: {ex.Message}"));
+                Server.NextFrame(() => SharpTimerError($"Error saving player {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} to MySQL: {ex.Message}"));
             }
         }
 
@@ -139,7 +136,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Error getting previous player {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} from MySQL: {ex.Message}");
+                SharpTimerError($"Error getting previous player {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} from MySQL: {ex.Message}");
             }
 
             return 0;
@@ -194,7 +191,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Error getting sorted records from MySQL: {ex.Message}");
+                SharpTimerError($"Error getting sorted records from MySQL: {ex.Message}");
             }
 
             return new Dictionary<string, PlayerRecord>();
@@ -286,7 +283,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Error adding JSON times to the database: {ex.Message}");
+                SharpTimerError($"Error adding JSON times to the database: {ex.Message}");
             }
         }
 
@@ -350,7 +347,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Error exporting player records to JSON: {ex.Message}");
+                SharpTimerError($"Error exporting player records to JSON: {ex.Message}");
             }
         }
     }

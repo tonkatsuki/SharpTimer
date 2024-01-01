@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 
 
@@ -559,7 +560,7 @@ namespace SharpTimer
             catch (Exception ex)
             {
                 player.PrintToChat(msgPrefix + $" Please enter a valid Bonus stage i.e: {ParseColorToSymbol(primaryHUDcolor)}!rb 1");
-                SharpTimerDebug($"Exception in RespawnPlayer: {ex.Message}");
+                SharpTimerError($"Exception in RespawnPlayer: {ex.Message}");
             }
         }
 
@@ -606,7 +607,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Exception in RespawnPlayer: {ex.Message}");
+                SharpTimerError($"Exception in RespawnPlayer: {ex.Message}");
             }
         }
 
@@ -629,10 +630,13 @@ namespace SharpTimer
             playerCheckpoints.Remove(player.Slot);
 
             playerTimers[player.Slot].IsTimerBlocked = playerTimers[player.Slot].IsTimerBlocked ? false : true;
-            player.PrintToChat($"Stop timer set to: {ParseColorToSymbol(primaryHUDcolor)}{playerTimers[player.Slot].IsTimerBlocked}");
+            player.PrintToChat(msgPrefix + $" Stop timer set to: {ParseColorToSymbol(primaryHUDcolor)}{playerTimers[player.Slot].IsTimerBlocked}");
             playerTimers[player.Slot].IsTimerRunning = false;
             playerTimers[player.Slot].TimerTicks = 0;
+            playerTimers[player.Slot].IsBonusTimerRunning = false;
+            playerTimers[player.Slot].BonusTimerTicks = 0;
             playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
+            if (stageTriggers.Any()) playerTimers[player.Slot].StageRecords.Clear(); //remove previous stage times if the map has stages
             if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {beepSound}");
             SharpTimerDebug($"{player.PlayerName} css_timer to {playerTimers[player.Slot].IsTimerBlocked}");
         }

@@ -63,6 +63,11 @@ namespace SharpTimer
             if (enableDebug == true) Console.WriteLine($"\u001b[33m[SharpTimerDebug] \u001b[37m{msg}");
         }
 
+        public void SharpTimerError(string msg)
+        {
+            Console.WriteLine($"\u001b[31m[SharpTimerERROR] \u001b[37m{msg}");
+        }
+
         public void SharpTimerConPrint(string msg)
         {
             Console.WriteLine($"\u001b[36m[SharpTimer] \u001b[37m{msg}");
@@ -87,36 +92,36 @@ namespace SharpTimer
             }
         }
 
-        public void TimerOnTick(CCSPlayerController player)
+        public void TimerOnTick(CCSPlayerController player, int playerSlot)
         {
             if (!IsAllowedPlayer(player))
             {
-                playerTimers[player.Slot].IsTimerRunning = false;
-                playerTimers[player.Slot].TimerTicks = 0;
-                playerCheckpoints.Remove(player.Slot);
-                playerTimers[player.Slot].TicksSinceLastCmd++;
+                playerTimers[playerSlot].IsTimerRunning = false;
+                playerTimers[playerSlot].TimerTicks = 0;
+                playerCheckpoints.Remove(playerSlot);
+                playerTimers[playerSlot].TicksSinceLastCmd++;
                 return;
             }
 
             var buttons = player.Buttons;
             var formattedPlayerVel = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString().PadLeft(4, '0');
-            var formattedPlayerPre = Math.Round(ParseVector(playerTimers[player.Slot].PreSpeed ?? "0 0 0").Length2D()).ToString().PadLeft(3, '0');
-            var playerTime = FormatTime(playerTimers[player.Slot].TimerTicks);
-            var playerBonusTime = FormatTime(playerTimers[player.Slot].BonusTimerTicks);
-            var timerLine = playerTimers[player.Slot].IsBonusTimerRunning
-                ? $"<font color='gray'>Bonus: {playerTimers[player.Slot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font><br>"
-                : playerTimers[player.Slot].IsTimerRunning
-                    ? $"<font class='fontSize-s' color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font> {(playerTimers[player.Slot].CurrentStage != 0 ? $"<font class='fontSize-s' color='gray'>Stage: {playerTimers[player.Slot].CurrentStage}/{stageTriggerCount}</font>" : "")}<br>"
+            var formattedPlayerPre = Math.Round(ParseVector(playerTimers[playerSlot].PreSpeed ?? "0 0 0").Length2D()).ToString().PadLeft(3, '0');
+            var playerTime = FormatTime(playerTimers[playerSlot].TimerTicks);
+            var playerBonusTime = FormatTime(playerTimers[playerSlot].BonusTimerTicks);
+            var timerLine = playerTimers[playerSlot].IsBonusTimerRunning
+                ? $"<font color='gray'>Bonus: {playerTimers[playerSlot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font><br>"
+                : playerTimers[playerSlot].IsTimerRunning
+                    ? $"<font class='fontSize-s' color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font> {(playerTimers[playerSlot].CurrentStage != 0 ? $"<font class='fontSize-s' color='gray'>{playerTimers[playerSlot].CurrentStage}/{stageTriggerCount}</font>" : "")}<br>"
                     : "";
 
             var veloLine = $"<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>";
             var veloLineAlt = $"{GetSpeedBar(Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()))}";
-            var infoLine = $"<font class='fontSize-s' color='gray'>{playerTimers[player.Slot].TimerRank} | PB: {playerTimers[player.Slot].PB}" +
+            var infoLine = $"<font class='fontSize-s' color='gray'>{playerTimers[playerSlot].TimerRank} | PB: {playerTimers[playerSlot].PB}" +
                               $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
                               $"{(currentMapType != null ? $" | {currentMapType}" : "")}</font>";
 
-            var forwardKey = playerTimers[player.Slot].Azerty ? "Z" : "W";
-            var leftKey = playerTimers[player.Slot].Azerty ? "Q" : "A";
+            var forwardKey = playerTimers[playerSlot].Azerty ? "Z" : "W";
+            var leftKey = playerTimers[playerSlot].Azerty ? "Q" : "A";
             var backKey = "S";
             var rightKey = "D";
 
@@ -138,23 +143,23 @@ namespace SharpTimer
 
             var hudContent = hudContentBuilder.ToString();
 
-            if (playerTimers[player.Slot].HideTimerHud != true)
+            if (playerTimers[playerSlot].HideTimerHud != true)
             {
                 player.PrintToCenterHtml(hudContent);
             }
 
-            if (playerTimers[player.Slot].HideKeys != true)
+            if (playerTimers[playerSlot].HideKeys != true)
             {
                 player.PrintToCenter(keysLineNoHtml);
             }
 
-            if (playerTimers[player.Slot].IsTimerRunning)
+            if (playerTimers[playerSlot].IsTimerRunning)
             {
-                playerTimers[player.Slot].TimerTicks++;
+                playerTimers[playerSlot].TimerTicks++;
             }
-            else if (playerTimers[player.Slot].IsBonusTimerRunning)
+            else if (playerTimers[playerSlot].IsBonusTimerRunning)
             {
-                playerTimers[player.Slot].BonusTimerTicks++;
+                playerTimers[playerSlot].BonusTimerTicks++;
             }
 
             if (!useTriggers)
@@ -162,20 +167,20 @@ namespace SharpTimer
                 CheckPlayerCoords(player);
             }
 
-            if (playerTimers[player.Slot].MovementService != null && removeCrouchFatigueEnabled == true)
+            if (playerTimers[playerSlot].MovementService != null && removeCrouchFatigueEnabled == true)
             {
-                if (playerTimers[player.Slot].MovementService.DuckSpeed != 7.0f)
+                if (playerTimers[playerSlot].MovementService.DuckSpeed != 7.0f)
                 {
-                    playerTimers[player.Slot].MovementService.DuckSpeed = 7.0f;
+                    playerTimers[playerSlot].MovementService.DuckSpeed = 7.0f;
                 }
             }
 
             //find a better solution for this by combining all into 1 string to store
-            if (playerTimers[player.Slot].TimerRank == null && playerTimers[player.Slot].PB == null && playerTimers[player.Slot].IsRankPbCached == false)
+            if (playerTimers[playerSlot].TimerRank == null && playerTimers[playerSlot].PB == null && playerTimers[playerSlot].IsRankPbCached == false)
             {
                 SharpTimerDebug($"{player.PlayerName} has rank and pb null... calling handler");
-                _ = RankCommandHandler(player, player.SteamID.ToString(), player.Slot, player.PlayerName, true);
-                playerTimers[player.Slot].IsRankPbCached = true;
+                _ = RankCommandHandler(player, player.SteamID.ToString(), playerSlot, player.PlayerName, true);
+                playerTimers[playerSlot].IsRankPbCached = true;
             }
 
             if (removeCollisionEnabled == true)
@@ -189,18 +194,18 @@ namespace SharpTimer
 
             if (!player.PlayerPawn.Value.OnGroundLastTick)
             {
-                playerTimers[player.Slot].TicksInAir++;
-                if (playerTimers[player.Slot].TicksInAir == 1)
+                playerTimers[playerSlot].TicksInAir++;
+                if (playerTimers[playerSlot].TicksInAir == 1)
                 {
-                    playerTimers[player.Slot].PreSpeed = $"{player.PlayerPawn.Value.AbsVelocity.X} {player.PlayerPawn.Value.AbsVelocity.Y} {player.PlayerPawn.Value.AbsVelocity.Z}";
+                    playerTimers[playerSlot].PreSpeed = $"{player.PlayerPawn.Value.AbsVelocity.X} {player.PlayerPawn.Value.AbsVelocity.Y} {player.PlayerPawn.Value.AbsVelocity.Z}";
                 }
             }
             else
             {
-                playerTimers[player.Slot].TicksInAir = 0;
+                playerTimers[playerSlot].TicksInAir = 0;
             }
 
-            playerTimers[player.Slot].TicksSinceLastCmd++;
+            playerTimers[playerSlot].TicksSinceLastCmd++;
         }
 
         private void CheckPlayerCoords(CCSPlayerController? player)
@@ -238,7 +243,7 @@ namespace SharpTimer
         {
             if (!IsAllowedPlayer(player)) return;
 
-            if (playerTimers[player.Slot].CurrentStage == stageTriggers[triggerHandle])
+            if (playerTimers[player.Slot].CurrentStage == stageTriggers[triggerHandle] || playerTimers[player.Slot].IsTimerBlocked == true)
             {
                 playerTimers[player.Slot].CurrentStage = stageTriggers[triggerHandle];
                 return;
@@ -266,7 +271,7 @@ namespace SharpTimer
             try
             {
                 string fileName = $"{currentMapName.ToLower()}_stage_times.json";
-                string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/StagePlayerData", fileName);
+                string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/PlayerStageData", fileName);
 
                 if (!File.Exists(playerStageRecordsPath))
                 {
@@ -294,7 +299,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"An error occurred in GetStageTime: {ex.Message}");
+                SharpTimerError($"An error occurred in GetStageTime: {ex.Message}");
             }
 
             return 0;
@@ -303,7 +308,7 @@ namespace SharpTimer
         private void DumpPlayerStageTimesToJson(CCSPlayerController player)
         {
             string fileName = $"{currentMapName.ToLower()}_stage_times.json";
-            string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/StagePlayerData", fileName);
+            string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/PlayerStageData", fileName);
 
             var stageTimes = playerTimers[player.Slot].StageRecords;
 
@@ -391,12 +396,12 @@ namespace SharpTimer
             }
             catch (NullReferenceException ex)
             {
-                SharpTimerDebug($"Null ref in IsValidStartTriggerName: {ex.Message}");
+                SharpTimerError($"Null ref in IsValidStartTriggerName: {ex.Message}");
                 return false;
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Exception in IsValidStartTriggerName: {ex.Message}");
+                SharpTimerError($"Exception in IsValidStartTriggerName: {ex.Message}");
                 return false;
             }
         }
@@ -413,25 +418,22 @@ namespace SharpTimer
                 {
                     string numberStr = match_surf.Groups[1].Value;
                     int X = int.Parse(numberStr);
-                    SharpTimerDebug($"IsValidStartBonusTriggerName Surf: {(true, X)}");
                     return (true, X);
                 }
                 else if (match_kz.Success)
                 {
                     string numberStr = match_kz.Groups[1].Value;
                     int X = int.Parse(numberStr);
-                    SharpTimerDebug($"IsValidStartBonusTriggerName KZ: {(true, X)}");
                     return (true, X);
                 }
                 else
                 {
-                    SharpTimerDebug($"IsValidStartBonusTriggerName: (false, 0)");
                     return (false, 0);
                 }
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Exception in IsValidStartBonusTriggerName: {ex.Message}");
+                SharpTimerError($"Exception in IsValidStartBonusTriggerName: {ex.Message}");
                 return (false, 0);
             }
         }
@@ -447,18 +449,16 @@ namespace SharpTimer
                 {
                     string numberStr = match.Groups[1].Value;
                     int X = int.Parse(numberStr);
-                    SharpTimerDebug($"IsValidStageTriggerName: {(true, X)}");
                     return (true, X);
                 }
                 else
                 {
-                    SharpTimerDebug($"IsValidStageTriggerName: (false, 0)");
                     return (false, 0);
                 }
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Exception in IsValidStageTriggerName: {ex.Message}");
+                SharpTimerError($"Exception in IsValidStageTriggerName: {ex.Message}");
                 return (false, 0);
             }
         }
@@ -471,14 +471,9 @@ namespace SharpTimer
                 string[] validEndTriggers = { "map_end", "timer_endzone", "zone_end", currentMapEndTrigger };
                 return validEndTriggers.Contains(triggerName);
             }
-            catch (NullReferenceException ex)
-            {
-                SharpTimerDebug($"Null ref in IsValidEndTriggerName: {ex.Message}");
-                return false;
-            }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Exception in IsValidEndTriggerName: {ex.Message}");
+                SharpTimerError($"Exception in IsValidEndTriggerName: {ex.Message}");
                 return false;
             }
         }
@@ -512,7 +507,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Exception in IsValidStartTriggerName: {ex.Message}");
+                SharpTimerError($"Exception in IsValidStartTriggerName: {ex.Message}");
                 return (false, 0);
             }
         }
@@ -612,12 +607,12 @@ namespace SharpTimer
                 }
                 catch (Exception ex)
                 {
-                    SharpTimerDebug($"Error parsing hex color code: {ex.Message}");
+                    SharpTimerError($"Error parsing hex color code: {ex.Message}");
                 }
             }
             else
             {
-                SharpTimerDebug("Invalid hex color code format");
+                SharpTimerError("Invalid hex color code format");
             }
 
             return false;
@@ -898,10 +893,6 @@ namespace SharpTimer
 
                     SharpTimerDebug($"Trigger_push {trigger_push.Entity.Name} Speed set to {trigger_push.PushSpeed}");
                 }
-            }
-            else
-            {
-                SharpTimerDebug($"triggerPushFixEnabled false");
             }
         }
 
@@ -1187,7 +1178,7 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                SharpTimerDebug($"Error Getting Remote Data for {currentMapName}: {ex.Message}");
+                SharpTimerError($"Error Getting Remote Data for {currentMapName}: {ex.Message}");
                 return (null, null);
             }
         }

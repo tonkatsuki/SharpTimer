@@ -138,7 +138,7 @@ namespace SharpTimer
                 {
                     var player = playerEntry.Value;
                     if (player == null) continue;
-                    TimerOnTick(player);
+                    TimerOnTick(player, player.Slot);
                 }
             });
 
@@ -210,7 +210,7 @@ namespace SharpTimer
 
                     var (validStartBonus, startBonusX) = IsValidStartBonusTriggerName(caller.Entity.Name.ToString());
 
-                    if (validStartBonus && IsAllowedPlayer(player) && !playerTimers[player.Slot].IsTimerBlocked)
+                    if (validStartBonus && IsAllowedPlayer(player))
                     {
                         playerTimers[player.Slot].IsTimerRunning = false;
                         playerTimers[player.Slot].TimerTicks = 0;
@@ -229,7 +229,7 @@ namespace SharpTimer
                 }
                 catch (Exception ex)
                 {
-                    SharpTimerDebug($"Exception in trigger_multiple OnStartTouch hook: {ex.Message}");
+                    SharpTimerError($"Exception in trigger_multiple OnStartTouch hook: {ex.Message}");
                     return HookResult.Continue;
                 }
             });
@@ -289,7 +289,7 @@ namespace SharpTimer
                 }
                 catch (Exception ex)
                 {
-                    SharpTimerDebug($"Exception in trigger_multiple OnEndTouch hook: {ex.Message}");
+                    SharpTimerError($"Exception in trigger_multiple OnEndTouch hook: {ex.Message}");
                     return HookResult.Continue;
                 }
             });
@@ -325,7 +325,7 @@ namespace SharpTimer
                 }
                 catch (Exception ex)
                 {
-                    SharpTimerDebug($"Exception in trigger_teleport hook: {ex.Message}");
+                    SharpTimerError($"Exception in trigger_teleport hook: {ex.Message}");
                     return HookResult.Continue;
                 }
             });
@@ -357,17 +357,17 @@ namespace SharpTimer
 
                     if (triggerPushData.TryGetValue(caller.Handle, out TriggerPushData TriggerPushData) && triggerPushFixEnabled == true)
                     {
-                        player.PlayerPawn.Value.AbsVelocity.X += TriggerPushData.PushDirEntitySpace.X * (TriggerPushData.PushSpeed * 0.75f); //*0.75 to account for PushSpeed being in inches/seconds
-                        player.PlayerPawn.Value.AbsVelocity.Y += TriggerPushData.PushDirEntitySpace.Y * (TriggerPushData.PushSpeed * 0.75f);
-                        player.PlayerPawn.Value.AbsVelocity.Z += TriggerPushData.PushDirEntitySpace.Z * (TriggerPushData.PushSpeed * 0.75f);
-                        SharpTimerDebug($"trigger_push OnStartTouch Player velocity adjusted for {player.PlayerName} by {TriggerPushData.PushSpeed * 0.75f}");
+                        player.PlayerPawn.Value.AbsVelocity.X += TriggerPushData.PushDirEntitySpace.X * TriggerPushData.PushSpeed;
+                        player.PlayerPawn.Value.AbsVelocity.Y += TriggerPushData.PushDirEntitySpace.Y * TriggerPushData.PushSpeed;
+                        player.PlayerPawn.Value.AbsVelocity.Z += TriggerPushData.PushDirEntitySpace.Z * TriggerPushData.PushSpeed;
+                        SharpTimerDebug($"trigger_push OnStartTouch Player velocity adjusted for {player.PlayerName} by {TriggerPushData.PushSpeed}");
                     }
 
                     return HookResult.Continue;
                 }
                 catch (Exception ex)
                 {
-                    SharpTimerDebug($"Exception in trigger_push hook: {ex.Message}");
+                    SharpTimerError($"Exception in trigger_push hook: {ex.Message}");
                     return HookResult.Continue;
                 }
             });
