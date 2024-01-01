@@ -6,14 +6,13 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
+using System;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Timers;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-
-
-
 
 namespace SharpTimer
 {
@@ -111,10 +110,10 @@ namespace SharpTimer
             var timerLine = playerTimers[playerSlot].IsBonusTimerRunning
                 ? $"<font color='gray'>Bonus: {playerTimers[playerSlot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font><br>"
                 : playerTimers[playerSlot].IsTimerRunning
-                    ? $"<font class='fontSize-s' color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font> {(playerTimers[playerSlot].CurrentStage != 0 ? $"<font class='fontSize-s' color='gray'>{playerTimers[playerSlot].CurrentStage}/{stageTriggerCount}</font>" : "")}<br>"
+                    ? $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font> {(playerTimers[playerSlot].CurrentStage != 0 ? $"<font color='gray'>{playerTimers[playerSlot].CurrentStage}/{stageTriggerCount}</font>" : "")}<br>"
                     : "";
 
-            var veloLine = $"<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font><br>";
+            var veloLine = $"{(playerTimers[playerSlot].IsFemboy ? playerTimers[playerSlot].FemboySparkleGif : "")}<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font>{(playerTimers[playerSlot].IsFemboy ? playerTimers[playerSlot].FemboySparkleGif : "")}<br>";
             var veloLineAlt = $"{GetSpeedBar(Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()))}";
             var infoLine = $"<font class='fontSize-s' color='gray'>{playerTimers[playerSlot].TimerRank} | PB: {playerTimers[playerSlot].PB}" +
                               $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
@@ -140,6 +139,8 @@ namespace SharpTimer
                 hudContentBuilder.Append(veloLineAlt);
             }
             hudContentBuilder.Append(infoLine);
+            if (playerTimers[playerSlot].IsFemboy && !playerTimers[playerSlot].IsTimerRunning && !playerTimers[playerSlot].IsBonusTimerRunning)
+                hudContentBuilder.Append(playerTimers[playerSlot].FemboyPausedGif);
 
             var hudContent = hudContentBuilder.ToString();
 
@@ -407,7 +408,7 @@ namespace SharpTimer
         }
 
         private (bool valid, int X) IsValidStartBonusTriggerName(string triggerName)
-        {         
+        {
             try
             {
                 if (string.IsNullOrEmpty(triggerName)) return (false, 0);
@@ -464,7 +465,7 @@ namespace SharpTimer
         }
 
         private bool IsValidEndTriggerName(string triggerName)
-        {          
+        {
             try
             {
                 if (string.IsNullOrEmpty(triggerName)) return false;
@@ -526,6 +527,30 @@ namespace SharpTimer
             bool isConnected = connectedPlayers.ContainsKey(player.Slot) || playerTimers.ContainsKey(player.Slot);
 
             return isTeamValid && isTeamSpectatorOrNone && isConnected;
+        }
+
+        private bool IsPlayerAFemboy(string steamId)
+        {
+            return femboyPersonalGifs.ContainsKey(steamId);
+        }
+
+        public static Tuple<string, string> GetFemboyPersonalGif(string steamId)
+        {
+            if (femboyPersonalGifs.ContainsKey(steamId))
+            {
+                return femboyPersonalGifs[steamId];
+            }
+            else
+            {
+                return Tuple.Create("Index not found", "");
+            }
+        }
+
+        public void HandleFemboyGifs(int playerSlot, string steamId)
+        {
+            Tuple<string, string> gifs = GetFemboyPersonalGif(steamId);
+            playerTimers[playerSlot].FemboySparkleGif = gifs.Item1;
+            playerTimers[playerSlot].FemboyPausedGif = gifs.Item2;
         }
 
         private static string FormatTime(int ticks)

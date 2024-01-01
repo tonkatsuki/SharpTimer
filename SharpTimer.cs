@@ -57,6 +57,9 @@ namespace SharpTimer
                     playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
                     playerTimers[player.Slot].StageRecords = new Dictionary<int, int>();
                     playerTimers[player.Slot].CurrentStage = 0;
+                    
+                    playerTimers[player.Slot].IsFemboy = IsPlayerAFemboy(player.SteamID.ToString());
+                    if(playerTimers[player.Slot].IsFemboy == true) HandleFemboyGifs(player.Slot, player.SteamID.ToString());
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 

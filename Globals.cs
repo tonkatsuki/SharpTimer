@@ -1,3 +1,4 @@
+using System.Text;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
@@ -59,7 +60,7 @@ namespace SharpTimer
         public bool isRankHUDTimerRunning = false;
         public bool removeCrouchFatigueEnabled = true;
         public bool goToEnabled = false;
-        public bool fovChangerEnabled  = true;
+        public bool fovChangerEnabled = true;
         public bool triggerPushFixEnabled = false;
         public int cmdCooldown = 64;
         public float fakeTriggerHeight = 50;
@@ -76,9 +77,9 @@ namespace SharpTimer
         public string? currentMapName;
         public string? defaultServerHostname = ConVar.Find("hostname").StringValue;
 
-        public string? remoteBhopDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.3-dev/remote_data/bhop_.json";
-        public string? remoteKZDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.3-dev/remote_data/kz_.json";
-        public string? remoteSurfDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.3-dev/remote_data/surf_.json";
+        public string? remoteBhopDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/bhop_.json";
+        public string? remoteKZDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/kz_.json";
+        public string? remoteSurfDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/surf_.json";
 
         private readonly WIN_LINUX<int> OnCollisionRulesChangedOffset = new WIN_LINUX<int>(174, 173);
     }

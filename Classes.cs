@@ -58,6 +58,11 @@ namespace SharpTimer
         public Dictionary<string, PlayerRecord>? SortedCachedRecords { get; set; }
         public CCSPlayer_MovementServices? MovementService { get; set; }
 
+        //super special stuff for testers
+        public bool IsFemboy { get; set; }
+        public string? FemboySparkleGif { get; set; }
+        public string? FemboyPausedGif { get; set; }
+
         //admin stuff
         public bool IsNoclipEnabled { get; set; }
         public bool IsAddingStartZone { get; set; }
