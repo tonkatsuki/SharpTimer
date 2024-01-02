@@ -158,7 +158,7 @@ namespace SharpTimer
             removeCpRestrictEnabled = bool.TryParse(args, out bool removeCpRestrictEnabledValue) ? removeCpRestrictEnabledValue : args != "0" && removeCpRestrictEnabled;
         }
 
-        [ConsoleCommand("sharptimer_reset_teleport_trigger_speed_enabled", "Whether the players speed should loose all speed when entring a teleport map trigger or not. Default value: false")]
+        [ConsoleCommand("sharptimer_disable_telehop", "Whether the players speed should loose all speed when entring a teleport map trigger or not. Default value: false")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void SharpTimerResetTeleportSpeedConvar(CCSPlayerController? player, CommandInfo command)
         {

@@ -30,6 +30,9 @@ namespace SharpTimer
         public string? RespawnPos { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? OverrideDisableTelehop { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? MapTier { get; set; }
     }
 

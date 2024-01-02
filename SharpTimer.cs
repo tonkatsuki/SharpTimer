@@ -322,7 +322,7 @@ namespace SharpTimer
 
                     if (!IsAllowedPlayer(player)) return HookResult.Continue;
 
-                    if (IsAllowedPlayer(player) && resetTriggerTeleportSpeedEnabled == true) AdjustPlayerVelocity(player, 0);
+                    if (IsAllowedPlayer(player) && resetTriggerTeleportSpeedEnabled == true && currentMapOverrideDisableTelehop == false) AdjustPlayerVelocity(player, 0);
 
                     return HookResult.Continue;
                 }

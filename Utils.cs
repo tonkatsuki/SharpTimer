@@ -412,25 +412,23 @@ namespace SharpTimer
             try
             {
                 if (string.IsNullOrEmpty(triggerName)) return (false, 0);
-                var match_surf = Regex.Match(triggerName, @"^b([1-9][0-9]?|onus[1-9][0-9]?)_start$");
-                var match_kz = Regex.Match(triggerName, @"^timer_bonus([1-9][0-9]?)_startzone$");
 
-                if (match_surf.Success)
+                string[] patterns = {
+                    @"^b([1-9][0-9]?|onus[1-9][0-9]?)_start$",
+                    @"^timer_bonus([1-9][0-9]?)_startzone$"
+                };
+
+                foreach (var pattern in patterns)
                 {
-                    string numberStr = match_surf.Groups[1].Value;
-                    int X = int.Parse(numberStr);
-                    return (true, X);
+                    var match = Regex.Match(triggerName, pattern);
+                    if (match.Success)
+                    {
+                        int X = int.Parse(match.Groups[1].Value);
+                        return (true, X);
+                    }
                 }
-                else if (match_kz.Success)
-                {
-                    string numberStr = match_kz.Groups[1].Value;
-                    int X = int.Parse(numberStr);
-                    return (true, X);
-                }
-                else
-                {
-                    return (false, 0);
-                }
+
+                return (false, 0);
             }
             catch (Exception ex)
             {
@@ -448,8 +446,7 @@ namespace SharpTimer
 
                 if (match.Success)
                 {
-                    string numberStr = match.Groups[1].Value;
-                    int X = int.Parse(numberStr);
+                    int X = int.Parse(match.Groups[1].Value);
                     return (true, X);
                 }
                 else
@@ -484,27 +481,23 @@ namespace SharpTimer
             try
             {
                 if (string.IsNullOrEmpty(triggerName)) return (false, 0);
-                var match_surf = Regex.Match(triggerName, @"^b([1-9][0-9]?|onus[1-9][0-9]?)_end$");
-                var match_kz = Regex.Match(triggerName, @"^timer_bonus([1-9][0-9]?)_endzone$");
+                string[] patterns = {
+                    @"^b([1-9][0-9]?|onus[1-9][0-9]?)_end$",
+                    @"^timer_bonus([1-9][0-9]?)_endzone$"
+                };
 
-                if (match_surf.Success)
+                foreach (var pattern in patterns)
                 {
-                    string numberStr = match_surf.Groups[1].Value;
-                    int X = int.Parse(numberStr);
-                    if (X != playerTimers[playerSlot].BonusStage) return (false, 0);
-                    return (true, X);
+                    var match = Regex.Match(triggerName, pattern);
+                    if (match.Success)
+                    {
+                        int X = int.Parse(match.Groups[1].Value);
+                        if (X != playerTimers[playerSlot].BonusStage) return (false, 0);
+                        return (true, X);
+                    }
                 }
-                else if (match_kz.Success)
-                {
-                    string numberStr = match_kz.Groups[1].Value;
-                    int X = int.Parse(numberStr);
-                    if (X != playerTimers[playerSlot].BonusStage) return (false, 0);
-                    return (true, X);
-                }
-                else
-                {
-                    return (false, 0);
-                }
+
+                return (false, 0);
             }
             catch (Exception ex)
             {
@@ -637,7 +630,7 @@ namespace SharpTimer
             }
             else
             {
-                SharpTimerError("Invalid hex color code format");
+                SharpTimerError("Invalid hex color code format. Please check SharpTimer/config.cfg");
             }
 
             return false;
@@ -1325,6 +1318,23 @@ namespace SharpTimer
                     {
                         SharpTimerConPrint($"Hooking Trigger RespawnPos Success! {currentRespawnPos}");
                     }
+                }
+
+                if (!string.IsNullOrEmpty(mapInfo.OverrideDisableTelehop))
+                {
+                    try
+                    {
+                        currentMapOverrideDisableTelehop = bool.Parse(mapInfo.OverrideDisableTelehop);
+                        SharpTimerConPrint($"Overriding Telehop...");
+                    }
+                    catch (FormatException)
+                    {
+                        Console.WriteLine("Invalid boolean string format for OverrideDisableTelehop");
+                    }
+                }
+                else
+                {
+                    currentMapOverrideDisableTelehop = false;
                 }
             }
             else
