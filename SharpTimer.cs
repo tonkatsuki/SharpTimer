@@ -57,9 +57,9 @@ namespace SharpTimer
                     playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
                     playerTimers[player.Slot].StageRecords = new Dictionary<int, int>();
                     playerTimers[player.Slot].CurrentStage = 0;
-                    
-                    playerTimers[player.Slot].IsFemboy = IsPlayerAFemboy(player.SteamID.ToString());
-                    if(playerTimers[player.Slot].IsFemboy == true) HandleFemboyGifs(player.Slot, player.SteamID.ToString());
+
+                    playerTimers[player.Slot].IsTester = IsPlayerATester(player.SteamID.ToString());
+                    if (playerTimers[player.Slot].IsTester == true) HandleTesterGifs(player.Slot, player.SteamID.ToString());
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
@@ -173,7 +173,7 @@ namespace SharpTimer
                     }
                     else if (stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] == 1)
                     {
-                        playerTimers[player.Slot].CurrentStage = stageTriggers[caller.Handle];
+                        playerTimers[player.Slot].CurrentStage = 1;
                     }
 
                     if (IsValidEndTriggerName(caller.Entity.Name.ToString()) && IsAllowedPlayer(player) && playerTimers[player.Slot].IsTimerRunning && !playerTimers[player.Slot].IsTimerBlocked)
@@ -190,7 +190,11 @@ namespace SharpTimer
                         playerTimers[player.Slot].IsBonusTimerRunning = false;
                         playerTimers[player.Slot].BonusTimerTicks = 0;
                         playerCheckpoints.Remove(player.Slot);
-                        if (stageTriggers.Any()) playerTimers[player.Slot].StageRecords.Clear(); //remove previous stage times if the map has stages
+                        if (stageTriggers.Any())
+                        {
+                            playerTimers[player.Slot].StageRecords.Clear();
+                            playerTimers[player.Slot].CurrentStage = stageTriggers.GetValueOrDefault(caller.Handle, 0);
+                        }
 
                         if (maxStartingSpeedEnabled == true && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed)
                         {
@@ -439,7 +443,7 @@ namespace SharpTimer
 
             if (stageTriggers.Any() && stageTriggers.Keys.Count != playerTimers[player.Slot].CurrentStage)
             {
-                player.PrintToChat(msgPrefix + $"Error Saving Time: Player stage does not match final map stage {stageTriggers.Keys.Count}");
+                player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({stageTriggers.Keys.Count})");
                 playerTimers[player.Slot].IsTimerRunning = false;
                 return;
             }

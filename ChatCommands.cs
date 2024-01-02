@@ -417,6 +417,7 @@ namespace SharpTimer
             if (!IsAllowedPlayer(player)) return;
             SharpTimerDebug($"Handling !rank for {playerName}...");
             string ranking = await GetPlayerPlacementWithTotal(player, steamId, playerName);
+            string rankIcon = await GetPlayerPlacementWithTotal(player, steamId, playerName, true);
 
             int pbTicks;
             if (useMySQL == false)
@@ -428,23 +429,13 @@ namespace SharpTimer
                 pbTicks = await GetPreviousPlayerRecordFromDatabase(player, steamId, currentMapName, playerName);
             }
 
-            playerTimers[playerSlot].TimerRank = ranking;
-            if (pbTicks != 0)
+            string rankHUDstring = $"{(string.IsNullOrEmpty(rankIcon) ? "" : "<font class='fontSize-s' color='gray'>|</font> " + rankIcon)}<font class='fontSize-s' color='gray'>{(string.IsNullOrEmpty(ranking) ? "" : " | " + ranking)}{(pbTicks != 0 ? $" | {FormatTime(pbTicks)}" : "")}";
+
+            Server.NextFrame(() =>
             {
-                Server.NextFrame(() =>
-                {
-                    if (!IsAllowedPlayer(player)) return;
-                    playerTimers[playerSlot].PB = FormatTime(pbTicks);
-                });
-            }
-            else
-            {
-                Server.NextFrame(() =>
-                {
-                    if (!IsAllowedPlayer(player)) return;
-                    playerTimers[playerSlot].PB = "n/a";
-                });
-            }
+                if (!IsAllowedPlayer(player)) return;
+                playerTimers[playerSlot].RankHUDString = rankHUDstring;
+            });
 
             if (sendRankToHUD == false)
             {
@@ -530,7 +521,7 @@ namespace SharpTimer
                 if (!int.TryParse(command.ArgString, out int bonusX))
                 {
                     SharpTimerDebug("css_rb conversion failed. The input string is not a valid integer.");
-                    player.PrintToChat(msgPrefix + $" Please enter a valid Bonus stage i.e: {ParseColorToSymbol(primaryHUDcolor)}!rb 1");
+                    player.PrintToChat(msgPrefix + $" Please enter a valid Bonus stage i.e: {ParseColorToSymbol(primaryHUDcolor)}!rb <index>");
                     return;
                 }
 
@@ -559,8 +550,67 @@ namespace SharpTimer
             }
             catch (Exception ex)
             {
-                player.PrintToChat(msgPrefix + $" Please enter a valid Bonus stage i.e: {ParseColorToSymbol(primaryHUDcolor)}!rb 1");
-                SharpTimerError($"Exception in RespawnPlayer: {ex.Message}");
+                SharpTimerError($"Exception in RespawnBonusPlayer: {ex.Message}");
+            }
+        }
+
+        [ConsoleCommand("css_stage", "Teleports you to a stage")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void TPtoStagePlayer(CCSPlayerController? player, CommandInfo command)
+        {
+            try
+            {
+                if (!IsAllowedPlayer(player) || respawnEnabled == false) return;
+                SharpTimerDebug($"{player.PlayerName} calling css_stage...");
+
+                if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
+                {
+                    player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
+                    return;
+                }
+
+                playerTimers[player.Slot].TicksSinceLastCmd = 0;
+
+                if (playerTimers[player.Slot].IsTimerBlocked == false)
+                {
+                    SharpTimerDebug($"css_stage failed. Player {player.PlayerName} had timer running.");
+                    player.PrintToChat(msgPrefix + $" Please stop your timer first using: {ParseColorToSymbol(primaryHUDcolor)}!timer");
+                    return;
+                }
+
+                if (!int.TryParse(command.ArgString, out int stageX))
+                {
+                    SharpTimerDebug("css_stage conversion failed. The input string is not a valid integer.");
+                    player.PrintToChat(msgPrefix + $" Please enter a valid stage i.e: {ParseColorToSymbol(primaryHUDcolor)}!stage <index>");
+                    return;
+                }
+
+                // Remove checkpoints for the current player
+                playerCheckpoints.Remove(player.Slot);
+
+                if (bonusRespawnPoses[stageX] != null)
+                {
+                    player.PlayerPawn.Value.Teleport(stageTriggerPoses[stageX], player.PlayerPawn.Value.EyeAngles ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    SharpTimerDebug($"{player.PlayerName} css_stage {stageX} to {stageTriggerPoses[stageX]}");
+                }
+                else
+                {
+                    player.PrintToChat(msgPrefix + $" {ChatColors.LightRed} No RespawnStagePos with index {stageX} found for current map!");
+                }
+
+                Server.NextFrame(() =>
+                {
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    playerTimers[player.Slot].TimerTicks = 0;
+                    playerTimers[player.Slot].IsBonusTimerRunning = false;
+                    playerTimers[player.Slot].BonusTimerTicks = 0;
+                });
+                
+                if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {respawnSound}");
+            }
+            catch (Exception ex)
+            {
+                SharpTimerError($"Exception in TPtoStagePlayer: {ex.Message}");
             }
         }
 

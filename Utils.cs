@@ -108,16 +108,16 @@ namespace SharpTimer
             var playerTime = FormatTime(playerTimers[playerSlot].TimerTicks);
             var playerBonusTime = FormatTime(playerTimers[playerSlot].BonusTimerTicks);
             var timerLine = playerTimers[playerSlot].IsBonusTimerRunning
-                ? $"<font color='gray'>Bonus: {playerTimers[playerSlot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font><br>"
+                ? $" <font color='gray' class='fontSize-s'>Bonus: {playerTimers[playerSlot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font> <br>"
                 : playerTimers[playerSlot].IsTimerRunning
-                    ? $"<font color='gray'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font> {(playerTimers[playerSlot].CurrentStage != 0 ? $"<font color='gray'>{playerTimers[playerSlot].CurrentStage}/{stageTriggerCount}</font>" : "")}<br>"
+                    ? $" <font color='gray' class='fontSize-s'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font>{(playerTimers[playerSlot].CurrentStage != 0 ? $"<font color='gray' class='fontSize-s'> {playerTimers[playerSlot].CurrentStage}/{stageTriggerCount}</font>" : "")} <br>"
                     : "";
 
-            var veloLine = $"{(playerTimers[playerSlot].IsFemboy ? playerTimers[playerSlot].FemboySparkleGif : "")}<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font>{(playerTimers[playerSlot].IsFemboy ? playerTimers[playerSlot].FemboySparkleGif : "")}<br>";
-            var veloLineAlt = $"{GetSpeedBar(Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()))}";
-            var infoLine = $"<font class='fontSize-s' color='gray'>{playerTimers[playerSlot].TimerRank} | PB: {playerTimers[playerSlot].PB}" +
+            var veloLine = $" {(playerTimers[playerSlot].IsTester ? playerTimers[playerSlot].TesterSparkleGif : "")}<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font>{(playerTimers[playerSlot].IsTester ? playerTimers[playerSlot].TesterSparkleGif : "")} <br>";
+            var veloLineAlt = $" {GetSpeedBar(Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()))} ";
+            var infoLine = $"{playerTimers[playerSlot].RankHUDString}" +
                               $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
-                              $"{(currentMapType != null ? $" | {currentMapType}" : "")}</font>";
+                              $"{(currentMapType != null ? $" | {currentMapType}" : "")} |</font> ";
 
             var forwardKey = playerTimers[playerSlot].Azerty ? "Z" : "W";
             var leftKey = playerTimers[playerSlot].Azerty ? "Q" : "A";
@@ -134,13 +134,10 @@ namespace SharpTimer
             var hudContentBuilder = new StringBuilder();
             hudContentBuilder.Append(timerLine);
             hudContentBuilder.Append(veloLine);
-            if (alternativeSpeedometer)
-            {
-                hudContentBuilder.Append(veloLineAlt);
-            }
+            if (alternativeSpeedometer) hudContentBuilder.Append(veloLineAlt);
             hudContentBuilder.Append(infoLine);
-            if (playerTimers[playerSlot].IsFemboy && !playerTimers[playerSlot].IsTimerRunning && !playerTimers[playerSlot].IsBonusTimerRunning)
-                hudContentBuilder.Append(playerTimers[playerSlot].FemboyPausedGif);
+            if (playerTimers[playerSlot].IsTester && !playerTimers[playerSlot].IsTimerRunning && !playerTimers[playerSlot].IsBonusTimerRunning)
+                hudContentBuilder.Append(playerTimers[playerSlot].TesterPausedGif);
 
             var hudContent = hudContentBuilder.ToString();
 
@@ -177,7 +174,7 @@ namespace SharpTimer
             }
 
             //find a better solution for this by combining all into 1 string to store
-            if (playerTimers[playerSlot].TimerRank == null && playerTimers[playerSlot].PB == null && playerTimers[playerSlot].IsRankPbCached == false)
+            if (playerTimers[playerSlot].RankHUDString == null && playerTimers[playerSlot].IsRankPbCached == false)
             {
                 SharpTimerDebug($"{player.PlayerName} has rank and pb null... calling handler");
                 _ = RankCommandHandler(player, player.SteamID.ToString(), playerSlot, player.PlayerName, true);
@@ -244,7 +241,7 @@ namespace SharpTimer
         {
             if (!IsAllowedPlayer(player)) return;
 
-            if (playerTimers[player.Slot].CurrentStage == stageTriggers[triggerHandle] || playerTimers[player.Slot].IsTimerBlocked == true)
+            if (playerTimers[player.Slot].CurrentStage == stageTriggers[triggerHandle])
             {
                 playerTimers[player.Slot].CurrentStage = stageTriggers[triggerHandle];
                 return;
@@ -255,7 +252,7 @@ namespace SharpTimer
 
             if (previousStageTime != 0)
             {
-                player.PrintToChat(msgPrefix + $"Entering stage {stageTriggers[triggerHandle]}: {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}][{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                player.PrintToChat(msgPrefix + $" {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
             }
 
             if (playerTimers[player.Slot].StageRecords != null && playerTimers[player.Slot].IsTimerRunning == true)
@@ -442,17 +439,24 @@ namespace SharpTimer
             try
             {
                 if (string.IsNullOrEmpty(triggerName)) return (false, 0);
-                var match = Regex.Match(triggerName, @"^s([1-9][0-9]?|tage[1-9][0-9]?)_start$");
 
-                if (match.Success)
+                string[] patterns = {
+                    @"^s([1-9][0-9]?|tage[1-9][0-9]?)_start$",
+                    @"^map_cp([1-9][0-9]?)$",
+                    @"^map_checkpoint([1-9][0-9]?)$",
+                };
+
+                foreach (var pattern in patterns)
                 {
-                    int X = int.Parse(match.Groups[1].Value);
-                    return (true, X);
+                    var match = Regex.Match(triggerName, pattern);
+                    if (match.Success)
+                    {
+                        int X = int.Parse(match.Groups[1].Value);
+                        return (true, X);
+                    }
                 }
-                else
-                {
-                    return (false, 0);
-                }
+
+                return (false, 0);
             }
             catch (Exception ex)
             {
@@ -522,16 +526,16 @@ namespace SharpTimer
             return isTeamValid && isTeamSpectatorOrNone && isConnected;
         }
 
-        private bool IsPlayerAFemboy(string steamId)
+        private bool IsPlayerATester(string steamId)
         {
-            return femboyPersonalGifs.ContainsKey(steamId);
+            return testerPersonalGifs.ContainsKey(steamId);
         }
 
-        public static Tuple<string, string> GetFemboyPersonalGif(string steamId)
+        public static Tuple<string, string> GetTesterPersonalGif(string steamId)
         {
-            if (femboyPersonalGifs.ContainsKey(steamId))
+            if (testerPersonalGifs.ContainsKey(steamId))
             {
-                return femboyPersonalGifs[steamId];
+                return testerPersonalGifs[steamId];
             }
             else
             {
@@ -539,11 +543,11 @@ namespace SharpTimer
             }
         }
 
-        public void HandleFemboyGifs(int playerSlot, string steamId)
+        public void HandleTesterGifs(int playerSlot, string steamId)
         {
-            Tuple<string, string> gifs = GetFemboyPersonalGif(steamId);
-            playerTimers[playerSlot].FemboySparkleGif = gifs.Item1;
-            playerTimers[playerSlot].FemboyPausedGif = gifs.Item2;
+            Tuple<string, string> gifs = GetTesterPersonalGif(steamId);
+            playerTimers[playerSlot].TesterSparkleGif = gifs.Item1;
+            playerTimers[playerSlot].TesterPausedGif = gifs.Item2;
         }
 
         private static string FormatTime(int ticks)
@@ -848,6 +852,7 @@ namespace SharpTimer
         private void FindStageTriggers()
         {
             stageTriggers.Clear();
+            stageTriggerPoses.Clear();
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
 
             foreach (var trigger in triggers)
@@ -858,6 +863,8 @@ namespace SharpTimer
                 if (validStage)
                 {
                     stageTriggers[trigger.Handle] = X;
+                    if (trigger.CBodyComponent?.SceneNode?.AbsOrigin == null) continue;
+                    stageTriggerPoses[X] = trigger.CBodyComponent?.SceneNode?.AbsOrigin;
                     SharpTimerDebug($"Added Stage {X} Trigger {trigger.Handle}");
                 }
             }
@@ -1067,11 +1074,11 @@ namespace SharpTimer
             }
         }
 
-        public async Task<string> GetPlayerPlacementWithTotal(CCSPlayerController? player, string steamId, string playerName)
+        public async Task<string> GetPlayerPlacementWithTotal(CCSPlayerController? player, string steamId, string playerName, bool getRankImg = false)
         {
             if (!IsAllowedPlayer(player))
             {
-                return "Unranked";
+                return "";
             }
 
             int savedPlayerTime;
@@ -1086,7 +1093,7 @@ namespace SharpTimer
 
             if (savedPlayerTime == 0)
             {
-                return "Unranked";
+                return "";
             }
 
             Dictionary<string, PlayerRecord> sortedRecords;
@@ -1117,7 +1124,39 @@ namespace SharpTimer
 
             int totalPlayers = sortedRecords.Count;
 
-            return $"Rank: {placement}/{totalPlayers}";
+            string rank;
+
+            if (getRankImg)
+            {
+                double percentage = (double)placement / totalPlayers * 100;
+
+                if (percentage <= 6.4)
+                {
+                    rank = "<img src='https://i.imgur.com/IFAyj0y.png' class=''>";
+                }
+                else if (percentage <= 28)
+                {
+                    rank = "<img src='https://i.imgur.com/5O4OfR5.png' class=''>";
+                }
+                else if (percentage <= 75.6)
+                {
+                    rank = "<img src='https://i.imgur.com/pc0TN7z.png' class=''>";
+                }
+                else if (percentage <= 95.2)
+                {
+                    rank = "<img src='https://i.imgur.com/kKzdpqu.png' class=''>";
+                }
+                else
+                {
+                    rank = "<img src='https://i.imgur.com/gL6Ru8t.png' class=''>";
+                }
+            }
+            else
+            {
+                rank = $"Rank: {placement}/{totalPlayers}";
+            }
+
+            return rank;
         }
 
         public void SavePlayerTime(CCSPlayerController? player, int timerTicks, int bonusX = 0)

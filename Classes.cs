@@ -46,6 +46,7 @@ namespace SharpTimer
         public int BonusStage { get; set; }
         public string? TimerRank { get; set; }
         public string? PB { get; set; }
+        public string? RankHUDString { get; set; }
         public bool IsRankPbCached { get; set; }
         public string? PreSpeed { get; set; }
         public int? TicksInAir { get; set; }
@@ -62,9 +63,9 @@ namespace SharpTimer
         public CCSPlayer_MovementServices? MovementService { get; set; }
 
         //super special stuff for testers
-        public bool IsFemboy { get; set; }
-        public string? FemboySparkleGif { get; set; }
-        public string? FemboyPausedGif { get; set; }
+        public bool IsTester { get; set; }
+        public string? TesterSparkleGif { get; set; }
+        public string? TesterPausedGif { get; set; }
 
         //admin stuff
         public bool IsNoclipEnabled { get; set; }

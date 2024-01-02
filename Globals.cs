@@ -30,6 +30,7 @@ namespace SharpTimer
         public bool currentMapOverrideDisableTelehop = false;
         private Dictionary<int, Vector?> bonusRespawnPoses = new Dictionary<int, Vector?>();
         private Dictionary<nint, int> stageTriggers = new Dictionary<nint, int>();
+        private Dictionary<int, Vector?> stageTriggerPoses = new Dictionary<int, Vector?>();
         private int stageTriggerCount;
         public string? currentMapType = null;
         public int? currentMapTier = null;
@@ -81,6 +82,22 @@ namespace SharpTimer
         public string? remoteBhopDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/bhop_.json";
         public string? remoteKZDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/kz_.json";
         public string? remoteSurfDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/surf_.json";
+
+        private static Dictionary<string, Tuple<string, string>> testerPersonalGifs = new Dictionary<string, Tuple<string, string>>
+        {
+            // steamid64                                        //sparks gif                                               //paused timer
+            {"86561198106801439", Tuple.Create("<img src='https://i.imgur.com/ATRxyFK.gif'>", "<br><img src='https://i.imgur.com/cjLztNF.gif'><br>")}, //
+
+            {"76561198175123071", Tuple.Create("<img src='https://i.imgur.com/ATRxyFK.gif'>", "<br><img src='https://i.imgur.com/UeRQp6P.gif'><br>")}, //
+
+            {"76561198100544780", Tuple.Create("<img src='https://i.imgur.com/AtYz3os.gif'>", "<br><img src='https://i.imgur.com/GYV48np.gif'><br>")}, //letaryat
+
+            {"76561199138382970", Tuple.Create("<img src='https://i.imgur.com/ATRxyFK.gif'>", "<br><img src='https://i.imgur.com/VrO856t.gif'><br>")}, //Panda
+
+            {"76561198033801423", Tuple.Create("<img src='https://i.imgur.com/r6xewP9.gif'>", "<br><img src='https://i.imgur.com/9bMEBrb.gif'><br>")}, //Dowz
+
+            {"0000000000", Tuple.Create("", "")},
+        };
 
         private readonly WIN_LINUX<int> OnCollisionRulesChangedOffset = new WIN_LINUX<int>(174, 173);
     }
