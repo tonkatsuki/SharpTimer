@@ -1,87 +1,77 @@
-# SharpTimer 
-SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using CounterStrikeSharp
+# SharpTimer
+SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using CounterStrikeSharp<br>
 
-# Dependencies
+## Features
+<details> 
+  <summary>Timer, speedometer and key input</summary>
+   <img src="https://i.imgur.com/cGUjH6m.png">
+</details>
+
+<details> 
+  <summary>Players personal best</summary>
+  <img src="https://i.imgur.com/9HGOhRR.png">
+</details>
+
+<details> 
+  <summary>Checkpoint system (disabled by default)</summary>
+   <img src="https://i.imgur.com/USX5i8C.png"><br>
+   <img src="https://i.imgur.com/kWiHOlz.png"><br>
+   <img src="https://i.imgur.com/lXwXNN7.png"><br>
+   <img src="https://i.imgur.com/nyn76Q4.png">
+</details>
+
+## Dependencies
 
 [**MetaMod**](https://cs2.poggu.me/metamod/installation/)
 
-[**CounterStrikeSharp** *(at least v142)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
+[**CounterStrikeSharp** *(at least v126)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
 
 [**MovementUnlocker** *(optional but recommended)*](https://github.com/Source2ZE/MovementUnlocker)
 
-⚠️ **CS2Fixes** does clash with **CSS** there fore the plugin might not work correctly with it
+[**Web panel** *(optional but recommended)*](https://github.com/Letaryat/sharptimer-web-panel)
 
-# Features
-<p align="center">
-<strong style="font-weight: bold;">----------------- [Timer, Speedometer and Keys] -----------------</strong>
-</p>
+:exclamation: **CS2Fixes** does clash with **CSS** there fore the plugin might not work correctly with it
 
-<p align="center">
-  <img src="https://i.imgur.com/cGUjH6m.png">
-</p>
-<br>
-<br>
-<br>
-<p align="center">
-<strong style="font-weight: bold;">-------------------------- [Players PBs] --------------------------</strong>
-</p>
+## Install
+* Download the [latest release](https://github.com/DEAFPS/SharpTimer/releases),
 
-<p align="center">
-  <img src="https://i.imgur.com/9HGOhRR.png">
-</p>
+* Unzip into your servers `game/csgo/` directory,
 
-<p align="center">
-  <img src="https://i.imgur.com/amVXOHP.png">
-</p>
-<br>
-<br>
-<br>
-<p align="center">
-<strong style="font-weight: bold;">----------------- [Checkpoints (disabled by default)] -----------------</strong>
-</p>
+* :exclamation: See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration,
 
-<p align="center">
-  <img src="https://i.imgur.com/USX5i8C.png">
-</p>
+* :exclamation: It is recommended to have a custom server cfg with your desired settings (for example [SURF](https://github.com/DEAFPS/cs-cfg/blob/main/surf.cfg) or [KZ](https://github.com/DEAFPS/cs-cfg/blob/main/kz.cfg)),
 
-<p align="center">
-  <img src="https://i.imgur.com/kWiHOlz.png">
-</p>
+* Here is a [collection of maps that are supported by default](https://steamcommunity.com/sharedfiles/filedetails/?id=3095738559),
 
-<p align="center">
-  <img src="https://i.imgur.com/lXwXNN7.png">
-</p>
+## MySQL
+* Head over to `game/csgo/cfg/SharpTimer/config.cfg` and enable `sharptimer_mysql_enabled`,
 
-<p align="center">
-  <img src="https://i.imgur.com/nyn76Q4.png">
-</p>
+* Configure MySQL connection with database credentials in `mysqlConfig.json`, which is located in the same directory,
 
-# Install
-* Download the [latest release](https://github.com/DEAFPS/SharpTimer/releases)
-
-* Unzip into your servers `game/csgo/` dir
-
-* Its recommended to have a custom server cfg with your desired settings (for example surf or kz)
-
-* Here a collection of maps supported by default: https://steamcommunity.com/sharedfiles/filedetails/?id=3095738559
-
-# Commands
+## Commands
 
 | Command  | What it does |
 | ------------- | ------------- |
 | `!r`  | Teleports the player back to Spawn |
+| `!rb`  | Teleports the player to a Bonus Spawn |
 | `!top`  | Prints the top 10 times on the current map |
+| `!topbonus`  | Prints the top 10 bonus times on the current map |
 | `!rank` | Tells you your rank on the current map |
-| `!pb` | Tells you your PB on the current map |
 | `!sr` | Tells you the current server record of the map |
 | `!hud` | Hides the Timer HUD |
+| `!keys` | Hides the HUD Keys |
 | `!azerty` | Changes Key Layout to Azerty on the HUD |
 | `!cp` | Sets a checkpoint |
 | `!tp` | Teleports the player to the latest checkpoint |
 | `!prevcp` | Teleports the player to the previous checkpoint |
 | `!nextcp` | Teleports the player to the previous checkpoint |
+| `!timer` | Stops timer and blocks it from starting |´
+| `!goto` | Teleports the player to another player by name |
+| `!stage` | Teleports the player to a stage by index |
+| `!stver` | Prints the current plugin version |
 
-# Admin Commands
+
+## Admin Commands
 These commands require the `@css/root` admin flag
 
 | Command  | What it does |
@@ -92,16 +82,10 @@ These commands require the `@css/root` admin flag
 | `!addstartzone`  | Adds a manual start zone to |
 | `!addendzone`  | Adds a manual end zone |
 | `!savezones`  | Saves manually set zones to mapdata.json |
+| `!noclip`  | Enables noclip for admin |
 
-# Configuration
-* See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *⚠️ you want to take a look in there first*
-  
-* You can add custom server settings to `game/csgo/cfg/SharpTimer/custom_exec.cfg`
-  
-  [Example Surf Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/surf.cfg)
+## Zones
 
-  [Example KZ Cfg](https://github.com/DEAFPS/cs-cfg/blob/main/kz.cfg)
-  
 ### Adding Zone Triggers
 * This plugin will look for trigger_multiple entities by default depending what map is being played. By default the plugin tries to hook the following target names:
 
@@ -127,7 +111,8 @@ These commands require the `@css/root` admin flag
 ### Adding "Fake" Zone Triggers
 * Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
 
-* Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:
+<details>
+<summary>Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:</summary>
 
 ### surf_utopia_njv.json
 ```
@@ -146,8 +131,16 @@ These commands require the `@css/root` admin flag
   "RespawnPos": "-2 0 64.03125"
 }
 ```
+
+</details>
+
 ### Adding Zone outline guides
-* This plugin will look for info_target entities to define the zone outlines. Mappers can place these at the opposite corners of the zone triggers like shown in [this example](https://i.imgur.com/8nJBHaH.jpeg)
+* This plugin will look for info_target entities to define the zone outlines. Mappers can place these at the opposite corners of the zone triggers.<details> 
+  <summary>EXAMPLE</summary>
+   <img src="https://i.imgur.com/8nJBHaH.jpeg">
+</details>
+
+
 * These are the supported info_target targetnames
 
 | Start Zone info_target targetname  | End Zone info_target targetname |
@@ -155,13 +148,4 @@ These commands require the `@css/root` admin flag
 | left_start  | left_end  |
 | right_start | right_end |
 
-
-# MySQL
-* Head over to `game/csgo/cfg/SharpTimer/config.cfg` and enable `sharptimer_mysql_enabled`
-
-  After that configure your MySQL connection in `mysqlConfig.json` that is located in the same dir
-
-# [Leaderboards Web Pannel](https://github.com/Letaryat/sharptimer-web-panel)
-
-# Author
-[@DEAFPS_](https://twitter.com/deafps_)
+## Author: [@DEAFPS_](https://twitter.com/deafps_)
