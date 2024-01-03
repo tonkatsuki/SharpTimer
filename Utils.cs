@@ -554,16 +554,15 @@ namespace SharpTimer
         {
             TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
 
-            // Format seconds with three decimal points
-            string secondsWithMilliseconds = $"{timeSpan.Seconds:D2}.{(ticks % 64) * 15 / 4:D3}";
+            string milliseconds = $"{(ticks % 64) * (1000.0 / 64.0):000}";
 
             int totalMinutes = (int)timeSpan.TotalMinutes;
             if (totalMinutes >= 60)
             {
-                return $"{totalMinutes / 60:D1}:{totalMinutes % 60:D2}:{secondsWithMilliseconds}";
+                return $"{totalMinutes / 60:D1}:{totalMinutes % 60:D2}:{timeSpan.Seconds:D2}.{milliseconds}";
             }
 
-            return $"{totalMinutes:D1}:{secondsWithMilliseconds}";
+            return $"{totalMinutes:D1}:{timeSpan.Seconds:D2}.{milliseconds}";
         }
 
         private static string FormatTimeDifference(int currentTicks, int previousTicks)
