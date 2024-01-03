@@ -79,9 +79,9 @@ namespace SharpTimer
         public string? currentMapName;
         public string? defaultServerHostname = ConVar.Find("hostname").StringValue;
 
-        public string? remoteBhopDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/bhop_.json";
-        public string? remoteKZDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/kz_.json";
-        public string? remoteSurfDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/0.1.4-dev/remote_data/surf_.json";
+        public string? remoteBhopDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/main/remote_data/bhop_.json";
+        public string? remoteKZDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/main/remote_data/kz_.json";
+        public string? remoteSurfDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/main/remote_data/surf_.json";
 
         private static Dictionary<string, Tuple<string, string>> testerPersonalGifs = new Dictionary<string, Tuple<string, string>>
         {
