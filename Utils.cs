@@ -1275,7 +1275,7 @@ namespace SharpTimer
 
                 string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(playerRecordsPath, updatedJson);
-                if (stageTriggers.Any()) DumpPlayerStageTimesToJson(player);
+                if ((stageTriggers.Any() || cpTriggers.Any()) && bonusX == 0) DumpPlayerStageTimesToJson(player);
             }
         }
 
