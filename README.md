@@ -108,6 +108,7 @@ These commands require the `@css/root` admin flag
 
 ### Adding "Fake" Zone Triggers
 * Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
+* ⚠️ Only use these as "the last resort" you will run into issues otherwise if a map supports default triggers and you decide to add "fake" zone triggers regardless!
 
 <details>
 <summary>Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:</summary>
