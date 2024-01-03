@@ -832,9 +832,12 @@ namespace SharpTimer
             SharpTimerDebug($"Removed Collison for {player.PlayerName}");
         }
 
-        private Vector? FindStartTriggerPos()
+        private (Vector?, QAngle?) FindStartTriggerPos()
         {
+            currentRespawnPos = null;
+            currentRespawnAng = null;
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+            var info_tps = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination");
 
             foreach (var trigger in triggers)
             {
@@ -842,10 +845,19 @@ namespace SharpTimer
 
                 if (IsValidStartTriggerName(trigger.Entity.Name.ToString()))
                 {
-                    return trigger.CBodyComponent?.SceneNode?.AbsOrigin;
+                    foreach (CBaseEntity info_tp in info_tps)
+                    {
+                        if (info_tp.Entity!.Name != null && IsInsideTrigger(trigger.AbsOrigin!, trigger.Collision.BoundingRadius, info_tp.AbsOrigin!))
+                        {
+                            if (info_tp.CBodyComponent.SceneNode.AbsOrigin == null || info_tp.AbsRotation == null) continue;
+                            return (info_tp.CBodyComponent.SceneNode.AbsOrigin, info_tp.AbsRotation);
+                        }
+                    }
+                    if (trigger.CBodyComponent.SceneNode.AbsOrigin == null) continue;
+                    return (trigger.CBodyComponent.SceneNode.AbsOrigin, null);
                 }
             }
-            return null;
+            return (null, null);
         }
 
         private void FindStageTriggers()
@@ -853,6 +865,7 @@ namespace SharpTimer
             stageTriggers.Clear();
             stageTriggerPoses.Clear();
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+            var info_tps = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination");
 
             foreach (var trigger in triggers)
             {
@@ -861,9 +874,17 @@ namespace SharpTimer
                 var (validStage, X) = IsValidStageTriggerName(trigger.Entity.Name.ToString());
                 if (validStage)
                 {
+                    foreach (CBaseEntity info_tp in info_tps)
+                    {
+                        if (info_tp.Entity!.Name != null && IsInsideTrigger(trigger.AbsOrigin!, trigger.Collision.BoundingRadius, info_tp.AbsOrigin!))
+                        {
+                            if (info_tp.CBodyComponent.SceneNode.AbsOrigin == null || info_tp.AbsRotation == null) continue;
+                            stageTriggerPoses[X] = info_tp.CBodyComponent?.SceneNode?.AbsOrigin;
+                            stageTriggerAngs[X] = info_tp.AbsRotation;
+                            SharpTimerDebug($"Added !stage {X} pos {stageTriggerPoses[X]} ang {stageTriggerAngs[X]}");
+                        }
+                    }
                     stageTriggers[trigger.Handle] = X;
-                    if (trigger.CBodyComponent?.SceneNode?.AbsOrigin == null) continue;
-                    stageTriggerPoses[X] = trigger.CBodyComponent?.SceneNode?.AbsOrigin;
                     SharpTimerDebug($"Added Stage {X} Trigger {trigger.Handle}");
                 }
             }
@@ -874,7 +895,10 @@ namespace SharpTimer
         private void FindBonusStartTriggerPos()
         {
             bonusRespawnPoses.Clear();
+            bonusRespawnAngs.Clear();
+
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+            var info_tps = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination");
 
             foreach (var trigger in triggers)
             {
@@ -883,9 +907,25 @@ namespace SharpTimer
                 var (validStartBonus, bonusX) = IsValidStartBonusTriggerName(trigger.Entity.Name.ToString());
                 if (validStartBonus)
                 {
-                    if (trigger.CBodyComponent?.SceneNode?.AbsOrigin == null) continue;
-                    bonusRespawnPoses[bonusX] = trigger.CBodyComponent?.SceneNode?.AbsOrigin;
-                    SharpTimerDebug($"Added Bonus !rb {bonusX} pos {bonusRespawnPoses[bonusX]}");
+                    bool bonusPosAndAngSet = false;
+
+                    foreach (CBaseEntity info_tp in info_tps)
+                    {
+                        if (info_tp.Entity!.Name != null && IsInsideTrigger(trigger.AbsOrigin!, trigger.Collision.BoundingRadius, info_tp.AbsOrigin!))
+                        {
+                            if (info_tp.CBodyComponent.SceneNode.AbsOrigin == null || info_tp.AbsRotation == null) continue;
+                            bonusRespawnPoses[bonusX] = info_tp.CBodyComponent?.SceneNode?.AbsOrigin;
+                            bonusRespawnAngs[bonusX] = info_tp.AbsRotation;
+                            SharpTimerDebug($"Added Bonus !rb {bonusX} pos {bonusRespawnPoses[bonusX]} ang {bonusRespawnAngs[bonusX]}");
+                            bonusPosAndAngSet = true;
+                        }
+                    }
+
+                    if (!bonusPosAndAngSet && trigger.CBodyComponent.SceneNode.AbsOrigin != null)
+                    {
+                        bonusRespawnPoses[bonusX] = trigger.CBodyComponent?.SceneNode?.AbsOrigin;
+                        SharpTimerDebug($"Added Bonus !rb {bonusX} pos {bonusRespawnPoses[bonusX]}");
+                    }
                 }
             }
         }
@@ -985,6 +1025,13 @@ namespace SharpTimer
             }
 
             return new QAngle(0, 0, 0);
+        }
+
+        public bool IsInsideTrigger(Vector triggerPos, float triggerCollisionRadius, Vector info_tpPos)
+        {
+            return info_tpPos.X >= triggerPos.X - triggerCollisionRadius && info_tpPos.X <= triggerPos.X + triggerCollisionRadius &&
+                   info_tpPos.Y >= triggerPos.Y - triggerCollisionRadius && info_tpPos.Y <= triggerPos.Y + triggerCollisionRadius &&
+                   info_tpPos.Z >= triggerPos.Z - triggerCollisionRadius && info_tpPos.Z <= triggerPos.Z + triggerCollisionRadius;
         }
 
         public Dictionary<string, PlayerRecord> GetSortedRecords(int bonusX = 0)
@@ -1344,7 +1391,8 @@ namespace SharpTimer
                 }
                 else
                 {
-                    currentRespawnPos = FindStartTriggerPos();
+                    (currentRespawnPos, currentRespawnAng) = FindStartTriggerPos();
+
                     FindBonusStartTriggerPos();
                     FindStageTriggers();
                     SharpTimerConPrint($"RespawnPos not found, trying to hook trigger pos instead");
@@ -1379,7 +1427,7 @@ namespace SharpTimer
             {
                 SharpTimerConPrint($"Map data json not found for map: {currentMapName}!");
                 SharpTimerConPrint($"Trying to hook Triggers supported by default!");
-                currentRespawnPos = FindStartTriggerPos();
+                (currentRespawnPos, currentRespawnAng) = FindStartTriggerPos();
                 FindBonusStartTriggerPos();
                 FindStageTriggers();
                 if (currentRespawnPos == null)

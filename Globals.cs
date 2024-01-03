@@ -1,6 +1,7 @@
 using System.Text;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Utils;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace SharpTimer
@@ -27,10 +28,13 @@ namespace SharpTimer
         public Vector currentMapEndC1 = new Vector(0, 0, 0);
         public Vector currentMapEndC2 = new Vector(0, 0, 0);
         public Vector? currentRespawnPos = null;
+        public QAngle? currentRespawnAng = null;
         public bool currentMapOverrideDisableTelehop = false;
         private Dictionary<int, Vector?> bonusRespawnPoses = new Dictionary<int, Vector?>();
+        private Dictionary<int, QAngle?> bonusRespawnAngs = new Dictionary<int, QAngle?>();
         private Dictionary<nint, int> stageTriggers = new Dictionary<nint, int>();
         private Dictionary<int, Vector?> stageTriggerPoses = new Dictionary<int, Vector?>();
+        private Dictionary<int, QAngle?> stageTriggerAngs = new Dictionary<int, QAngle?>();
         private int stageTriggerCount;
         public string? currentMapType = null;
         public int? currentMapTier = null;
@@ -86,7 +90,7 @@ namespace SharpTimer
         private static Dictionary<string, Tuple<string, string>> testerPersonalGifs = new Dictionary<string, Tuple<string, string>>
         {
             // steamid64                                        //sparks gif                                               //paused timer
-            {"86561198106801439", Tuple.Create("<img src='https://i.imgur.com/ATRxyFK.gif'>", "<br><img src='https://i.imgur.com/cjLztNF.gif'><br>")}, //
+            {"76561198106801439", Tuple.Create("<img src='https://i.imgur.com/ATRxyFK.gif'>", "<br><img src='https://i.imgur.com/cjLztNF.gif'><br>")}, //
 
             {"76561198175123071", Tuple.Create("<img src='https://i.imgur.com/ATRxyFK.gif'>", "<br><img src='https://i.imgur.com/UeRQp6P.gif'><br>")}, //
 

@@ -167,7 +167,7 @@ namespace SharpTimer
 
                     if (!IsAllowedPlayer(player) || caller.Entity.Name == null) return HookResult.Continue;
 
-                    if (stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] != 1 && IsAllowedPlayer(player))
+                    if (stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] != 1 && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
                     {
                         HandlePlayerStageTimes(player, caller.Handle);
                     }

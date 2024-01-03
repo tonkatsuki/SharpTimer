@@ -530,7 +530,14 @@ namespace SharpTimer
 
                 if (bonusRespawnPoses[bonusX] != null)
                 {
-                    player.PlayerPawn.Value.Teleport(bonusRespawnPoses[bonusX], player.PlayerPawn.Value.EyeAngles ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    if (bonusRespawnAngs.TryGetValue(bonusX, out QAngle bonusAng) && bonusAng != null)
+                    {
+                        player.PlayerPawn.Value.Teleport(bonusRespawnPoses[bonusX], bonusRespawnAngs[bonusX], new Vector(0, 0, 0));
+                    }
+                    else
+                    {
+                        player.PlayerPawn.Value.Teleport(bonusRespawnPoses[bonusX], player.PlayerPawn.Value.EyeAngles ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    }
                     SharpTimerDebug($"{player.PlayerName} css_rb {bonusX} to {bonusRespawnPoses[bonusX]}");
                 }
                 else
@@ -545,7 +552,7 @@ namespace SharpTimer
                     playerTimers[player.Slot].IsBonusTimerRunning = false;
                     playerTimers[player.Slot].BonusTimerTicks = 0;
                 });
-                
+
                 if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {respawnSound}");
             }
             catch (Exception ex)
@@ -588,10 +595,10 @@ namespace SharpTimer
                 // Remove checkpoints for the current player
                 playerCheckpoints.Remove(player.Slot);
 
-                if (bonusRespawnPoses[stageX] != null)
+                if (stageTriggerPoses.TryGetValue(stageX, out Vector stagePos) && stagePos != null)
                 {
-                    player.PlayerPawn.Value.Teleport(stageTriggerPoses[stageX], player.PlayerPawn.Value.EyeAngles ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
-                    SharpTimerDebug($"{player.PlayerName} css_stage {stageX} to {stageTriggerPoses[stageX]}");
+                    player.PlayerPawn.Value.Teleport(stagePos, stageTriggerAngs[stageX] ?? player.PlayerPawn.Value.EyeAngles, new Vector(0, 0, 0));
+                    SharpTimerDebug($"{player.PlayerName} css_stage {stageX} to {stagePos}");
                 }
                 else
                 {
@@ -605,7 +612,7 @@ namespace SharpTimer
                     playerTimers[player.Slot].IsBonusTimerRunning = false;
                     playerTimers[player.Slot].BonusTimerTicks = 0;
                 });
-                
+
                 if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {respawnSound}");
             }
             catch (Exception ex)
@@ -637,7 +644,14 @@ namespace SharpTimer
 
                 if (currentRespawnPos != null)
                 {
-                    player.PlayerPawn.Value.Teleport(currentRespawnPos, player.PlayerPawn.Value.EyeAngles ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    if (currentRespawnAng != null)
+                    {
+                        player.PlayerPawn.Value.Teleport(currentRespawnPos, currentRespawnAng, new Vector(0, 0, 0));
+                    }
+                    else
+                    {
+                        player.PlayerPawn.Value.Teleport(currentRespawnPos, player.PlayerPawn.Value.EyeAngles ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    }
                     SharpTimerDebug($"{player.PlayerName} css_r to {currentRespawnPos}");
                 }
                 else
