@@ -1,11 +1,11 @@
-# SharpTimer
+# SharpTimer 
 SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using CounterStrikeSharp
 
 # Dependencies
 
 [**MetaMod**](https://cs2.poggu.me/metamod/installation/)
 
-[**CounterStrikeSharp** *(at least v126)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
+[**CounterStrikeSharp** *(at least v142)*](https://github.com/roflmuffin/CounterStrikeSharp/releases)
 
 [**MovementUnlocker** *(optional but recommended)*](https://github.com/Source2ZE/MovementUnlocker)
 
@@ -94,7 +94,7 @@ These commands require the `@css/root` admin flag
 | `!savezones`  | Saves manually set zones to mapdata.json |
 
 # Configuration
-* See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *(yes you can enable checkpoints there)*
+* See `game/csgo/cfg/SharpTimer/config.cfg` for basic plugin configuration *⚠️ you want to take a look in there first*
   
 * You can add custom server settings to `game/csgo/cfg/SharpTimer/custom_exec.cfg`
   
@@ -146,6 +146,15 @@ These commands require the `@css/root` admin flag
   "RespawnPos": "-2 0 64.03125"
 }
 ```
+### Adding Zone outline guides
+* This plugin will look for info_target entities to define the zone outlines. Mappers can place these at the opposite corners of the zone triggers like shown in [this example](https://i.imgur.com/8nJBHaH.jpeg)
+* These are the supported info_target targetnames
+
+| Start Zone info_target targetname  | End Zone info_target targetname |
+| ------------- | ------------- |
+| left_start  | left_end  |
+| right_start | right_end |
+
 
 # MySQL
 * Head over to `game/csgo/cfg/SharpTimer/config.cfg` and enable `sharptimer_mysql_enabled`
