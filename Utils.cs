@@ -444,6 +444,7 @@ namespace SharpTimer
                     @"^s([1-9][0-9]?|tage[1-9][0-9]?)_start$",
                     @"^map_cp([1-9][0-9]?)$",
                     @"^map_checkpoint([1-9][0-9]?)$",
+                    @"^map_start$",
                 };
 
                 foreach (var pattern in patterns)
@@ -451,8 +452,16 @@ namespace SharpTimer
                     var match = Regex.Match(triggerName, pattern);
                     if (match.Success)
                     {
-                        int X = int.Parse(match.Groups[1].Value);
-                        return (true, X);
+                        if (pattern == @"^map_start$")
+                        {
+                            // If pattern is "^map_start$", set X to 1
+                            return (true, 1);
+                        }
+                        else
+                        {
+                            int X = int.Parse(match.Groups[1].Value);
+                            return (true, X);
+                        }
                     }
                 }
 

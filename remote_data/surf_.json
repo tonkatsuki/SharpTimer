@@ -37,7 +37,7 @@
     },
     "surf_ace": {
         "Tier": 1,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_aircontrol": {
         "Tier": 1,
@@ -61,7 +61,7 @@
     },
     "surf_aser": {
         "Tier": 1,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_aura": {
         "Tier": 1,
@@ -117,7 +117,7 @@
     },
     "surf_deathstar": {
         "Tier": 1,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_demise": {
         "Tier": 1,
@@ -169,7 +169,7 @@
     },
     "surf_kepler": {
         "Tier": 1,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_kitsune": {
         "Tier": 1,
@@ -265,7 +265,7 @@
     },
     "surf_school": {
         "Tier": 1,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_summit": {
         "Tier": 1,
@@ -325,7 +325,7 @@
     },
     "surf_81st_network": {
         "Tier": 2,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_8bit": {
         "Tier": 2,
@@ -337,7 +337,7 @@
     },
     "surf_activation": {
         "Tier": 2,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_aeron": {
         "Tier": 2,
@@ -369,7 +369,7 @@
     },
     "surf_anzchamps": {
         "Tier": 2,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_aqua": {
         "Tier": 2,
@@ -449,7 +449,7 @@
     },
     "surf_destruction": {
         "Tier": 2,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_devs": {
         "Tier": 2,
@@ -609,7 +609,7 @@
     },
     "surf_in_space": {
         "Tier": 2,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_indecisive": {
         "Tier": 2,
@@ -673,7 +673,7 @@
     },
     "surf_kz_protraining": {
         "Tier": 2,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_lies": {
         "Tier": 2,
@@ -781,7 +781,7 @@
     },
     "surf_progress": {
         "Tier": 2,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_psycho": {
         "Tier": 2,
@@ -969,7 +969,7 @@
     },
     "surf_asrown": {
         "Tier": 3,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_ataque": {
         "Tier": 3,
@@ -1325,7 +1325,7 @@
     },
     "surf_kitsune2": {
         "Tier": 3,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_krow10": {
         "Tier": 3,
@@ -1417,7 +1417,7 @@
     },
     "surf_minimumwage": {
         "Tier": 3,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_missing_no": {
         "Tier": 3,
@@ -1649,7 +1649,7 @@
     },
     "surf_sanguine": {
         "Tier": 3,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_santorini2": {
         "Tier": 3,
@@ -1821,7 +1821,7 @@
     },
     "surf_unraveled": {
         "Tier": 3,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_vale": {
         "Tier": 3,
@@ -1889,7 +1889,7 @@
     },
     "surf_4dimensional": {
         "Tier": 4,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_adrift": {
         "Tier": 4,
@@ -2065,7 +2065,7 @@
     },
     "surf_desolate": {
         "Tier": 4,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_discovery": {
         "Tier": 4,
@@ -2077,7 +2077,7 @@
     },
     "surf_drifting": {
         "Tier": 4,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_dynamicsed": {
         "Tier": 4,
@@ -2317,7 +2317,7 @@
     },
     "surf_lt_unicorn": {
         "Tier": 4,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_medley": {
         "Tier": 4,
@@ -2457,7 +2457,7 @@
     },
     "surf_rands": {
         "Tier": 4,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_redemption_b1": {
         "Tier": 4,
@@ -2497,7 +2497,7 @@
     },
     "surf_rustic_v2": {
         "Tier": 4,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_sacrifice": {
         "Tier": 4,
@@ -2781,7 +2781,7 @@
     },
     "surf_drift": {
         "Tier": 5,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_edge": {
         "Tier": 5,
@@ -3141,7 +3141,7 @@
     },
     "surf_lt_omnific": {
         "Tier": 6,
-        "Type": "Staged-Linear"
+        "Type": "Hybrid"
     },
     "surf_map_h": {
         "Tier": 6,
