@@ -190,12 +190,12 @@ namespace SharpTimer
                         playerTimers[player.Slot].IsBonusTimerRunning = false;
                         playerTimers[player.Slot].BonusTimerTicks = 0;
                         playerCheckpoints.Remove(player.Slot);
-                        if (stageTriggers.Any() && useStageTriggers == true)
+                        if (stageTriggerCount != 0 && useStageTriggers == true)
                         {
                             playerTimers[player.Slot].StageRecords.Clear();
                             playerTimers[player.Slot].CurrentStage = stageTriggers.GetValueOrDefault(caller.Handle, 0);
                         }
-                        else if (cpTriggers.Any() && useStageTriggers == false)
+                        else if (cpTriggerCount != 0 && useStageTriggers == false)
                         {
                             playerTimers[player.Slot].StageRecords.Clear();
                             playerTimers[player.Slot].CurrentStage = cpTriggers.GetValueOrDefault(caller.Handle, 0);
@@ -446,13 +446,13 @@ namespace SharpTimer
         {
             if (!IsAllowedPlayer(player) || playerTimers[player.Slot].IsTimerRunning == false) return;
 
-            if (useStageTriggers && stageTriggers.Any() && stageTriggerCount != playerTimers[player.Slot].CurrentStage)
+            if (useStageTriggers && stageTriggerCount != 0 && stageTriggerCount != playerTimers[player.Slot].CurrentStage)
             {
                 player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current stage does not match final one ({stageTriggerCount})");
                 playerTimers[player.Slot].IsTimerRunning = false;
                 return;
             }
-            else if (!useStageTriggers && cpTriggers.Any() && cpTriggerCount != playerTimers[player.Slot].CurrentStage)
+            else if (!useStageTriggers && cpTriggerCount != 0 && cpTriggerCount != playerTimers[player.Slot].CurrentStage)
             {
                 player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({cpTriggerCount})");
                 playerTimers[player.Slot].IsTimerRunning = false;

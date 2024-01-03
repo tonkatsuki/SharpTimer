@@ -914,8 +914,17 @@ namespace SharpTimer
                 }
 
             }
+            
             stageTriggerCount = stageTriggers.Count;
             cpTriggerCount = cpTriggers.Count;
+
+            if(stageTriggerCount == 1) // if theres only one stage strigger the map is liniear
+            {
+                stageTriggerCount = 0;
+                useStageTriggers = false;
+                stageTriggers.Clear();
+            }
+
             SharpTimerDebug($"Found a max of {stageTriggerCount} Stage triggers");
             SharpTimerDebug($"Found a max of {cpTriggerCount} Checkpoint triggers");
             SharpTimerDebug($"Use stageTriggers is set to {useStageTriggers}");
@@ -1275,7 +1284,7 @@ namespace SharpTimer
 
                 string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(playerRecordsPath, updatedJson);
-                if ((stageTriggers.Any() || cpTriggers.Any()) && bonusX == 0) DumpPlayerStageTimesToJson(player);
+                if ((stageTriggerCount != 0 || cpTriggerCount != 0) && bonusX == 0) DumpPlayerStageTimesToJson(player);
             }
         }
 
