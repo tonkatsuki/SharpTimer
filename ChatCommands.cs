@@ -429,7 +429,11 @@ namespace SharpTimer
                 pbTicks = await GetPreviousPlayerRecordFromDatabase(player, steamId, currentMapName, playerName);
             }
 
-            string rankHUDstring = $"{(string.IsNullOrEmpty(rankIcon) ? "" : "<font class='fontSize-s' color='gray'>|</font> " + rankIcon)}<font class='fontSize-s' color='gray'>{(string.IsNullOrEmpty(ranking) ? "" : " | " + ranking)}{(pbTicks != 0 ? $" | {FormatTime(pbTicks)}" : "")}";
+            string rankHUDstring = $"{(!string.IsNullOrEmpty(rankIcon) ? $" {rankIcon}" : "")}" +
+                       $"<font class='fontSize-s' color='gray'>" +
+                       $"{((!string.IsNullOrEmpty(ranking) && string.IsNullOrEmpty(rankIcon)) ? $" {ranking}" : "")}" +
+                       $"{((!string.IsNullOrEmpty(ranking) && !string.IsNullOrEmpty(rankIcon)) ? " | " + ranking : "")}" +
+                       $"{(pbTicks != 0 ? $" | {FormatTime(pbTicks)}" : "")}";
 
             Server.NextFrame(() =>
             {
