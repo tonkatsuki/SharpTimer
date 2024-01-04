@@ -14,7 +14,7 @@ namespace SharpTimer
         Dictionary<nint, TriggerPushData> triggerPushData = new Dictionary<nint, TriggerPushData>();
 
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => $"0.1.4 - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
+        public override string ModuleVersion => $"0.1.5 - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $"[SharpTimer] ";
