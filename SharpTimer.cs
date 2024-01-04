@@ -40,7 +40,6 @@ namespace SharpTimer
                 }
                 else
                 {
-
                     connectedPlayers[player.Slot] = player;
 
                     SharpTimerDebug($"Added player {player.PlayerName} with UserID {player.UserId} to connectedPlayers");
@@ -59,8 +58,8 @@ namespace SharpTimer
                     playerTimers[player.Slot].CurrentMapStage = 0;
                     playerTimers[player.Slot].CurrentMapCheckpoint = 0;
 
-                    playerTimers[player.Slot].IsTester = IsPlayerATester(player.SteamID.ToString());
-                    if (playerTimers[player.Slot].IsTester == true) HandleTesterGifs(player.Slot, player.SteamID.ToString());
+                    _ = IsPlayerATester(player.SteamID.ToString(), player.Slot);
+                    
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 

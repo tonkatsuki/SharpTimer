@@ -249,6 +249,7 @@ namespace SharpTimer
                 stageTriggers.Clear();
                 stageTriggerPoses.Clear();
                 stageTriggerAngs.Clear();
+                SharpTimerDebug($"Only one Stage Trigger found. Not enough. Cancelling...");
             }
 
             SharpTimerDebug($"Found a max of {stageTriggerCount} Stage triggers");

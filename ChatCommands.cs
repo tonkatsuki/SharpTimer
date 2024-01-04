@@ -34,7 +34,6 @@ namespace SharpTimer
                 playerTimers[player.Slot].IsAddingStartZone = true;
                 playerTimers[player.Slot].IsAddingEndZone = false;
                 player.PrintToChat($" {ChatColors.LightPurple}[ZONE TOOL]{ChatColors.Default} Please stand on one of the opposite start zone corners and type {ParseColorToSymbol(primaryHUDcolor)}!c1 & !c2");
-                player.PrintToCenter($" {ChatColors.Grey}Please stand on one of the opposite start zone corners and type !c1 & !c2");
                 player.PrintToChat($" {ChatColors.Grey}Type !addendzone again to cancel...");
                 player.PrintToChat($" {ChatColors.Grey}Commands:!addstartzone, !addendzone,");
                 player.PrintToChat($" {ChatColors.Grey}!addrespawnpos, !savezones");
@@ -63,7 +62,6 @@ namespace SharpTimer
                 playerTimers[player.Slot].IsAddingStartZone = false;
                 playerTimers[player.Slot].IsAddingEndZone = true;
                 player.PrintToChat($" {ChatColors.LightPurple}[ZONE TOOL]{ChatColors.Default} Please stand on one of the opposite end zone corners and type {ParseColorToSymbol(primaryHUDcolor)}!c1 & !c2");
-                player.PrintToCenter($" Please stand on one of the opposite end zone corners and type !c1 & !c2");
                 player.PrintToChat($" {ChatColors.Grey}Type !addendzone again to cancel...");
                 player.PrintToChat($" {ChatColors.Grey}Commands:!addstartzone, !addendzone,");
                 player.PrintToChat($" {ChatColors.Grey}!addrespawnpos, !savezones");

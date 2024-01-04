@@ -1,17 +1,10 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using System.Drawing;
-using System;
-using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace SharpTimer
@@ -34,28 +27,27 @@ namespace SharpTimer
             return isTeamValid && isTeamSpectatorOrNone && isConnected;
         }
 
-        private bool IsPlayerATester(string steamId)
+        async Task IsPlayerATester(string steamId64, int playerSlot)
         {
-            return testerPersonalGifs.ContainsKey(steamId);
-        }
-
-        public static Tuple<string, string> GetTesterPersonalGif(string steamId)
-        {
-            if (testerPersonalGifs.ContainsKey(steamId))
+            using (HttpClient client = new HttpClient())
             {
-                return testerPersonalGifs[steamId];
-            }
-            else
-            {
-                return Tuple.Create("Index not found", "");
-            }
-        }
+                string response = await client.GetStringAsync(testerPersonalGifsSource);
+                JsonDocument jsonDocument = JsonDocument.Parse(response);
+                playerTimers[playerSlot].IsTester = jsonDocument.RootElement.TryGetProperty(steamId64, out JsonElement steamData);
 
-        public void HandleTesterGifs(int playerSlot, string steamId)
-        {
-            Tuple<string, string> gifs = GetTesterPersonalGif(steamId);
-            playerTimers[playerSlot].TesterSparkleGif = gifs.Item1;
-            playerTimers[playerSlot].TesterPausedGif = gifs.Item2;
+                if (playerTimers[playerSlot].IsTester)
+                {
+                    if (steamData.TryGetProperty("SmolGif", out JsonElement smolGifElement))
+                    {
+                        playerTimers[playerSlot].TesterSparkleGif = smolGifElement.GetString() ?? "";
+                    }
+
+                    if (steamData.TryGetProperty("BigGif", out JsonElement bigGifElement))
+                    {
+                        playerTimers[playerSlot].TesterPausedGif = bigGifElement.GetString() ?? "";
+                    }
+                }
+            }
         }
 
         public void TimerOnTick(CCSPlayerController player, int playerSlot)
@@ -86,6 +78,20 @@ namespace SharpTimer
                               $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
                               $"{(currentMapType != null ? $" | {currentMapType}" : "")}" +
                               $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")} </font> ";
+
+            /* var timerLine = playerTimers[playerSlot].IsBonusTimerRunning
+                ? $"Bonus: {playerTimers[playerSlot].BonusStage} {playerBonusTime}\n"
+                : playerTimers[playerSlot].IsTimerRunning
+                    ? $"{GetPlayerPlacement(player)} {playerTime}" +
+                    $"{(playerTimers[playerSlot].CurrentMapStage != 0 && useStageTriggers == true ? $" {playerTimers[playerSlot].CurrentMapStage}/{stageTriggerCount}" : "")}\n"
+                    : "";
+
+            var veloLine = $"Speed: {formattedPlayerVel} " +
+                           $"({formattedPlayerPre})\n";
+            var veloLineAlt = $"{GetSpeedBar(Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()))}\n";
+            var infoLine = $"{(currentMapTier != null ? $"Tier: {currentMapTier}" : "")}" +
+                           $"{(currentMapType != null ? $" | {currentMapType}" : "")}" +
+                           $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")}"; */
 
             var forwardKey = playerTimers[playerSlot].Azerty ? "Z" : "W";
             var leftKey = playerTimers[playerSlot].Azerty ? "Q" : "A";
