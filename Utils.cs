@@ -110,7 +110,7 @@ namespace SharpTimer
             var timerLine = playerTimers[playerSlot].IsBonusTimerRunning
                 ? $" <font color='gray' class='fontSize-s'>Bonus: {playerTimers[playerSlot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font> <br>"
                 : playerTimers[playerSlot].IsTimerRunning
-                    ? $" <font color='gray' class='fontSize-s'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font>{((playerTimers[playerSlot].CurrentStage != 0 && useStageTriggers == true) ? $"<font color='gray' class='fontSize-s'> {playerTimers[playerSlot].CurrentStage}/{stageTriggerCount}</font>" : "")} <br>"
+                    ? $" <font color='gray' class='fontSize-s'>{GetPlayerPlacement(player)}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerTime}</font>{((playerTimers[playerSlot].CurrentMapStage != 0 && useStageTriggers == true) ? $"<font color='gray' class='fontSize-s'> {playerTimers[playerSlot].CurrentMapStage}/{stageTriggerCount}</font>" : "")} <br>"
                     : "";
 
             var veloLine = $" {(playerTimers[playerSlot].IsTester ? playerTimers[playerSlot].TesterSparkleGif : "")}<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font>{(playerTimers[playerSlot].IsTester ? playerTimers[playerSlot].TesterSparkleGif : "")} <br>";
@@ -240,31 +240,50 @@ namespace SharpTimer
 
         private void HandlePlayerStageTimes(CCSPlayerController player, nint triggerHandle)
         {
-            if (!IsAllowedPlayer(player) || playerTimers[player.Slot].CurrentStage == GetCurrentTrigger(triggerHandle))
+            if (!IsAllowedPlayer(player) || playerTimers[player.Slot].CurrentMapStage == stageTriggers[triggerHandle])
             {
                 return;
             }
 
             SharpTimerDebug($"Player {player.PlayerName} has a stage trigger with handle {triggerHandle}");
-            int previousStageTime = GetStageTime(player.SteamID.ToString(), GetCurrentTrigger(triggerHandle));
+            int previousStageTime = GetStageTime(player.SteamID.ToString(), stageTriggers[triggerHandle]);
 
             if (previousStageTime != 0)
             {
-                player.PrintToChat(msgPrefix + $" {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                player.PrintToChat(msgPrefix + $" Entering Stage: {stageTriggers[triggerHandle]} {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
             }
 
             if (playerTimers[player.Slot].StageRecords != null && playerTimers[player.Slot].IsTimerRunning == true)
             {
-                playerTimers[player.Slot].StageRecords[GetCurrentTrigger(triggerHandle)] = playerTimers[player.Slot].TimerTicks;
-                SharpTimerDebug($"Player {player.PlayerName} Entering stage {GetCurrentTrigger(triggerHandle)} Time {playerTimers[player.Slot].StageRecords[GetCurrentTrigger(triggerHandle)]}");
+                playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
+                SharpTimerDebug($"Player {player.PlayerName} Entering stage {stageTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]]}");
             }
 
-            playerTimers[player.Slot].CurrentStage = GetCurrentTrigger(triggerHandle);
+            playerTimers[player.Slot].CurrentMapStage = stageTriggers[triggerHandle];
         }
 
-        private int GetCurrentTrigger(nint triggerHandle)
+        private void HandlePlayerCheckpointTimes(CCSPlayerController player, nint triggerHandle)
         {
-            return useStageTriggers ? stageTriggers[triggerHandle] : cpTriggers[triggerHandle];
+            if (!IsAllowedPlayer(player) || playerTimers[player.Slot].CurrentMapCheckpoint == cpTriggers[triggerHandle])
+            {
+                return;
+            }
+
+            SharpTimerDebug($"Player {player.PlayerName} has a checkpoint trigger with handle {triggerHandle}");
+            int previousStageTime = GetStageTime(player.SteamID.ToString(), cpTriggers[triggerHandle]);
+
+            if (previousStageTime != 0)
+            {
+                player.PrintToChat(msgPrefix + $" Checkpoint: {cpTriggers[triggerHandle]} {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+            }
+
+            if (playerTimers[player.Slot].StageRecords != null && playerTimers[player.Slot].IsTimerRunning == true)
+            {
+                playerTimers[player.Slot].StageRecords[cpTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
+                SharpTimerDebug($"Player {player.PlayerName} Entering checkpoint {cpTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageRecords[cpTriggers[triggerHandle]]}");
+            }
+
+            playerTimers[player.Slot].CurrentMapCheckpoint = cpTriggers[triggerHandle];
         }
 
         public int GetStageTime(string steamId, int stageIndex)
@@ -437,16 +456,14 @@ namespace SharpTimer
             }
         }
 
-        private (bool valid, int X, bool IsCheckpoint) IsValidStageTriggerName(string triggerName)
+        private (bool valid, int X) IsValidStageTriggerName(string triggerName)
         {
             try
             {
-                if (string.IsNullOrEmpty(triggerName)) return (false, 0, false);
+                if (string.IsNullOrEmpty(triggerName)) return (false, 0);
 
                 string[] patterns = {
                     @"^s([1-9][0-9]?|tage[1-9][0-9]?)_start$",
-                    @"^map_cp([1-9][0-9]?)$",
-                    @"^map_checkpoint([1-9][0-9]?)$",
                     @"^map_start$",
                 };
 
@@ -458,28 +475,53 @@ namespace SharpTimer
                         if (pattern == @"^map_start$")
                         {
                             // If pattern is "^map_start$", set X to 1
-                            return (true, 1, false);
-                        }
-                        else if (pattern == @"^map_cp([1-9][0-9]?)$" || pattern == @"^map_checkpoint([1-9][0-9]?)$")
-                        {
-                            useStageTriggers = false;
-                            int X = int.Parse(match.Groups[1].Value);
-                            return (true, X, true);
+                            return (true, 1);
                         }
                         else
                         {
                             int X = int.Parse(match.Groups[1].Value);
-                            return (true, X, false);
+                            return (true, X);
                         }
                     }
                 }
 
-                return (false, 0, false);
+                return (false, 0);
             }
             catch (Exception ex)
             {
                 SharpTimerError($"Exception in IsValidStageTriggerName: {ex.Message}");
-                return (false, 0, false);
+                return (false, 0);
+            }
+        }
+
+        private (bool valid, int X) IsValidCheckpointTriggerName(string triggerName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(triggerName)) return (false, 0);
+
+                string[] patterns = {
+                    @"^map_cp([1-9][0-9]?)$",
+                    @"^map_checkpoint([1-9][0-9]?)$"
+                };
+
+                foreach (var pattern in patterns)
+                {
+                    var match = Regex.Match(triggerName, pattern);
+                    if (match.Success)
+                    {
+                        useStageTriggers = false;
+                        int X = int.Parse(match.Groups[1].Value);
+                        return (true, X);
+                    }
+                }
+
+                return (false, 0);
+            }
+            catch (Exception ex)
+            {
+                SharpTimerError($"Exception in IsValidCheckpointTriggerName: {ex.Message}");
+                return (false, 0);
             }
         }
 
@@ -882,7 +924,6 @@ namespace SharpTimer
         {
             useStageTriggers = true;
             stageTriggers.Clear();
-            cpTriggers.Clear();
             stageTriggerPoses.Clear();
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
             var info_tps = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination");
@@ -891,8 +932,8 @@ namespace SharpTimer
             {
                 if (trigger == null || trigger.Entity.Name == null) continue;
 
-                var (validStage, X, isCheckpoint) = IsValidStageTriggerName(trigger.Entity.Name.ToString());
-                if (validStage && !isCheckpoint)
+                var (validStage, X) = IsValidStageTriggerName(trigger.Entity.Name.ToString());
+                if (validStage)
                 {
                     foreach (CBaseEntity info_tp in info_tps)
                     {
@@ -907,27 +948,44 @@ namespace SharpTimer
                     stageTriggers[trigger.Handle] = X;
                     SharpTimerDebug($"Added Stage {X} Trigger {trigger.Handle}");
                 }
-                else if (validStage && isCheckpoint)
+            }
+
+            stageTriggerCount = stageTriggers.Count;
+
+            if (stageTriggerCount == 1) // if theres only one stage strigger the map is liniear
+            {
+                stageTriggerCount = 0;
+                useStageTriggers = false;
+                stageTriggers.Clear();
+                stageTriggerPoses.Clear();
+                stageTriggerAngs.Clear();
+            }
+
+            SharpTimerDebug($"Found a max of {stageTriggerCount} Stage triggers");
+            SharpTimerDebug($"Use stageTriggers is set to {useStageTriggers}");
+        }
+
+        private void FindCheckpointTriggers()
+        {
+            cpTriggers.Clear();
+            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
+
+            foreach (var trigger in triggers)
+            {
+                if (trigger == null || trigger.Entity.Name == null) continue;
+
+                var (validCp, X) = IsValidCheckpointTriggerName(trigger.Entity.Name.ToString());
+                if (validCp)
                 {
                     cpTriggers[trigger.Handle] = X;
                     SharpTimerDebug($"Added Checkpoint {X} Trigger {trigger.Handle}");
                 }
 
             }
-            
-            stageTriggerCount = stageTriggers.Count;
+
             cpTriggerCount = cpTriggers.Count;
 
-            if(stageTriggerCount == 1) // if theres only one stage strigger the map is liniear
-            {
-                stageTriggerCount = 0;
-                useStageTriggers = false;
-                stageTriggers.Clear();
-            }
-
-            SharpTimerDebug($"Found a max of {stageTriggerCount} Stage triggers");
             SharpTimerDebug($"Found a max of {cpTriggerCount} Checkpoint triggers");
-            SharpTimerDebug($"Use stageTriggers is set to {useStageTriggers}");
         }
 
         private void FindBonusStartTriggerPos()
@@ -1375,6 +1433,14 @@ namespace SharpTimer
                 });
 
                 if (removeCrouchFatigueEnabled == true) Server.ExecuteCommand("sv_timebetweenducks 0");
+
+                bonusRespawnPoses.Clear();
+                bonusRespawnAngs.Clear();
+
+                cpTriggers.Clear();
+                stageTriggers.Clear();
+                stageTriggerAngs.Clear();
+                stageTriggerPoses.Clear();
             });
         }
 
@@ -1437,6 +1503,7 @@ namespace SharpTimer
 
                     FindBonusStartTriggerPos();
                     FindStageTriggers();
+                    FindCheckpointTriggers();
                     SharpTimerConPrint($"RespawnPos not found, trying to hook trigger pos instead");
                     if (currentRespawnPos == null)
                     {
@@ -1472,6 +1539,7 @@ namespace SharpTimer
                 (currentRespawnPos, currentRespawnAng) = FindStartTriggerPos();
                 FindBonusStartTriggerPos();
                 FindStageTriggers();
+                FindCheckpointTriggers();
                 if (currentRespawnPos == null)
                 {
                     SharpTimerConPrint($"Hooking Trigger RespawnPos Failed!");

@@ -56,7 +56,8 @@ namespace SharpTimer
                     playerTimers[player.Slot].MovementService = new CCSPlayer_MovementServices(player.PlayerPawn.Value.MovementServices!.Handle);
                     playerTimers[player.Slot].SortedCachedRecords = GetSortedRecords();
                     playerTimers[player.Slot].StageRecords = new Dictionary<int, int>();
-                    playerTimers[player.Slot].CurrentStage = 0;
+                    playerTimers[player.Slot].CurrentMapStage = 0;
+                    playerTimers[player.Slot].CurrentMapCheckpoint = 0;
 
                     playerTimers[player.Slot].IsTester = IsPlayerATester(player.SteamID.ToString());
                     if (playerTimers[player.Slot].IsTester == true) HandleTesterGifs(player.Slot, player.SteamID.ToString());
@@ -167,13 +168,20 @@ namespace SharpTimer
 
                     if (!IsAllowedPlayer(player) || caller.Entity.Name == null) return HookResult.Continue;
 
-                    if (((useStageTriggers == true && stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] != 1) || (useStageTriggers == false && cpTriggers.ContainsKey(caller.Handle))) && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
+                    if (useStageTriggers == true && stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] != 1 && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
                     {
-                        HandlePlayerStageTimes(player, caller.Handle);
+                        if (stageTriggers[caller.Handle] == 1)
+                        {
+                            playerTimers[player.Slot].CurrentMapStage = 1;
+                        }
+                        else
+                        {
+                            HandlePlayerStageTimes(player, caller.Handle);
+                        }
                     }
-                    else if ((stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] == 1) ||(cpTriggers.ContainsKey(caller.Handle) && cpTriggers[caller.Handle] == 1) )
+                    else if (useStageTriggers == false && cpTriggers.ContainsKey(caller.Handle) && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
                     {
-                        playerTimers[player.Slot].CurrentStage = 1;
+                        HandlePlayerCheckpointTimes(player, caller.Handle);
                     }
 
                     if (IsValidEndTriggerName(caller.Entity.Name.ToString()) && IsAllowedPlayer(player) && playerTimers[player.Slot].IsTimerRunning && !playerTimers[player.Slot].IsTimerBlocked)
@@ -193,12 +201,12 @@ namespace SharpTimer
                         if (stageTriggerCount != 0 && useStageTriggers == true)
                         {
                             playerTimers[player.Slot].StageRecords.Clear();
-                            playerTimers[player.Slot].CurrentStage = stageTriggers.GetValueOrDefault(caller.Handle, 0);
+                            playerTimers[player.Slot].CurrentMapStage = stageTriggers.GetValueOrDefault(caller.Handle, 0);
                         }
                         else if (cpTriggerCount != 0 && useStageTriggers == false)
                         {
                             playerTimers[player.Slot].StageRecords.Clear();
-                            playerTimers[player.Slot].CurrentStage = cpTriggers.GetValueOrDefault(caller.Handle, 0);
+                            playerTimers[player.Slot].CurrentMapCheckpoint = 0;
                         }
 
                         if (maxStartingSpeedEnabled == true && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed)
@@ -446,13 +454,13 @@ namespace SharpTimer
         {
             if (!IsAllowedPlayer(player) || playerTimers[player.Slot].IsTimerRunning == false) return;
 
-            if (useStageTriggers && stageTriggerCount != 0 && stageTriggerCount != playerTimers[player.Slot].CurrentStage)
+            if (useStageTriggers && stageTriggerCount != 0 && stageTriggerCount != playerTimers[player.Slot].CurrentMapStage)
             {
                 player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current stage does not match final one ({stageTriggerCount})");
                 playerTimers[player.Slot].IsTimerRunning = false;
                 return;
             }
-            else if (!useStageTriggers && cpTriggerCount != 0 && cpTriggerCount != playerTimers[player.Slot].CurrentStage)
+            else if (!useStageTriggers && cpTriggerCount != 0 && cpTriggerCount != playerTimers[player.Slot].CurrentMapCheckpoint)
             {
                 player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({cpTriggerCount})");
                 playerTimers[player.Slot].IsTimerRunning = false;

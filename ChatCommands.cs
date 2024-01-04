@@ -596,6 +596,13 @@ namespace SharpTimer
                     return;
                 }
 
+                if (useStageTriggers == false)
+                {
+                    SharpTimerDebug("css_stage failed useStages is false.");
+                    player.PrintToChat(msgPrefix + $" Stages unavalible");
+                    return;
+                }
+
                 // Remove checkpoints for the current player
                 playerCheckpoints.Remove(player.Slot);
 
@@ -644,7 +651,10 @@ namespace SharpTimer
 
                 // Remove checkpoints for the current player
                 playerCheckpoints.Remove(player.Slot);
-                if (stageTriggers.Any()) playerTimers[player.Slot].StageRecords.Clear(); //remove previous stage times if the map has stages
+                if (stageTriggerCount != 0 || cpTriggerCount != 0)//remove previous stage times if the map has stages
+                {
+                    playerTimers[player.Slot].StageRecords.Clear();
+                } 
 
                 if (currentRespawnPos != null)
                 {
