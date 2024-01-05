@@ -231,7 +231,7 @@ namespace SharpTimer
                 }
             }
 
-            stageTriggerCount = stageTriggers.Count;
+            stageTriggerCount = stageTriggers.Any() ? stageTriggers.OrderByDescending(x => x.Value).First().Value : 0;
 
             if (stageTriggerCount == 1) // if theres only one stage strigger the map is liniear
             {
@@ -269,8 +269,8 @@ namespace SharpTimer
 
             }
 
-            cpTriggerCount = cpTriggers.Count;
-
+            cpTriggerCount = cpTriggers.Any() ? cpTriggers.OrderByDescending(x => x.Value).First().Value : 0;
+            
             if(cpTriggerCount != 0)
             {
                 useCheckpointTriggers = true;
