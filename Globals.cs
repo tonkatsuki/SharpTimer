@@ -14,7 +14,7 @@ namespace SharpTimer
         Dictionary<nint, TriggerPushData> triggerPushData = new Dictionary<nint, TriggerPushData>();
 
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => $"0.1.6 - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
+        public override string ModuleVersion => $"0.1.6b - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $"[SharpTimer] ";
@@ -38,7 +38,8 @@ namespace SharpTimer
         private Dictionary<int, QAngle?> stageTriggerAngs = new Dictionary<int, QAngle?>();
         private int stageTriggerCount;
         private int cpTriggerCount;
-        private bool useStageTriggers = true;
+        private bool useStageTriggers = false;
+        private bool useCheckpointTriggers = false;
         public string? currentMapType = null;
         public int? currentMapTier = null;
 

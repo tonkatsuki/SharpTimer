@@ -35,7 +35,8 @@ namespace SharpTimer
                 if (string.IsNullOrEmpty(triggerName)) return (false, 0);
 
                 string[] patterns = {
-                    @"^b([1-9][0-9]?|onus[1-9][0-9]?)_start$",
+                    @"^b([1-9][0-9]?)_start$",
+                    @"^bonus([1-9][0-9]?)_start$",
                     @"^timer_bonus([1-9][0-9]?)_startzone$"
                 };
 
@@ -65,7 +66,8 @@ namespace SharpTimer
                 if (string.IsNullOrEmpty(triggerName)) return (false, 0);
 
                 string[] patterns = {
-                    @"^s([1-9][0-9]?|tage[1-9][0-9]?)_start$",
+                    @"^s([1-9][0-9]?)_start$",
+                    @"^stage([1-9][0-9]?)_start$",
                     @"^map_start$",
                 };
 
@@ -112,7 +114,6 @@ namespace SharpTimer
                     var match = Regex.Match(triggerName, pattern);
                     if (match.Success)
                     {
-                        useStageTriggers = false;
                         int X = int.Parse(match.Groups[1].Value);
                         return (true, X);
                     }
@@ -148,7 +149,8 @@ namespace SharpTimer
             {
                 if (string.IsNullOrEmpty(triggerName)) return (false, 0);
                 string[] patterns = {
-                    @"^b([1-9][0-9]?|onus[1-9][0-9]?)_end$",
+                    @"^b([1-9][0-9]?)_end$",
+                    @"^bonus([1-9][0-9]?)_end$",
                     @"^timer_bonus([1-9][0-9]?)_endzone$"
                 };
 
@@ -202,7 +204,6 @@ namespace SharpTimer
 
         private void FindStageTriggers()
         {
-            useStageTriggers = true;
             stageTriggers.Clear();
             stageTriggerPoses.Clear();
             var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
@@ -241,6 +242,10 @@ namespace SharpTimer
                 stageTriggerAngs.Clear();
                 SharpTimerDebug($"Only one Stage Trigger found. Not enough. Cancelling...");
             }
+            else if(stageTriggerCount > 1)
+            {
+                useStageTriggers = true;
+            }
 
             SharpTimerDebug($"Found a max of {stageTriggerCount} Stage triggers");
             SharpTimerDebug($"Use stageTriggers is set to {useStageTriggers}");
@@ -266,7 +271,17 @@ namespace SharpTimer
 
             cpTriggerCount = cpTriggers.Count;
 
+            if(cpTriggerCount != 0)
+            {
+                useCheckpointTriggers = true;
+            }
+            else
+            {
+                useCheckpointTriggers = false;
+            }
+
             SharpTimerDebug($"Found a max of {cpTriggerCount} Checkpoint triggers");
+            SharpTimerDebug($"Use useCheckpointTriggers is set to {useCheckpointTriggers}");
         }
 
         private void FindBonusStartTriggerPos()

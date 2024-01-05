@@ -166,7 +166,7 @@ namespace SharpTimer
 
                     if (!IsAllowedPlayer(player) || caller.Entity.Name == null) return HookResult.Continue;
 
-                    if (useStageTriggers == true && stageTriggers.ContainsKey(caller.Handle) && stageTriggers[caller.Handle] != 1 && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
+                    if (useStageTriggers == true && stageTriggers.ContainsKey(caller.Handle) && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
                     {
                         if (stageTriggers[caller.Handle] == 1)
                         {
@@ -177,7 +177,8 @@ namespace SharpTimer
                             HandlePlayerStageTimes(player, caller.Handle);
                         }
                     }
-                    else if (useStageTriggers == false && cpTriggers.ContainsKey(caller.Handle) && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
+
+                    if (useCheckpointTriggers == true && cpTriggers.ContainsKey(caller.Handle) && playerTimers[player.Slot].IsTimerBlocked == false && playerTimers[player.Slot].IsTimerRunning == true && IsAllowedPlayer(player))
                     {
                         HandlePlayerCheckpointTimes(player, caller.Handle);
                     }
@@ -452,17 +453,41 @@ namespace SharpTimer
         {
             if (!IsAllowedPlayer(player) || playerTimers[player.Slot].IsTimerRunning == false) return;
 
-            if (useStageTriggers && stageTriggerCount != 0 && stageTriggerCount != playerTimers[player.Slot].CurrentMapStage)
+            if (useStageTriggers == true && useCheckpointTriggers == true)
             {
-                player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current stage does not match final one ({stageTriggerCount})");
-                playerTimers[player.Slot].IsTimerRunning = false;
-                return;
+                if (playerTimers[player.Slot].CurrentMapStage != stageTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current stage does not match final one ({stageTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
+
+                if (playerTimers[player.Slot].CurrentMapCheckpoint != cpTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({cpTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
             }
-            else if (!useStageTriggers && cpTriggerCount != 0 && cpTriggerCount != playerTimers[player.Slot].CurrentMapCheckpoint)
+
+            if (useStageTriggers == true && useCheckpointTriggers == false)
             {
-                player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({cpTriggerCount})");
-                playerTimers[player.Slot].IsTimerRunning = false;
-                return;
+                if (playerTimers[player.Slot].CurrentMapStage != stageTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current stage does not match final one ({stageTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
+            }
+
+            if (useStageTriggers == false && useCheckpointTriggers == true)
+            {
+                if (playerTimers[player.Slot].CurrentMapCheckpoint != cpTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({cpTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
             }
 
             if (useTriggers) SharpTimerDebug($"Stopping Timer for {player.PlayerName}");

@@ -288,6 +288,12 @@ namespace SharpTimer
                 return;
             }
 
+            if( useStageTriggers == true) //use stagetime instead
+            {
+                playerTimers[player.Slot].CurrentMapCheckpoint = cpTriggers[triggerHandle];
+                return;
+            }
+
             SharpTimerDebug($"Player {player.PlayerName} has a checkpoint trigger with handle {triggerHandle}");
             int previousStageTime = GetStageTime(player.SteamID.ToString(), cpTriggers[triggerHandle]);
 
