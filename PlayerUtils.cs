@@ -500,33 +500,44 @@ namespace SharpTimer
 
             if (getRankImg)
             {
+                //if(totalPlayers < 100) return "";
+                
                 double percentage = (double)placement / totalPlayers * 100;
 
-                if (percentage <= 6.4)
-                {
-                    rank = "<img src='https://i.imgur.com/IFAyj0y.png' class=''>";
-                }
-                else if (percentage <= 28)
-                {
-                    rank = "<img src='https://i.imgur.com/5O4OfR5.png' class=''>";
-                }
-                else if (percentage <= 75.6)
-                {
-                    rank = "<img src='https://i.imgur.com/pc0TN7z.png' class=''>";
-                }
-                else if (percentage <= 95.2)
-                {
-                    rank = "<img src='https://i.imgur.com/kKzdpqu.png' class=''>";
-                }
+                if (percentage <= 1)
+                    rank = "<img src='https://i.imgur.com/mL4Z8ZW.png' class=''>";
+                else if (percentage <= 2)
+                    rank = "<img src='https://i.imgur.com/ZOC1Knl.png' class=''>";
+                else if (percentage <= 3)
+                    rank = "<img src='https://i.imgur.com/ZbXHaik.png' class=''>";
+                else if (percentage <= 4)
+                    rank = "<img src='https://i.imgur.com/JzofMpi.png' class=''>";
+                else if (percentage <= 5)
+                    rank = "<img src='https://i.imgur.com/PgRSBWk.png' class=''>";
+                else if (percentage <= 6)
+                    rank = "<img src='https://i.imgur.com/0OF3ij0.png' class=''>";
+                else if (percentage <= 15)
+                    rank = "<img src='https://i.imgur.com/6e3cSwY.png' class=''>";
+                else if (percentage <= 20)
+                    rank = "<img src='https://i.imgur.com/6pysO2O.png' class=''>";
+                else if (percentage <= 25)
+                    rank = "<img src='https://i.imgur.com/EgqfpFR.png' class=''>";
+                else if (percentage <= 30)
+                    rank = "<img src='https://i.imgur.com/IGa9B0o.png' class=''>";
+                else if (percentage <= 35)
+                    rank = "<img src='https://i.imgur.com/ObC3Y9Z.png' class=''>";
+                else if (percentage <= 40)
+                    rank = "<img src='https://i.imgur.com/9vPImVK.png' class=''>";
+                else if (percentage <= 45)
+                    rank = "<img src='https://i.imgur.com/lklvcW2.png' class=''>";
                 else
-                {
-                    rank = "<img src='https://i.imgur.com/gL6Ru8t.png' class=''>";
-                }
+                    rank = "<img src='https://i.imgur.com/HZf9EqX.png' class=''>";
             }
             else
             {
                 rank = $"Rank: {placement}/{totalPlayers}";
             }
+
 
             return rank;
         }

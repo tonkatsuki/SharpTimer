@@ -59,7 +59,6 @@ namespace SharpTimer
                     playerTimers[player.Slot].CurrentMapCheckpoint = 0;
 
                     _ = IsPlayerATester(player.SteamID.ToString(), player.Slot);
-                    
 
                     if (removeLegsEnabled == true) player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
 
