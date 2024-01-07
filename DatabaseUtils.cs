@@ -1,63 +1,78 @@
-using System.Drawing;
 using System.Text.Json;
+using MySqlConnector;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using MySqlConnector;
-using Nexd.MySQL;
-
 
 namespace SharpTimer
 {
     partial class SharpTimer
     {
+        private async Task<MySqlConnection> OpenDatabaseConnectionAsync()
+        {
+            var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath));
+            await connection.OpenAsync();
+            return connection;
+        }
+
+        private async Task CreatePlayerRecordsTableAsync(MySqlConnection connection)
+        {
+            string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+            using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
+            {
+                await createTableCommand.ExecuteNonQueryAsync();
+            }
+        }
+
         private string GetConnectionStringFromConfigFile(string mySQLpath)
         {
             try
             {
-                string jsonString = File.ReadAllText(mySQLpath);
-                JsonDocument jsonConfig = JsonDocument.Parse(jsonString);
+                using (JsonDocument jsonConfig = LoadJson(mySQLpath))
+                {
+                    if (jsonConfig != null)
+                    {
+                        JsonElement root = jsonConfig.RootElement;
 
-                JsonElement root = jsonConfig.RootElement;
+                        string host = root.GetProperty("MySqlHost").GetString();
+                        string database = root.GetProperty("MySqlDatabase").GetString();
+                        string username = root.GetProperty("MySqlUsername").GetString();
+                        string password = root.GetProperty("MySqlPassword").GetString();
+                        int port = root.GetProperty("MySqlPort").GetInt32();
 
-                string host = root.GetProperty("MySqlHost").GetString();
-                string database = root.GetProperty("MySqlDatabase").GetString();
-                string username = root.GetProperty("MySqlUsername").GetString();
-                string password = root.GetProperty("MySqlPassword").GetString();
-                int port = root.GetProperty("MySqlPort").GetInt32();
-                return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;";
+                        return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;";
+                    }
+                    else
+                    {
+                        SharpTimerError($"mySQL json was null");
+                    }
+                }
             }
             catch (Exception ex)
             {
-                SharpTimerError($"Error GetConnectionString: {ex.Message}");
-                return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;CharSet=utf8mb4;";
+                SharpTimerError($"Error in GetConnectionString: {ex.Message}");
             }
+
+            return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;CharSet=utf8mb4;";
         }
 
         public async Task SavePlayerTimeToDatabase(CCSPlayerController? player, int timerTicks, string steamId, string playerName, int playerSlot, int bonusX = 0)
         {
             if (!IsAllowedPlayer(player)) return;
-            if ((bonusX == 0 && playerTimers[playerSlot].IsTimerRunning == false) || (bonusX != 0 && playerTimers[playerSlot].IsBonusTimerRunning == false)) return;
+            if ((bonusX == 0 && !playerTimers[playerSlot].IsTimerRunning) || (bonusX != 0 && !playerTimers[playerSlot].IsBonusTimerRunning)) return;
 
             string currentMapNamee = bonusX == 0 ? currentMapName : $"{currentMapName}_bonus{bonusX}";
 
             SharpTimerDebug($"Trying to save player {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} to MySQL for {playerName} {timerTicks}");
             try
             {
-                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
+                using (var connection = await OpenDatabaseConnectionAsync())
                 {
-                    await connection.OpenAsync();
+                    await CreatePlayerRecordsTableAsync(connection);
 
                     string formattedTime = FormatTime(timerTicks); // Assuming FormatTime method is available
-
-                    // Check if the table exists, and create it if necessary
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
-                    using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
-                    {
-                        await createTableCommand.ExecuteNonQueryAsync();
-                    }
 
                     // Check if the record already exists or has a higher timer value
                     string selectQuery = "SELECT TimerTicks FROM PlayerRecords WHERE MapName = @MapName AND SteamID = @SteamID";
@@ -85,6 +100,7 @@ namespace SharpTimer
                         }
                     }
                 }
+
                 if (useMySQL == true) _ = RankCommandHandler(player, steamId, playerSlot, playerName, true);
             }
             catch (Exception ex)
@@ -105,16 +121,9 @@ namespace SharpTimer
             SharpTimerDebug($"Trying to get Previous {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} from MySQL for {playerName}");
             try
             {
-                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
+                using (var connection = await OpenDatabaseConnectionAsync())
                 {
-                    await connection.OpenAsync();
-
-                    // Check if the table exists
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
-                    using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
-                    {
-                        await createTableCommand.ExecuteNonQueryAsync();
-                    }
+                    await CreatePlayerRecordsTableAsync(connection);
 
                     // Retrieve the TimerTicks value for the specified player on the current map
                     string selectQuery = "SELECT TimerTicks FROM PlayerRecords WHERE MapName = @MapName AND SteamID = @SteamID";
@@ -148,16 +157,9 @@ namespace SharpTimer
             SharpTimerDebug($"Trying GetSortedRecords {(bonusX != 0 ? $"bonus {bonusX}" : "")} from MySQL");
             try
             {
-                using (var connection = new MySqlConnection(GetConnectionStringFromConfigFile(mySQLpath)))
+                using (var connection = await OpenDatabaseConnectionAsync())
                 {
-                    await connection.OpenAsync();
-
-                    // Check if the table exists
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
-                    using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
-                    {
-                        await createTableCommand.ExecuteNonQueryAsync();
-                    }
+                    await CreatePlayerRecordsTableAsync(connection);
 
                     // Retrieve and sort records for the current map
                     string selectQuery = "SELECT SteamID, PlayerName, TimerTicks FROM PlayerRecords WHERE MapName = @MapName";

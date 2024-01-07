@@ -8,17 +8,19 @@ namespace SharpTimer
 {
     public partial class SharpTimer
     {
+        public override string ModuleName => "SharpTimer";
+        public override string ModuleVersion => $"0.1.7 - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
+        public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
+        public override string ModuleDescription => "A simple CSS Timer Plugin";
+
         private Dictionary<int, PlayerTimerInfo> playerTimers = new Dictionary<int, PlayerTimerInfo>();
         private Dictionary<int, List<PlayerCheckpoint>> playerCheckpoints = new Dictionary<int, List<PlayerCheckpoint>>();
         private Dictionary<int, CCSPlayerController> connectedPlayers = new Dictionary<int, CCSPlayerController>();
         Dictionary<nint, TriggerPushData> triggerPushData = new Dictionary<nint, TriggerPushData>();
         private EntityCache? entityCache;
         public Dictionary<string, PlayerRecord>? SortedCachedRecords = new Dictionary<string, PlayerRecord>();
+        private static readonly HttpClient httpClient = new HttpClient();
 
-        public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => $"0.1.7 - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
-        public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
-        public override string ModuleDescription => "A simple CSS Timer Plugin";
         public string msgPrefix = $"[SharpTimer] ";
         public string primaryHUDcolor = "green";
         public string secondaryHUDcolor = "orange";

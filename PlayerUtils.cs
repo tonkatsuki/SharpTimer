@@ -3,8 +3,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
-using System.Formats.Asn1;
-using System.Text;
 using System.Text.Json;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
@@ -30,24 +28,31 @@ namespace SharpTimer
 
         async Task IsPlayerATester(string steamId64, int playerSlot)
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                string response = await client.GetStringAsync(testerPersonalGifsSource);
-                JsonDocument jsonDocument = JsonDocument.Parse(response);
-                playerTimers[playerSlot].IsTester = jsonDocument.RootElement.TryGetProperty(steamId64, out JsonElement steamData);
+                string response = await httpClient.GetStringAsync(testerPersonalGifsSource);
 
-                if (playerTimers[playerSlot].IsTester)
+                using (JsonDocument jsonDocument = JsonDocument.Parse(response))
                 {
-                    if (steamData.TryGetProperty("SmolGif", out JsonElement smolGifElement))
-                    {
-                        playerTimers[playerSlot].TesterSparkleGif = smolGifElement.GetString() ?? "";
-                    }
+                    playerTimers[playerSlot].IsTester = jsonDocument.RootElement.TryGetProperty(steamId64, out JsonElement steamData);
 
-                    if (steamData.TryGetProperty("BigGif", out JsonElement bigGifElement))
+                    if (playerTimers[playerSlot].IsTester)
                     {
-                        playerTimers[playerSlot].TesterPausedGif = bigGifElement.GetString() ?? "";
+                        if (steamData.TryGetProperty("SmolGif", out JsonElement smolGifElement))
+                        {
+                            playerTimers[playerSlot].TesterSparkleGif = smolGifElement.GetString() ?? "";
+                        }
+
+                        if (steamData.TryGetProperty("BigGif", out JsonElement bigGifElement))
+                        {
+                            playerTimers[playerSlot].TesterPausedGif = bigGifElement.GetString() ?? "";
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                SharpTimerError($"Error in IsPlayerATester: {ex.Message}");
             }
         }
 
@@ -329,27 +334,38 @@ namespace SharpTimer
             string fileName = $"{currentMapName.ToLower()}_stage_times.json";
             string playerStageRecordsPath = Path.Join(gameDir, "csgo", "cfg", "SharpTimer", "PlayerStageData", fileName);
 
-            string jsonContent = "";
-            if (File.Exists(playerStageRecordsPath))
+            try
             {
-                jsonContent = File.ReadAllText(playerStageRecordsPath);
-            }
-
-            Dictionary<string, PlayerStageData> playerData;
-            if (!string.IsNullOrEmpty(jsonContent))
-            {
-                playerData = JsonSerializer.Deserialize<Dictionary<string, PlayerStageData>>(jsonContent);
-
-                // Check if the given Steam ID exists in the playerData dictionary
-                if (playerData.TryGetValue(steamId, out var playerStageData))
+                using (JsonDocument jsonDocument = LoadJson(playerStageRecordsPath))
                 {
-                    // Check if the stage index exists in the player's data
-                    if (playerStageData.StageTimes != null && playerStageData.StageTimes.TryGetValue(stageIndex, out var time) &&
-                        playerStageData.StageVelos != null && playerStageData.StageVelos.TryGetValue(stageIndex, out var speed))
+                    if (jsonDocument != null)
                     {
-                        return (time, speed);
+                        string jsonContent = jsonDocument.RootElement.GetRawText();
+
+                        Dictionary<string, PlayerStageData> playerData;
+                        if (!string.IsNullOrEmpty(jsonContent))
+                        {
+                            playerData = JsonSerializer.Deserialize<Dictionary<string, PlayerStageData>>(jsonContent);
+
+                            if (playerData.TryGetValue(steamId, out var playerStageData))
+                            {
+                                if (playerStageData.StageTimes != null && playerStageData.StageTimes.TryGetValue(stageIndex, out var time) &&
+                                    playerStageData.StageVelos != null && playerStageData.StageVelos.TryGetValue(stageIndex, out var speed))
+                                {
+                                    return (time, speed);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        SharpTimerDebug($"Error in GetStageTime jsonDoc was null");
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                SharpTimerError($"Error in GetStageTime: {ex.Message}");
             }
 
             return (0, string.Empty);
@@ -362,34 +378,58 @@ namespace SharpTimer
             string fileName = $"{currentMapName.ToLower()}_stage_times.json";
             string playerStageRecordsPath = Path.Join(gameDir, "csgo", "cfg", "SharpTimer", "PlayerStageData", fileName);
 
-            string jsonContent = "";
-            if (File.Exists(playerStageRecordsPath))
+            try
             {
-                jsonContent = File.ReadAllText(playerStageRecordsPath);
-            }
+                using (JsonDocument jsonDocument = LoadJson(playerStageRecordsPath))
+                {
+                    if (jsonDocument != null)
+                    {
+                        string jsonContent = jsonDocument.RootElement.GetRawText();
 
-            Dictionary<string, PlayerStageData> playerData;
-            if (!string.IsNullOrEmpty(jsonContent))
+                        Dictionary<string, PlayerStageData> playerData;
+                        if (!string.IsNullOrEmpty(jsonContent))
+                        {
+                            playerData = JsonSerializer.Deserialize<Dictionary<string, PlayerStageData>>(jsonContent);
+                        }
+                        else
+                        {
+                            playerData = new Dictionary<string, PlayerStageData>();
+                        }
+
+                        string playerId = player.SteamID.ToString();
+
+                        if (!playerData.ContainsKey(playerId))
+                        {
+                            playerData[playerId] = new PlayerStageData();
+                        }
+
+                        playerData[playerId].StageTimes = playerTimers[player.Slot].StageTimes;
+                        playerData[playerId].StageVelos = playerTimers[player.Slot].StageVelos;
+
+                        string updatedJson = JsonSerializer.Serialize(playerData, new JsonSerializerOptions { WriteIndented = true });
+                        File.WriteAllText(playerStageRecordsPath, updatedJson);
+                    }
+                    else
+                    {
+                        Dictionary<string, PlayerStageData> playerData = new Dictionary<string, PlayerStageData>();
+
+                        string playerId = player.SteamID.ToString();
+
+                        playerData[playerId] = new PlayerStageData
+                        {
+                            StageTimes = playerTimers[player.Slot].StageTimes,
+                            StageVelos = playerTimers[player.Slot].StageVelos
+                        };
+
+                        string updatedJson = JsonSerializer.Serialize(playerData, new JsonSerializerOptions { WriteIndented = true });
+                        File.WriteAllText(playerStageRecordsPath, updatedJson);
+                    }
+                }
+            }
+            catch (Exception ex)
             {
-                playerData = JsonSerializer.Deserialize<Dictionary<string, PlayerStageData>>(jsonContent);
+                SharpTimerError($"Error in DumpPlayerStageTimesToJson: {ex.Message}");
             }
-            else
-            {
-                playerData = new Dictionary<string, PlayerStageData>();
-            }
-
-            string playerId = player.SteamID.ToString();
-
-            if (!playerData.ContainsKey(playerId))
-            {
-                playerData[playerId] = new PlayerStageData();
-            }
-
-            playerData[playerId].StageTimes = playerTimers[player.Slot].StageTimes;
-            playerData[playerId].StageVelos = playerTimers[player.Slot].StageVelos;
-
-            string updatedJson = JsonSerializer.Serialize(playerData, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(playerStageRecordsPath, updatedJson);
         }
 
         private int GetPreviousPlayerRecord(CCSPlayerController? player, int bonusX = 0)
@@ -399,16 +439,29 @@ namespace SharpTimer
             string mapRecordsPath = Path.Combine(playerRecordsPath, bonusX == 0 ? "" : $"_bonus{bonusX}");
             string steamId = player.SteamID.ToString();
 
-            Dictionary<string, PlayerRecord> records;
-            if (File.Exists(mapRecordsPath))
+            try
             {
-                string json = File.ReadAllText(mapRecordsPath);
-                records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json) ?? new Dictionary<string, PlayerRecord>();
-
-                if (records.ContainsKey(steamId))
+                using (JsonDocument jsonDocument = LoadJson(mapRecordsPath))
                 {
-                    return records[steamId].TimerTicks;
+                    if (jsonDocument != null)
+                    {
+                        string json = jsonDocument.RootElement.GetRawText();
+                        Dictionary<string, PlayerRecord> records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json) ?? new Dictionary<string, PlayerRecord>();
+
+                        if (records.ContainsKey(steamId))
+                        {
+                            return records[steamId].TimerTicks;
+                        }
+                    }
+                    else
+                    {
+                        SharpTimerDebug($"Error in GetPreviousPlayerRecord: json was null");
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                SharpTimerError($"Error in GetPreviousPlayerRecord: {ex.Message}");
             }
 
             return 0;
@@ -546,6 +599,122 @@ namespace SharpTimer
             return rank;
         }
 
+        public void OnTimerStart(CCSPlayerController? player, int bonusX = 0)
+        {
+            if (!IsAllowedPlayer(player)) return;
+
+            if (bonusX != 0)
+            {
+                if (useTriggers) SharpTimerDebug($"Starting Bonus Timer for {player.PlayerName}");
+
+                // Remove checkpoints for the current player
+                playerCheckpoints.Remove(player.Slot);
+
+                playerTimers[player.Slot].IsTimerRunning = false;
+                playerTimers[player.Slot].TimerTicks = 0;
+
+                playerTimers[player.Slot].IsBonusTimerRunning = true;
+                playerTimers[player.Slot].BonusTimerTicks = 0;
+                playerTimers[player.Slot].BonusStage = bonusX;
+            }
+            else
+            {
+                if (useTriggers) SharpTimerDebug($"Starting Timer for {player.PlayerName}");
+
+                // Remove checkpoints for the current player
+                playerCheckpoints.Remove(player.Slot);
+
+                playerTimers[player.Slot].IsTimerRunning = true;
+                playerTimers[player.Slot].TimerTicks = 0;
+
+                playerTimers[player.Slot].IsBonusTimerRunning = false;
+                playerTimers[player.Slot].BonusTimerTicks = 0;
+                playerTimers[player.Slot].BonusStage = bonusX;
+            }
+
+        }
+
+        public void OnTimerStop(CCSPlayerController? player)
+        {
+            if (!IsAllowedPlayer(player) || playerTimers[player.Slot].IsTimerRunning == false) return;
+
+            if (useStageTriggers == true && useCheckpointTriggers == true)
+            {
+                if (playerTimers[player.Slot].CurrentMapStage != stageTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current stage does not match final one ({stageTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
+
+                if (playerTimers[player.Slot].CurrentMapCheckpoint != cpTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({cpTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
+            }
+
+            if (useStageTriggers == true && useCheckpointTriggers == false)
+            {
+                if (playerTimers[player.Slot].CurrentMapStage != stageTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current stage does not match final one ({stageTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
+            }
+
+            if (useStageTriggers == false && useCheckpointTriggers == true)
+            {
+                if (playerTimers[player.Slot].CurrentMapCheckpoint != cpTriggerCount)
+                {
+                    player.PrintToChat(msgPrefix + $"{ChatColors.LightRed} Error Saving Time: Player current checkpoint does not match final one ({cpTriggerCount})");
+                    playerTimers[player.Slot].IsTimerRunning = false;
+                    return;
+                }
+            }
+
+            if (useTriggers) SharpTimerDebug($"Stopping Timer for {player.PlayerName}");
+
+            int currentTicks = playerTimers[player.Slot].TimerTicks;
+            int previousRecordTicks = GetPreviousPlayerRecord(player);
+
+            SavePlayerTime(player, currentTicks);
+            if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks, player.SteamID.ToString(), player.PlayerName, player.Slot);
+            playerTimers[player.Slot].IsTimerRunning = false;
+
+            string timeDifference = "";
+            if (previousRecordTicks != 0) timeDifference = FormatTimeDifference(currentTicks, previousRecordTicks);
+
+            Server.PrintToChatAll(msgPrefix + $"{primaryChatColor}{player.PlayerName} {ChatColors.White}just finished the map in: {primaryChatColor}[{FormatTime(currentTicks)}]{ChatColors.White}! {timeDifference}");
+
+            if (useMySQL == false) _ = RankCommandHandler(player, player.SteamID.ToString(), player.Slot, player.PlayerName, true);
+
+            if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {beepSound}");
+        }
+
+        public void OnBonusTimerStop(CCSPlayerController? player, int bonusX)
+        {
+            if (!IsAllowedPlayer(player) || playerTimers[player.Slot].IsBonusTimerRunning == false) return;
+
+            if (useTriggers) SharpTimerDebug($"Stopping Bonus Timer for {player.PlayerName}");
+
+            int currentTicks = playerTimers[player.Slot].BonusTimerTicks;
+            int previousRecordTicks = GetPreviousPlayerRecord(player, bonusX);
+
+            SavePlayerTime(player, currentTicks, bonusX);
+            if (useMySQL == true) _ = SavePlayerTimeToDatabase(player, currentTicks, player.SteamID.ToString(), player.PlayerName, player.Slot, bonusX);
+            playerTimers[player.Slot].IsBonusTimerRunning = false;
+
+            string timeDifference = "";
+            if (previousRecordTicks != 0) timeDifference = FormatTimeDifference(currentTicks, previousRecordTicks);
+
+            Server.PrintToChatAll(msgPrefix + $"{primaryChatColor}{player.PlayerName} {ChatColors.White}just finished the Bonus{bonusX} in: {primaryChatColor}[{FormatTime(currentTicks)}]{ChatColors.White}! {timeDifference}");
+
+            if (playerTimers[player.Slot].SoundsEnabled != false) player.ExecuteClientCommand($"play {beepSound}");
+        }
+
         public void SavePlayerTime(CCSPlayerController? player, int timerTicks, int bonusX = 0)
         {
             if (!IsAllowedPlayer(player)) return;
@@ -554,31 +723,42 @@ namespace SharpTimer
             SharpTimerDebug($"Saving player {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} of {timerTicks} ticks for {player.PlayerName} to json");
             string mapRecordsPath = Path.Combine(playerRecordsPath, bonusX == 0 ? "" : $"_bonus{bonusX}");
 
-            Dictionary<string, PlayerRecord> records;
-            if (File.Exists(mapRecordsPath))
+            try
             {
-                string json = File.ReadAllText(mapRecordsPath);
-                records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json) ?? new Dictionary<string, PlayerRecord>();
-            }
-            else
-            {
-                records = new Dictionary<string, PlayerRecord>();
-            }
-
-            string steamId = player.SteamID.ToString();
-            string playerName = player.PlayerName;
-
-            if (!records.ContainsKey(steamId) || records[steamId].TimerTicks > timerTicks)
-            {
-                records[steamId] = new PlayerRecord
+                using (JsonDocument jsonDocument = LoadJson(mapRecordsPath))
                 {
-                    PlayerName = playerName,
-                    TimerTicks = timerTicks
-                };
+                    Dictionary<string, PlayerRecord> records;
 
-                string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(mapRecordsPath, updatedJson);
-                if ((stageTriggerCount != 0 || cpTriggerCount != 0) && bonusX == 0) DumpPlayerStageTimesToJson(player);
+                    if (jsonDocument != null)
+                    {
+                        string json = jsonDocument.RootElement.GetRawText();
+                        records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json) ?? new Dictionary<string, PlayerRecord>();
+                    }
+                    else
+                    {
+                        records = new Dictionary<string, PlayerRecord>();
+                    }
+
+                    string steamId = player.SteamID.ToString();
+                    string playerName = player.PlayerName;
+
+                    if (!records.ContainsKey(steamId) || records[steamId].TimerTicks > timerTicks)
+                    {
+                        records[steamId] = new PlayerRecord
+                        {
+                            PlayerName = playerName,
+                            TimerTicks = timerTicks
+                        };
+
+                        string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
+                        File.WriteAllText(mapRecordsPath, updatedJson);
+                        if ((stageTriggerCount != 0 || cpTriggerCount != 0) && bonusX == 0) DumpPlayerStageTimesToJson(player);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                SharpTimerError($"Error in SavePlayerTime: {ex.Message}");
             }
         }
     }
