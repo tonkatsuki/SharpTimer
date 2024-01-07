@@ -74,12 +74,6 @@ These commands require the `@css/root` admin flag
 
 | Command  | What it does |
 | ------------- | ------------- |
-| `!jsontodatabase`  | Uploads all saved Records to the MySql Database from the local Json |
-| `!databasetojson`  | Downloads all saved Records from the MySql Database to Json |
-| `!addrespawnpos`  | Adds a manual respawn pos |
-| `!addstartzone`  | Adds a manual start zone to |
-| `!addendzone`  | Adds a manual end zone |
-| `!savezones`  | Saves manually set zones to mapdata.json |
 | `!noclip`  | Enables noclip for admin |
 
 ## Zones
@@ -107,8 +101,8 @@ These commands require the `@css/root` admin flag
   ```
 
 ### Adding "Fake" Zone Triggers
-* Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
 * ⚠️ Only use these as "the last resort" you will run into issues otherwise if a map supports default triggers and you decide to add "fake" zone triggers regardless!
+* Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
 
 <details>
 <summary>Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:</summary>
