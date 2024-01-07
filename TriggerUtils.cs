@@ -174,31 +174,38 @@ namespace SharpTimer
             }
         }
 
+        private void UpdateEntityCache()
+        {
+            entityCache.UpdateCache();
+        }
+
         private (Vector?, QAngle?) FindStartTriggerPos()
         {
             currentRespawnPos = null;
             currentRespawnAng = null;
-            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
-            var info_tps = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination");
 
-            foreach (var trigger in triggers)
+            foreach (var trigger in entityCache.Triggers)
             {
-                if (trigger == null || trigger.Entity.Name == null) continue;
+                if (trigger == null || trigger.Entity.Name == null || !IsValidStartTriggerName(trigger.Entity.Name.ToString()))
+                    continue;
 
-                if (IsValidStartTriggerName(trigger.Entity.Name.ToString()))
+                foreach (var info_tp in entityCache.InfoTeleportDestinations)
                 {
-                    foreach (CBaseEntity info_tp in info_tps)
+                    if (info_tp.Entity?.Name != null && IsInsideTrigger(trigger.AbsOrigin, trigger.Collision.BoundingRadius, info_tp.AbsOrigin))
                     {
-                        if (info_tp.Entity!.Name != null && IsInsideTrigger(trigger.AbsOrigin!, trigger.Collision.BoundingRadius, info_tp.AbsOrigin!))
+                        if (info_tp.CBodyComponent.SceneNode.AbsOrigin != null && info_tp.AbsRotation != null)
                         {
-                            if (info_tp.CBodyComponent.SceneNode.AbsOrigin == null || info_tp.AbsRotation == null) continue;
                             return (info_tp.CBodyComponent.SceneNode.AbsOrigin, info_tp.AbsRotation);
                         }
                     }
-                    if (trigger.CBodyComponent.SceneNode.AbsOrigin == null) continue;
+                }
+
+                if (trigger.CBodyComponent.SceneNode.AbsOrigin != null)
+                {
                     return (trigger.CBodyComponent.SceneNode.AbsOrigin, null);
                 }
             }
+
             return (null, null);
         }
 
@@ -206,26 +213,27 @@ namespace SharpTimer
         {
             stageTriggers.Clear();
             stageTriggerPoses.Clear();
-            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
-            var info_tps = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination");
 
-            foreach (var trigger in triggers)
+            foreach (var trigger in entityCache.Triggers)
             {
                 if (trigger == null || trigger.Entity.Name == null) continue;
 
                 var (validStage, X) = IsValidStageTriggerName(trigger.Entity.Name.ToString());
                 if (validStage)
                 {
-                    foreach (CBaseEntity info_tp in info_tps)
+                    foreach (var info_tp in entityCache.InfoTeleportDestinations)
                     {
-                        if (info_tp.Entity!.Name != null && IsInsideTrigger(trigger.AbsOrigin!, trigger.Collision.BoundingRadius, info_tp.AbsOrigin!))
+                        if (info_tp.Entity?.Name != null && IsInsideTrigger(trigger.AbsOrigin, trigger.Collision.BoundingRadius, info_tp.AbsOrigin))
                         {
-                            if (info_tp.CBodyComponent.SceneNode.AbsOrigin == null || info_tp.AbsRotation == null) continue;
-                            stageTriggerPoses[X] = info_tp.CBodyComponent?.SceneNode?.AbsOrigin;
-                            stageTriggerAngs[X] = info_tp.AbsRotation;
-                            SharpTimerDebug($"Added !stage {X} pos {stageTriggerPoses[X]} ang {stageTriggerAngs[X]}");
+                            if (info_tp.CBodyComponent?.SceneNode?.AbsOrigin != null && info_tp.AbsRotation != null)
+                            {
+                                stageTriggerPoses[X] = info_tp.CBodyComponent.SceneNode.AbsOrigin;
+                                stageTriggerAngs[X] = info_tp.AbsRotation;
+                                SharpTimerDebug($"Added !stage {X} pos {stageTriggerPoses[X]} ang {stageTriggerAngs[X]}");
+                            }
                         }
                     }
+
                     stageTriggers[trigger.Handle] = X;
                     SharpTimerDebug($"Added Stage {X} Trigger {trigger.Handle}");
                 }
@@ -233,8 +241,9 @@ namespace SharpTimer
 
             stageTriggerCount = stageTriggers.Any() ? stageTriggers.OrderByDescending(x => x.Value).First().Value : 0;
 
-            if (stageTriggerCount == 1) // if theres only one stage strigger the map is liniear
+            if (stageTriggerCount == 1)
             {
+                // If there's only one stage trigger, the map is linear
                 stageTriggerCount = 0;
                 useStageTriggers = false;
                 stageTriggers.Clear();
@@ -242,7 +251,7 @@ namespace SharpTimer
                 stageTriggerAngs.Clear();
                 SharpTimerDebug($"Only one Stage Trigger found. Not enough. Cancelling...");
             }
-            else if(stageTriggerCount > 1)
+            else if (stageTriggerCount > 1)
             {
                 useStageTriggers = true;
             }
@@ -254,9 +263,8 @@ namespace SharpTimer
         private void FindCheckpointTriggers()
         {
             cpTriggers.Clear();
-            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
 
-            foreach (var trigger in triggers)
+            foreach (var trigger in entityCache.Triggers)
             {
                 if (trigger == null || trigger.Entity.Name == null) continue;
 
@@ -266,19 +274,11 @@ namespace SharpTimer
                     cpTriggers[trigger.Handle] = X;
                     SharpTimerDebug($"Added Checkpoint {X} Trigger {trigger.Handle}");
                 }
-
             }
 
             cpTriggerCount = cpTriggers.Any() ? cpTriggers.OrderByDescending(x => x.Value).First().Value : 0;
-            
-            if(cpTriggerCount != 0)
-            {
-                useCheckpointTriggers = true;
-            }
-            else
-            {
-                useCheckpointTriggers = false;
-            }
+
+            useCheckpointTriggers = cpTriggerCount != 0;
 
             SharpTimerDebug($"Found a max of {cpTriggerCount} Checkpoint triggers");
             SharpTimerDebug($"Use useCheckpointTriggers is set to {useCheckpointTriggers}");
@@ -289,10 +289,7 @@ namespace SharpTimer
             bonusRespawnPoses.Clear();
             bonusRespawnAngs.Clear();
 
-            var triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple");
-            var info_tps = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination");
-
-            foreach (var trigger in triggers)
+            foreach (var trigger in entityCache.Triggers)
             {
                 if (trigger == null || trigger.Entity.Name == null) continue;
 
@@ -301,21 +298,23 @@ namespace SharpTimer
                 {
                     bool bonusPosAndAngSet = false;
 
-                    foreach (CBaseEntity info_tp in info_tps)
+                    foreach (var info_tp in entityCache.InfoTeleportDestinations)
                     {
-                        if (info_tp.Entity!.Name != null && IsInsideTrigger(trigger.AbsOrigin!, trigger.Collision.BoundingRadius, info_tp.AbsOrigin!))
+                        if (info_tp.Entity?.Name != null && IsInsideTrigger(trigger.AbsOrigin, trigger.Collision.BoundingRadius, info_tp.AbsOrigin))
                         {
-                            if (info_tp.CBodyComponent.SceneNode.AbsOrigin == null || info_tp.AbsRotation == null) continue;
-                            bonusRespawnPoses[bonusX] = info_tp.CBodyComponent?.SceneNode?.AbsOrigin;
-                            bonusRespawnAngs[bonusX] = info_tp.AbsRotation;
-                            SharpTimerDebug($"Added Bonus !rb {bonusX} pos {bonusRespawnPoses[bonusX]} ang {bonusRespawnAngs[bonusX]}");
-                            bonusPosAndAngSet = true;
+                            if (info_tp.CBodyComponent?.SceneNode?.AbsOrigin != null && info_tp.AbsRotation != null)
+                            {
+                                bonusRespawnPoses[bonusX] = info_tp.CBodyComponent.SceneNode.AbsOrigin;
+                                bonusRespawnAngs[bonusX] = info_tp.AbsRotation;
+                                SharpTimerDebug($"Added Bonus !rb {bonusX} pos {bonusRespawnPoses[bonusX]} ang {bonusRespawnAngs[bonusX]}");
+                                bonusPosAndAngSet = true;
+                            }
                         }
                     }
 
-                    if (!bonusPosAndAngSet && trigger.CBodyComponent.SceneNode.AbsOrigin != null)
+                    if (!bonusPosAndAngSet && trigger.CBodyComponent?.SceneNode?.AbsOrigin != null)
                     {
-                        bonusRespawnPoses[bonusX] = trigger.CBodyComponent?.SceneNode?.AbsOrigin;
+                        bonusRespawnPoses[bonusX] = trigger.CBodyComponent.SceneNode.AbsOrigin;
                         SharpTimerDebug($"Added Bonus !rb {bonusX} pos {bonusRespawnPoses[bonusX]}");
                     }
                 }
@@ -327,7 +326,7 @@ namespace SharpTimer
             if (triggerPushFixEnabled)
             {
                 triggerPushData.Clear();
-                var trigger_pushers = Utilities.FindAllEntitiesByDesignerName<CTriggerPush>("trigger_push");
+                var trigger_pushers = entityCache.TriggerPushEntities;
 
                 foreach (var trigger_push in trigger_pushers)
                 {
@@ -354,7 +353,7 @@ namespace SharpTimer
 
         private (Vector? startRight, Vector? startLeft, Vector? endRight, Vector? endLeft) FindTriggerCorners()
         {
-            var targets = Utilities.FindAllEntitiesByDesignerName<CPointEntity>("info_target");
+            var targets = entityCache.InfoTargetEntities;
 
             Vector? startRight = null;
             Vector? startLeft = null;

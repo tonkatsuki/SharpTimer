@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
+using System.Formats.Asn1;
 using System.Text;
 using System.Text.Json;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
@@ -52,6 +53,8 @@ namespace SharpTimer
 
         public void TimerOnTick(CCSPlayerController player, int playerSlot)
         {
+            hudContentBuilder.Clear();
+
             if (!IsAllowedPlayer(player))
             {
                 playerTimers[playerSlot].IsTimerRunning = false;
@@ -66,6 +69,7 @@ namespace SharpTimer
             var formattedPlayerPre = Math.Round(ParseVector(playerTimers[playerSlot].PreSpeed ?? "0 0 0").Length2D()).ToString().PadLeft(3, '0');
             var playerTime = FormatTime(playerTimers[playerSlot].TimerTicks);
             var playerBonusTime = FormatTime(playerTimers[playerSlot].BonusTimerTicks);
+
             var timerLine = playerTimers[playerSlot].IsBonusTimerRunning
                 ? $" <font color='gray' class='fontSize-s'>Bonus: {playerTimers[playerSlot].BonusStage}</font> <font class='fontSize-l' color='{primaryHUDcolor}'>{playerBonusTime}</font> <br>"
                 : playerTimers[playerSlot].IsTimerRunning
@@ -75,23 +79,9 @@ namespace SharpTimer
             var veloLine = $" {(playerTimers[playerSlot].IsTester ? playerTimers[playerSlot].TesterSparkleGif : "")}<font class='fontSize-s' color='{tertiaryHUDcolor}'>Speed:</font> <font class='fontSize-l' color='{secondaryHUDcolor}'>{formattedPlayerVel}</font> <font class='fontSize-s' color='gray'>({formattedPlayerPre})</font>{(playerTimers[playerSlot].IsTester ? playerTimers[playerSlot].TesterSparkleGif : "")} <br>";
             var veloLineAlt = $" {GetSpeedBar(Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()))} ";
             var infoLine = $"{playerTimers[playerSlot].RankHUDString}" +
-                              $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
-                              $"{(currentMapType != null ? $" | {currentMapType}" : "")}" +
-                              $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")} </font> ";
-
-            /* var timerLine = playerTimers[playerSlot].IsBonusTimerRunning
-                ? $"Bonus: {playerTimers[playerSlot].BonusStage} {playerBonusTime}\n"
-                : playerTimers[playerSlot].IsTimerRunning
-                    ? $"{GetPlayerPlacement(player)} {playerTime}" +
-                    $"{(playerTimers[playerSlot].CurrentMapStage != 0 && useStageTriggers == true ? $" {playerTimers[playerSlot].CurrentMapStage}/{stageTriggerCount}" : "")}\n"
-                    : "";
-
-            var veloLine = $"Speed: {formattedPlayerVel} " +
-                           $"({formattedPlayerPre})\n";
-            var veloLineAlt = $"{GetSpeedBar(Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()))}\n";
-            var infoLine = $"{(currentMapTier != null ? $"Tier: {currentMapTier}" : "")}" +
-                           $"{(currentMapType != null ? $" | {currentMapType}" : "")}" +
-                           $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")}"; */
+                            $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
+                            $"{(currentMapType != null ? $" | {currentMapType}" : "")}" +
+                            $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")} </font> ";
 
             var forwardKey = playerTimers[playerSlot].Azerty ? "Z" : "W";
             var leftKey = playerTimers[playerSlot].Azerty ? "Q" : "A";
@@ -99,13 +89,12 @@ namespace SharpTimer
             var rightKey = "D";
 
             var keysLineNoHtml = $"{((buttons & PlayerButtons.Moveleft) != 0 ? leftKey : "_")} " +
-                                    $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
-                                    $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
-                                    $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
-                                    $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
-                                    $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}";
+                                $"{((buttons & PlayerButtons.Forward) != 0 ? forwardKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Moveright) != 0 ? rightKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Back) != 0 ? backKey : "_")} " +
+                                $"{((buttons & PlayerButtons.Jump) != 0 ? "J" : "_")} " +
+                                $"{((buttons & PlayerButtons.Duck) != 0 ? "C" : "_")}";
 
-            var hudContentBuilder = new StringBuilder();
             hudContentBuilder.Append(timerLine);
             hudContentBuilder.Append(veloLine);
             if (alternativeSpeedometer) hudContentBuilder.Append(veloLineAlt);
@@ -138,6 +127,8 @@ namespace SharpTimer
             {
                 CheckPlayerCoords(player);
             }
+
+            if (forcePlayerSpeedEnabled == true) ForcePlayerSpeed(player, player.Pawn.Value.WeaponServices.ActiveWeapon.Value.DesignerName);
 
             if (playerTimers[playerSlot].MovementService != null && removeCrouchFatigueEnabled == true)
             {
@@ -207,27 +198,39 @@ namespace SharpTimer
             }
 
             Vector incorrectVector = new Vector(0, 0, 0);
-            Vector playerPos = player.Pawn?.Value.CBodyComponent?.SceneNode.AbsOrigin ?? incorrectVector;
+            Vector? playerPos = player.Pawn?.Value.CBodyComponent?.SceneNode.AbsOrigin;
 
-            if (new[] { playerPos, currentMapStartC1, currentMapStartC2, currentMapEndC1, currentMapEndC2 }.All(v => v != incorrectVector))
+            if (playerPos == null || currentMapStartC1 == incorrectVector || currentMapStartC2 == incorrectVector ||
+                currentMapEndC1 == incorrectVector || currentMapEndC2 == incorrectVector)
             {
-                bool isInsideStartBox = IsVectorInsideBox(playerPos, currentMapStartC1, currentMapStartC2);
-                bool isInsideEndBox = IsVectorInsideBox(playerPos, currentMapEndC1, currentMapEndC2);
+                return;
+            }
 
-                if (!isInsideStartBox && isInsideEndBox)
-                {
-                    OnTimerStop(player);
-                }
-                else if (isInsideStartBox)
-                {
-                    OnTimerStart(player);
+            bool isInsideStartBox = IsVectorInsideBox(playerPos, currentMapStartC1, currentMapStartC2);
+            bool isInsideEndBox = IsVectorInsideBox(playerPos, currentMapEndC1, currentMapEndC2);
 
-                    if (maxStartingSpeedEnabled == true && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed)
-                    {
-                        AdjustPlayerVelocity(player, maxStartingSpeed, true);
-                    }
+            if (!isInsideStartBox && isInsideEndBox)
+            {
+                OnTimerStop(player);
+            }
+            else if (isInsideStartBox)
+            {
+                OnTimerStart(player);
+
+                if (maxStartingSpeedEnabled == true && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed)
+                {
+                    AdjustPlayerVelocity(player, maxStartingSpeed, true);
                 }
             }
+        }
+
+        public void ForcePlayerSpeed(CCSPlayerController player, string activeWeapon)
+        {
+
+            activeWeapon ??= "no_knife";
+            if (!weaponSpeedLookup.TryGetValue(activeWeapon, out WeaponSpeedStats weaponStats) || !player.IsValid) return;
+
+            player.PlayerPawn.Value.VelocityModifier = (float)(forcedPlayerSpeed / weaponStats.GetSpeed(player.PlayerPawn.Value.IsWalking));
         }
 
         private void AdjustPlayerVelocity(CCSPlayerController? player, float velocity, bool forceNoDebug = false)
@@ -265,17 +268,22 @@ namespace SharpTimer
             }
 
             SharpTimerDebug($"Player {player.PlayerName} has a stage trigger with handle {triggerHandle}");
-            int previousStageTime = GetStageTime(player.SteamID.ToString(), stageTriggers[triggerHandle]);
+            var (previousStageTime, previousStageSpeed) = GetStageTime(player.SteamID.ToString(), stageTriggers[triggerHandle]);
+
+            string currentStageSpeed = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString();
 
             if (previousStageTime != 0)
             {
-                player.PrintToChat(msgPrefix + $" Entering Stage: {stageTriggers[triggerHandle]} {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                player.PrintToChat(msgPrefix + $" Entering Stage: {stageTriggers[triggerHandle]}");
+                player.PrintToChat(msgPrefix + $" Time: {ChatColors.White}[{primaryChatColor}{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                player.PrintToChat(msgPrefix + $" Speed: {ChatColors.White}[{primaryChatColor}{currentStageSpeed}u/s{ChatColors.White}] [{FormatSpeedDifferenceFromString(currentStageSpeed, previousStageSpeed)}u/s{ChatColors.White}]");
             }
 
-            if (playerTimers[player.Slot].StageRecords != null && playerTimers[player.Slot].IsTimerRunning == true)
+            if (playerTimers[player.Slot].StageVelos != null && playerTimers[player.Slot].StageTimes != null && playerTimers[player.Slot].IsTimerRunning == true)
             {
-                playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
-                SharpTimerDebug($"Player {player.PlayerName} Entering stage {stageTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageRecords[stageTriggers[triggerHandle]]}");
+                playerTimers[player.Slot].StageTimes[stageTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
+                playerTimers[player.Slot].StageVelos[stageTriggers[triggerHandle]] = $"{currentStageSpeed}";
+                SharpTimerDebug($"Player {player.PlayerName} Entering stage {stageTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageTimes[stageTriggers[triggerHandle]]}");
             }
 
             playerTimers[player.Slot].CurrentMapStage = stageTriggers[triggerHandle];
@@ -288,128 +296,118 @@ namespace SharpTimer
                 return;
             }
 
-            if( useStageTriggers == true) //use stagetime instead
+            if (useStageTriggers == true) //use stagetime instead
             {
                 playerTimers[player.Slot].CurrentMapCheckpoint = cpTriggers[triggerHandle];
                 return;
             }
 
             SharpTimerDebug($"Player {player.PlayerName} has a checkpoint trigger with handle {triggerHandle}");
-            int previousStageTime = GetStageTime(player.SteamID.ToString(), cpTriggers[triggerHandle]);
+            var (previousStageTime, previousStageSpeed) = GetStageTime(player.SteamID.ToString(), cpTriggers[triggerHandle]);
+
+            string currentStageSpeed = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString();
 
             if (previousStageTime != 0)
             {
-                player.PrintToChat(msgPrefix + $" Checkpoint: {cpTriggers[triggerHandle]} {ParseColorToSymbol(primaryHUDcolor)}[{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                player.PrintToChat(msgPrefix + $" Checkpoint: {cpTriggers[triggerHandle]}");
+                player.PrintToChat(msgPrefix + $" Time: {ChatColors.White}[{primaryChatColor}{FormatTime(playerTimers[player.Slot].TimerTicks)}{ChatColors.White}] [{FormatTimeDifference(playerTimers[player.Slot].TimerTicks, previousStageTime)}{ChatColors.White}]");
+                player.PrintToChat(msgPrefix + $" Speed: {ChatColors.White}[{primaryChatColor}{currentStageSpeed}u/s{ChatColors.White}] [{FormatSpeedDifferenceFromString(currentStageSpeed, previousStageSpeed)}u/s{ChatColors.White}]");
             }
 
-            if (playerTimers[player.Slot].StageRecords != null && playerTimers[player.Slot].IsTimerRunning == true)
+            if (playerTimers[player.Slot].StageVelos != null && playerTimers[player.Slot].StageTimes != null && playerTimers[player.Slot].IsTimerRunning == true)
             {
-                playerTimers[player.Slot].StageRecords[cpTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
-                SharpTimerDebug($"Player {player.PlayerName} Entering checkpoint {cpTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageRecords[cpTriggers[triggerHandle]]}");
+                playerTimers[player.Slot].StageTimes[cpTriggers[triggerHandle]] = playerTimers[player.Slot].TimerTicks;
+                playerTimers[player.Slot].StageVelos[cpTriggers[triggerHandle]] = $"{currentStageSpeed}";
+                SharpTimerDebug($"Player {player.PlayerName} Entering checkpoint {cpTriggers[triggerHandle]} Time {playerTimers[player.Slot].StageTimes[cpTriggers[triggerHandle]]}");
             }
 
             playerTimers[player.Slot].CurrentMapCheckpoint = cpTriggers[triggerHandle];
         }
 
-        public int GetStageTime(string steamId, int stageIndex)
+        public (int time, string speed) GetStageTime(string steamId, int stageIndex)
         {
-            try
+            string fileName = $"{currentMapName.ToLower()}_stage_times.json";
+            string playerStageRecordsPath = Path.Join(gameDir, "csgo", "cfg", "SharpTimer", "PlayerStageData", fileName);
+
+            string jsonContent = "";
+            if (File.Exists(playerStageRecordsPath))
             {
-                string fileName = $"{currentMapName.ToLower()}_stage_times.json";
-                string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/PlayerStageData", fileName);
+                jsonContent = File.ReadAllText(playerStageRecordsPath);
+            }
 
-                if (!File.Exists(playerStageRecordsPath))
-                {
-                    //file doesnt exist so create it
-                    File.WriteAllText(playerStageRecordsPath, "{}");
-                }
+            Dictionary<string, PlayerStageData> playerData;
+            if (!string.IsNullOrEmpty(jsonContent))
+            {
+                playerData = JsonSerializer.Deserialize<Dictionary<string, PlayerStageData>>(jsonContent);
 
-                using (var stream = File.OpenRead(playerStageRecordsPath))
-                using (var document = JsonDocument.Parse(stream))
+                // Check if the given Steam ID exists in the playerData dictionary
+                if (playerData.TryGetValue(steamId, out var playerStageData))
                 {
-                    var root = document.RootElement;
-                    if (root.TryGetProperty(steamId, out var playerRecord))
+                    // Check if the stage index exists in the player's data
+                    if (playerStageData.StageTimes != null && playerStageData.StageTimes.TryGetValue(stageIndex, out var time) &&
+                        playerStageData.StageVelos != null && playerStageData.StageVelos.TryGetValue(stageIndex, out var speed))
                     {
-                        if (playerRecord.TryGetProperty("StageRecords", out var stageRecords) &&
-                            stageRecords.TryGetProperty(stageIndex.ToString(), out var stageTime))
-                        {
-                            return stageTime.GetInt32();
-                        }
-                        else
-                        {
-                            SharpTimerDebug($"Stage {stageIndex} not found for SteamID {steamId}");
-                        }
+                        return (time, speed);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                SharpTimerError($"An error occurred in GetStageTime: {ex.Message}");
-            }
 
-            return 0;
+            return (0, string.Empty);
         }
 
-        private void DumpPlayerStageTimesToJson(CCSPlayerController player)
+        public void DumpPlayerStageTimesToJson(CCSPlayerController? player)
         {
+            if (!IsAllowedPlayer(player)) return;
+
             string fileName = $"{currentMapName.ToLower()}_stage_times.json";
-            string playerStageRecordsPath = Path.Join(gameDir + "/csgo/cfg/SharpTimer/PlayerStageData", fileName);
+            string playerStageRecordsPath = Path.Join(gameDir, "csgo", "cfg", "SharpTimer", "PlayerStageData", fileName);
 
-            var stageTimes = playerTimers[player.Slot].StageRecords;
-
-            var playerStageData = new Dictionary<string, object>
-            {
-                { "StageRecords", stageTimes }
-            };
-
+            string jsonContent = "";
             if (File.Exists(playerStageRecordsPath))
             {
-                var existingData = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(playerStageRecordsPath));
+                jsonContent = File.ReadAllText(playerStageRecordsPath);
+            }
 
-                existingData[player.SteamID.ToString()] = playerStageData;
-
-                string jsonData = JsonSerializer.Serialize(existingData, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
-
-                File.WriteAllText(playerStageRecordsPath, jsonData);
+            Dictionary<string, PlayerStageData> playerData;
+            if (!string.IsNullOrEmpty(jsonContent))
+            {
+                playerData = JsonSerializer.Deserialize<Dictionary<string, PlayerStageData>>(jsonContent);
             }
             else
             {
-                var newData = new Dictionary<string, object>
-                {
-                    { player.SteamID.ToString(), playerStageData }
-                };
-
-                string jsonData = JsonSerializer.Serialize(newData, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
-
-                File.WriteAllText(playerStageRecordsPath, jsonData);
+                playerData = new Dictionary<string, PlayerStageData>();
             }
 
-            SharpTimerDebug($"Player {player.PlayerName} stage times for map {currentMapName} dumped to {playerStageRecordsPath}");
+            string playerId = player.SteamID.ToString();
+
+            if (!playerData.ContainsKey(playerId))
+            {
+                playerData[playerId] = new PlayerStageData();
+            }
+
+            playerData[playerId].StageTimes = playerTimers[player.Slot].StageTimes;
+            playerData[playerId].StageVelos = playerTimers[player.Slot].StageVelos;
+
+            string updatedJson = JsonSerializer.Serialize(playerData, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(playerStageRecordsPath, updatedJson);
         }
 
         private int GetPreviousPlayerRecord(CCSPlayerController? player, int bonusX = 0)
         {
             if (!IsAllowedPlayer(player)) return 0;
 
-            string currentMapName = bonusX == 0 ? Server.MapName : $"{Server.MapName}_bonus{bonusX}";
-
+            string mapRecordsPath = Path.Combine(playerRecordsPath, bonusX == 0 ? "" : $"_bonus{bonusX}");
             string steamId = player.SteamID.ToString();
 
-            Dictionary<string, Dictionary<string, PlayerRecord>> records;
-            if (File.Exists(playerRecordsPath))
+            Dictionary<string, PlayerRecord> records;
+            if (File.Exists(mapRecordsPath))
             {
-                string json = File.ReadAllText(playerRecordsPath);
-                records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json) ?? new Dictionary<string, Dictionary<string, PlayerRecord>>();
+                string json = File.ReadAllText(mapRecordsPath);
+                records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json) ?? new Dictionary<string, PlayerRecord>();
 
-                if (records.ContainsKey(currentMapName) && records[currentMapName].ContainsKey(steamId))
+                if (records.ContainsKey(steamId))
                 {
-                    return records[currentMapName][steamId].TimerTicks;
+                    return records[steamId].TimerTicks;
                 }
             }
 
@@ -425,7 +423,7 @@ namespace SharpTimer
 
             int placement = 1;
 
-            foreach (var kvp in playerTimers[player.Slot].SortedCachedRecords.Take(100))
+            foreach (var kvp in SortedCachedRecords.Take(100))
             {
                 int recordTimerTicks = kvp.Value.TimerTicks;
 
@@ -507,7 +505,7 @@ namespace SharpTimer
             if (getRankImg)
             {
                 //if(totalPlayers < 100) return "";
-                
+
                 double percentage = (double)placement / totalPlayers * 100;
 
                 if (percentage <= 1)
@@ -554,37 +552,32 @@ namespace SharpTimer
             if ((bonusX == 0 && playerTimers[player.Slot].IsTimerRunning == false) || (bonusX != 0 && playerTimers[player.Slot].IsBonusTimerRunning == false)) return;
 
             SharpTimerDebug($"Saving player {(bonusX != 0 ? $"bonus {bonusX} time" : "time")} of {timerTicks} ticks for {player.PlayerName} to json");
+            string mapRecordsPath = Path.Combine(playerRecordsPath, bonusX == 0 ? "" : $"_bonus{bonusX}");
 
-            string currentMapName = bonusX == 0 ? Server.MapName : $"{Server.MapName}_bonus{bonusX}";
-            string steamId = player.SteamID.ToString();
-            string playerName = player.PlayerName;
-
-            Dictionary<string, Dictionary<string, PlayerRecord>> records;
-            if (File.Exists(playerRecordsPath))
+            Dictionary<string, PlayerRecord> records;
+            if (File.Exists(mapRecordsPath))
             {
-                string json = File.ReadAllText(playerRecordsPath);
-                records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json) ?? new Dictionary<string, Dictionary<string, PlayerRecord>>();
+                string json = File.ReadAllText(mapRecordsPath);
+                records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json) ?? new Dictionary<string, PlayerRecord>();
             }
             else
             {
-                records = new Dictionary<string, Dictionary<string, PlayerRecord>>();
+                records = new Dictionary<string, PlayerRecord>();
             }
 
-            if (!records.ContainsKey(currentMapName))
-            {
-                records[currentMapName] = new Dictionary<string, PlayerRecord>();
-            }
+            string steamId = player.SteamID.ToString();
+            string playerName = player.PlayerName;
 
-            if (!records[currentMapName].ContainsKey(steamId) || records[currentMapName][steamId].TimerTicks > timerTicks)
+            if (!records.ContainsKey(steamId) || records[steamId].TimerTicks > timerTicks)
             {
-                records[currentMapName][steamId] = new PlayerRecord
+                records[steamId] = new PlayerRecord
                 {
                     PlayerName = playerName,
                     TimerTicks = timerTicks
                 };
 
                 string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(playerRecordsPath, updatedJson);
+                File.WriteAllText(mapRecordsPath, updatedJson);
                 if ((stageTriggerCount != 0 || cpTriggerCount != 0) && bonusX == 0) DumpPlayerStageTimesToJson(player);
             }
         }

@@ -193,6 +193,33 @@ namespace SharpTimer
             }
         }
 
+        [ConsoleCommand("sharptimer_force_knife_speed", "Whether the players speed should be always knife speed regardless of weapon held. Default value: false")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerForceKnifeSpeedBoolConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            forcePlayerSpeedEnabled = bool.TryParse(args, out bool forcePlayerSpeedEnabledValue) ? forcePlayerSpeedEnabledValue : args != "0" && forcePlayerSpeedEnabled;
+        }
+
+        [ConsoleCommand("sharptimer_forced_player_speed", "Speed override for sharptimer_force_knife_speed. Default value: 250")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerForcedSpeedConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            if (int.TryParse(args, out int speed) && speed > 0)
+            {
+                forcedPlayerSpeed = speed;
+                SharpTimerConPrint($"SharpTimer forced player speed set to {speed}.");
+            }
+            else
+            {
+                SharpTimerConPrint("Invalid forced player speed value. Please provide a positive integer.");
+            }
+        }
+
+
         [ConsoleCommand("sharptimer_connect_commands_msg_enabled", "Whether commands on join messages are enabled by default or not. Default value: true")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void SharpTimerConnectCmdMSGConvar(CCSPlayerController? player, CommandInfo command)
@@ -227,6 +254,15 @@ namespace SharpTimer
             string args = command.ArgString;
 
             srEnabled = bool.TryParse(args, out bool srEnabledValue) ? srEnabledValue : args != "0" && srEnabled;
+        }
+
+        [ConsoleCommand("sharptimer_checkpoints_only_when_timer_stopped", "Will only allow checkpoints if timer is stopped using !timer")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void SharpTimerCheckpointsOnlyWithStoppedTimer(CCSPlayerController? player, CommandInfo command)
+        {
+            string args = command.ArgString;
+
+            cpOnlyWhenTimerStopped = bool.TryParse(args, out bool cpOnlyWhenTimerStoppedValue) ? cpOnlyWhenTimerStoppedValue : args != "0" && cpOnlyWhenTimerStopped;
         }
 
         [ConsoleCommand("sharptimer_velo_bar_enabled", "Whether the alternative speedometer is enabled by default or not. Default value: false")]

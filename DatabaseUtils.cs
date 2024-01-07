@@ -213,25 +213,19 @@ namespace SharpTimer
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void AddJsonTimesToDatabaseCommand(CCSPlayerController? player, CommandInfo command)
         {
-            _ = AddJsonTimesToDatabaseAsync(player);
+            _ = AddJsonTimesToDatabaseAsync();
         }
 
-        public async Task AddJsonTimesToDatabaseAsync(CCSPlayerController? player)
+        public async Task AddJsonTimesToDatabaseAsync()
         {
             try
             {
-                if (!File.Exists(playerRecordsPath))
-                {
-                    SharpTimerDebug($"Error: JSON file not found at {playerRecordsPath}");
-                    return;
-                }
+                string recordsDirectoryNamee = "SharpTimer/PlayerRecords";
+                string playerRecordsPathh = Path.Combine(gameDir, "csgo", "cfg", recordsDirectoryNamee);
 
-                string json = await File.ReadAllTextAsync(playerRecordsPath);
-                var records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json);
-
-                if (records == null)
+                if (!Directory.Exists(playerRecordsPathh))
                 {
-                    SharpTimerDebug("Error: Failed to deserialize JSON data.");
+                    SharpTimerDebug($"Error: Directory not found at {playerRecordsPathh}");
                     return;
                 }
 
@@ -242,43 +236,53 @@ namespace SharpTimer
                     await connection.OpenAsync();
 
                     // Check if the table exists, and create it if necessary
-                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (MapName VARCHAR(255), SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), PRIMARY KEY (MapName, SteamID))";
+                    string createTableQuery = "CREATE TABLE IF NOT EXISTS PlayerRecords (SteamID VARCHAR(255), PlayerName VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, TimerTicks INT, FormattedTime VARCHAR(255), MapName VARCHAR(255), PRIMARY KEY (SteamID, MapName))";
                     using (var createTableCommand = new MySqlCommand(createTableQuery, connection))
                     {
                         await createTableCommand.ExecuteNonQueryAsync();
                     }
 
-                    foreach (var mapEntry in records)
+                    foreach (var filePath in Directory.EnumerateFiles(playerRecordsPathh, "*.json"))
                     {
-                        string currentMapName = mapEntry.Key;
+                        string json = await File.ReadAllTextAsync(filePath);
+                        var records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json);
 
-                        foreach (var recordEntry in mapEntry.Value)
+                        if (records == null)
+                        {
+                            SharpTimerDebug($"Error: Failed to deserialize JSON data from {filePath}");
+                            continue;
+                        }
+
+                        foreach (var recordEntry in records)
                         {
                             string steamId = recordEntry.Key;
                             PlayerRecord playerRecord = recordEntry.Value;
 
-                            // Check if the player is already in the database for the map
+                            // Extract MapName from the filename (remove extension)
+                            string mapName = Path.GetFileNameWithoutExtension(filePath);
+
+                            // Check if the player is already in the database
                             string insertOrUpdateQuery = @"
-                                INSERT INTO PlayerRecords (MapName, SteamID, PlayerName, TimerTicks, FormattedTime)
-                                VALUES (@MapName, @SteamID, @PlayerName, @TimerTicks, @FormattedTime)
+                                INSERT INTO PlayerRecords (SteamID, PlayerName, TimerTicks, FormattedTime, MapName)
+                                VALUES (@SteamID, @PlayerName, @TimerTicks, @FormattedTime, @MapName)
                                 ON DUPLICATE KEY UPDATE
                                 TimerTicks = IF(@TimerTicks < TimerTicks, @TimerTicks, TimerTicks),
                                 FormattedTime = IF(@TimerTicks < TimerTicks, @FormattedTime, FormattedTime)";
 
                             using (var insertOrUpdateCommand = new MySqlCommand(insertOrUpdateQuery, connection))
                             {
-                                insertOrUpdateCommand.Parameters.AddWithValue("@MapName", currentMapName);
                                 insertOrUpdateCommand.Parameters.AddWithValue("@SteamID", steamId);
                                 insertOrUpdateCommand.Parameters.AddWithValue("@PlayerName", playerRecord.PlayerName);
                                 insertOrUpdateCommand.Parameters.AddWithValue("@TimerTicks", playerRecord.TimerTicks);
                                 insertOrUpdateCommand.Parameters.AddWithValue("@FormattedTime", FormatTime(playerRecord.TimerTicks));
+                                insertOrUpdateCommand.Parameters.AddWithValue("@MapName", mapName);
 
                                 await insertOrUpdateCommand.ExecuteNonQueryAsync();
                             }
                         }
-                    }
 
-                    SharpTimerDebug("JSON times successfully added to the database.");
+                        SharpTimerDebug($"JSON times from {Path.GetFileName(filePath)} successfully added to the database.");
+                    }
                 }
             }
             catch (Exception ex)
@@ -292,11 +296,14 @@ namespace SharpTimer
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void ExportDatabaseToJsonCommand(CCSPlayerController? player, CommandInfo command)
         {
-            _ = ExportDatabaseToJsonAsync(player);
+            _ = ExportDatabaseToJsonAsync();
         }
 
-        public async Task ExportDatabaseToJsonAsync(CCSPlayerController? player)
+        public async Task ExportDatabaseToJsonAsync()
         {
+            string recordsDirectoryNamee = "SharpTimer/PlayerRecords";
+            string playerRecordsPathh = Path.Combine(gameDir, "csgo", "cfg", recordsDirectoryNamee);
+
             try
             {
                 string connectionString = GetConnectionStringFromConfigFile(mySQLpath);
@@ -305,42 +312,47 @@ namespace SharpTimer
                 {
                     await connection.OpenAsync();
 
-                    string selectQuery = "SELECT MapName, SteamID, PlayerName, TimerTicks FROM PlayerRecords";
+                    string selectQuery = "SELECT SteamID, PlayerName, TimerTicks, MapName FROM PlayerRecords";
                     using (var selectCommand = new MySqlCommand(selectQuery, connection))
                     {
                         using (var reader = await selectCommand.ExecuteReaderAsync())
                         {
-                            var records = new Dictionary<string, Dictionary<string, PlayerRecord>>();
-
                             while (await reader.ReadAsync())
                             {
-                                string mapName = reader.GetString(0);
-                                string steamId = reader.GetString(1);
-                                string playerName = reader.GetString(2);
-                                int timerTicks = reader.GetInt32(3);
+                                string steamId = reader.GetString(0);
+                                string playerName = reader.GetString(1);
+                                int timerTicks = reader.GetInt32(2);
+                                string mapName = reader.GetString(3);
 
-                                if (!records.ContainsKey(mapName))
+                                Directory.CreateDirectory(playerRecordsPathh);
+
+                                Dictionary<string, PlayerRecord> records;
+                                string filePath = Path.Combine(playerRecordsPathh, $"{mapName}.json");
+                                if (File.Exists(filePath))
                                 {
-                                    records[mapName] = new Dictionary<string, PlayerRecord>();
+                                    string existingJson = await File.ReadAllTextAsync(filePath);
+                                    records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(existingJson) ?? new Dictionary<string, PlayerRecord>();
+                                }
+                                else
+                                {
+                                    records = new Dictionary<string, PlayerRecord>();
                                 }
 
-                                records[mapName][steamId] = new PlayerRecord
+                                records[steamId] = new PlayerRecord
                                 {
                                     PlayerName = playerName,
                                     TimerTicks = timerTicks
                                 };
+
+                                string updatedJson = JsonSerializer.Serialize(records, new JsonSerializerOptions
+                                {
+                                    WriteIndented = true
+                                });
+
+                                await File.WriteAllTextAsync(filePath, updatedJson);
+
+                                SharpTimerDebug($"Player records for map {mapName} successfully exported to JSON.");
                             }
-
-                            // Convert records to JSON
-                            string json = JsonSerializer.Serialize(records, new JsonSerializerOptions
-                            {
-                                WriteIndented = true
-                            });
-
-                            // Save JSON to file
-                            await File.WriteAllTextAsync(playerRecordsPath, json);
-
-                            SharpTimerDebug("Player records successfully exported to JSON.");
                         }
                     }
                 }

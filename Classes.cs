@@ -1,11 +1,36 @@
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace SharpTimer
 {
+    public class EntityCache
+    {
+        public List<CBaseTrigger> Triggers { get; private set; }
+        public List<CInfoTeleportDestination> InfoTeleportDestinations { get; private set; }
+        public List<CTriggerPush> TriggerPushEntities { get; private set; }
+        public List<CPointEntity> InfoTargetEntities { get; private set; }
+
+        public EntityCache()
+        {
+            Triggers = new List<CBaseTrigger>();
+            InfoTeleportDestinations = new List<CInfoTeleportDestination>();
+            TriggerPushEntities = new List<CTriggerPush>();
+            InfoTargetEntities = new List<CPointEntity>();
+            UpdateCache();
+        }
+
+        public void UpdateCache()
+        {
+            Triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple").ToList();
+            InfoTeleportDestinations = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination").ToList();
+            TriggerPushEntities = Utilities.FindAllEntitiesByDesignerName<CTriggerPush>("trigger_push").ToList();
+            InfoTargetEntities = Utilities.FindAllEntitiesByDesignerName<CPointEntity>("info_target").ToList();
+        }
+    }
+
     public class MapInfo
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -55,10 +80,10 @@ namespace SharpTimer
         public bool SoundsEnabled { get; set; }
         public int TimesConnected { get; set; }
         public int TicksSinceLastCmd { get; set; }
-        public Dictionary<int, int>? StageRecords { get; set; }
+        public Dictionary<int, int>? StageTimes { get; set; }
+        public Dictionary<int, string>? StageVelos { get; set; }
         public int CurrentMapStage { get; set; }
         public int CurrentMapCheckpoint { get; set; }
-        public Dictionary<string, PlayerRecord>? SortedCachedRecords { get; set; }
         public CCSPlayer_MovementServices? MovementService { get; set; }
 
         //super special stuff for testers
@@ -88,6 +113,12 @@ namespace SharpTimer
         public string? PositionString { get; set; }
         public string? RotationString { get; set; }
         public string? SpeedString { get; set; }
+    }
+
+    public class PlayerStageData
+    {
+        public Dictionary<int, int>? StageTimes { get; set; }
+        public Dictionary<int, string>? StageVelos { get; set; }
     }
 
     public class TriggerPushData

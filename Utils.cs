@@ -37,14 +37,14 @@ namespace SharpTimer
                     return;
                 }
 
-                Server.NextFrame(() => Server.PrintToChatAll($"{msgPrefix} Current Server Record on {ParseColorToSymbol(primaryHUDcolor)}{currentMapName}{ChatColors.White}: "));
+                Server.NextFrame(() => Server.PrintToChatAll($"{msgPrefix} Current Server Record on {primaryChatColor}{currentMapName}{ChatColors.White}: "));
 
                 foreach (var kvp in sortedRecords.Take(1))
                 {
                     string playerName = kvp.Value.PlayerName; // Get the player name from the dictionary value
                     int timerTicks = kvp.Value.TimerTicks; // Get the timer ticks from the dictionary value
 
-                    Server.NextFrame(() => Server.PrintToChatAll(msgPrefix + $" {ParseColorToSymbol(primaryHUDcolor)}{playerName} {ChatColors.White}- {ParseColorToSymbol(primaryHUDcolor)}{FormatTime(timerTicks)}"));
+                    Server.NextFrame(() => Server.PrintToChatAll(msgPrefix + $" {primaryChatColor}{playerName} {ChatColors.White}- {primaryChatColor}{FormatTime(timerTicks)}"));
                 }
 
             }, TimerFlags.REPEAT);
@@ -137,6 +137,22 @@ namespace SharpTimer
             }
 
             return $"{signColor}{sign}{totalDifferenceMinutes:D1}:{secondsWithMilliseconds}";
+        }
+
+        private static string FormatSpeedDifferenceFromString(string currentSpeed, string previousSpeed)
+        {
+            if (int.TryParse(currentSpeed, out int currentSpeedInt) && int.TryParse(previousSpeed, out int previousSpeedInt))
+            {
+                int difference = previousSpeedInt - currentSpeedInt;
+                string sign = (difference > 0) ? "-" : "+";
+                char signColor = (difference < 0) ? ChatColors.Green : ChatColors.Red;
+
+                return $"{signColor}{sign}{Math.Abs(difference)}";
+            }
+            else
+            {
+                return "Invalid Speed Format";
+            }
         }
 
         static string StringAfterPrefix(string input, string prefix)
@@ -303,57 +319,54 @@ namespace SharpTimer
 
         public void DrawWireframe2D(Vector corner1, Vector corner2, float height = 50)
         {
-            Vector corner3 = new Vector(corner2.X, corner1.Y, corner1.Z);
-            Vector corner4 = new Vector(corner1.X, corner2.Y, corner1.Z);
+            Vector[] corners = new Vector[8];
+            corners[0] = corner1;
+            corners[1] = new Vector(corner2.X, corner1.Y, corner1.Z);
+            corners[2] = new Vector(corner1.X, corner2.Y, corner1.Z);
+            corners[3] = corner2;
 
-            Vector corner1_top = new Vector(corner1.X, corner1.Y, corner1.Z + height);
-            Vector corner2_top = new Vector(corner2.X, corner2.Y, corner2.Z + height);
-            Vector corner3_top = new Vector(corner2.X, corner1.Y, corner1.Z + height);
-            Vector corner4_top = new Vector(corner1.X, corner2.Y, corner1.Z + height);
+            for (int i = 0; i < 4; i++)
+                corners[i + 4] = new Vector(corners[i].X, corners[i].Y, corners[i].Z + height);
 
-            DrawLaserBetween(corner1, corner3);
-            DrawLaserBetween(corner1, corner4);
-            DrawLaserBetween(corner2, corner3);
-            DrawLaserBetween(corner2, corner4);
+            for (int i = 0; i < 4; i++)
+            {
+                DrawLaserBetween(corners[i], corners[(i + 1) % 4]);
+                DrawLaserBetween(corners[i], corners[i + 4]);
+            }
 
-            DrawLaserBetween(corner1_top, corner3_top);
-            DrawLaserBetween(corner1_top, corner4_top);
-            DrawLaserBetween(corner2_top, corner3_top);
-            DrawLaserBetween(corner2_top, corner4_top);
+            for (int i = 4; i < 8; i++)
+            {
+                DrawLaserBetween(corners[i], corners[(i + 1) % 4 + 4]);
+                DrawLaserBetween(corners[i], corners[i - 4]);
+            }
 
-            DrawLaserBetween(corner1, corner1_top);
-            DrawLaserBetween(corner2, corner2_top);
-            DrawLaserBetween(corner3, corner3_top);
-            DrawLaserBetween(corner4, corner4_top);
+            for (int i = 0; i < 4; i++)
+                DrawLaserBetween(corners[i], corners[i + 4]);
         }
 
         public void DrawWireframe3D(Vector corner1, Vector corner8)
         {
-            Vector corner2 = new Vector(corner1.X, corner8.Y, corner1.Z);
-            Vector corner3 = new Vector(corner8.X, corner8.Y, corner1.Z);
-            Vector corner4 = new Vector(corner8.X, corner1.Y, corner1.Z);
+            Vector[] corners = new Vector[8];
+            corners[0] = corner1;
+            corners[1] = new Vector(corner1.X, corner8.Y, corner1.Z);
+            corners[2] = new Vector(corner8.X, corner8.Y, corner1.Z);
+            corners[3] = new Vector(corner8.X, corner1.Y, corner1.Z);
+            corners[4] = new Vector(corner8.X, corner1.Y, corner8.Z);
+            corners[5] = new Vector(corner1.X, corner1.Y, corner8.Z);
+            corners[6] = new Vector(corner1.X, corner8.Y, corner8.Z);
+            corners[7] = corner8;
 
-            Vector corner5 = new Vector(corner8.X, corner1.Y, corner8.Z);
-            Vector corner6 = new Vector(corner1.X, corner1.Y, corner8.Z);
-            Vector corner7 = new Vector(corner1.X, corner8.Y, corner8.Z);
+            for (int i = 0; i < 4; i++)
+            {
+                DrawLaserBetween(corners[i], corners[(i + 1) % 4]);
+                DrawLaserBetween(corners[i + 4], corners[(i + 1) % 4 + 4]);
+                DrawLaserBetween(corners[i], corners[i + 4]);
+            }
 
-            //top square
-            DrawLaserBetween(corner1, corner2);
-            DrawLaserBetween(corner2, corner3);
-            DrawLaserBetween(corner3, corner4);
-            DrawLaserBetween(corner4, corner1);
-
-            //bottom square
-            DrawLaserBetween(corner5, corner6);
-            DrawLaserBetween(corner6, corner7);
-            DrawLaserBetween(corner7, corner8);
-            DrawLaserBetween(corner8, corner5);
-
-            //connect them both to build a cube
-            DrawLaserBetween(corner1, corner6);
-            DrawLaserBetween(corner2, corner7);
-            DrawLaserBetween(corner3, corner8);
-            DrawLaserBetween(corner4, corner5);
+            for (int i = 0; i < 4; i++)
+            {
+                DrawLaserBetween(corners[i], corners[i + 4]);
+            }
         }
 
         private bool IsVectorInsideBox(Vector playerVector, Vector corner1, Vector corner2)
@@ -364,11 +377,11 @@ namespace SharpTimer
 
             float maxX = Math.Max(corner1.X, corner2.X);
             float maxY = Math.Max(corner1.Y, corner2.Y);
-            float maxZ = Math.Max(corner1.Z, corner1.Z);
+            float maxZ = Math.Max(corner1.Z, corner2.Z + fakeTriggerHeight);
 
             return playerVector.X >= minX && playerVector.X <= maxX &&
                    playerVector.Y >= minY && playerVector.Y <= maxY &&
-                   playerVector.Z >= minZ && playerVector.Z <= maxZ + fakeTriggerHeight;
+                   playerVector.Z >= minZ && playerVector.Z <= maxZ;
         }
 
         private static Vector ParseVector(string vectorString)
@@ -407,33 +420,28 @@ namespace SharpTimer
 
         public Dictionary<string, PlayerRecord> GetSortedRecords(int bonusX = 0)
         {
-            string currentMapName = bonusX == 0 ? Server.MapName : $"{Server.MapName}_bonus{bonusX}";
+            string mapRecordsPath = Path.Combine(playerRecordsPath, bonusX == 0 ? "" : $"_bonus{bonusX}");
 
-            Dictionary<string, Dictionary<string, PlayerRecord>> records;
-            if (File.Exists(playerRecordsPath))
+            Dictionary<string, PlayerRecord> records;
+            if (File.Exists(mapRecordsPath))
             {
-                string json = File.ReadAllText(playerRecordsPath);
-                records = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, PlayerRecord>>>(json) ?? new Dictionary<string, Dictionary<string, PlayerRecord>>();
+                string json = File.ReadAllText(mapRecordsPath);
+                records = JsonSerializer.Deserialize<Dictionary<string, PlayerRecord>>(json) ?? new Dictionary<string, PlayerRecord>();
             }
             else
             {
-                records = new Dictionary<string, Dictionary<string, PlayerRecord>>();
+                records = new Dictionary<string, PlayerRecord>();
             }
 
-            if (records.ContainsKey(currentMapName))
-            {
-                var sortedRecords = records[currentMapName]
-                    .OrderBy(record => record.Value.TimerTicks)
-                    .ToDictionary(record => record.Key, record => new PlayerRecord
-                    {
-                        PlayerName = record.Value.PlayerName,
-                        TimerTicks = record.Value.TimerTicks
-                    });
+            var sortedRecords = records
+                .OrderBy(record => record.Value.TimerTicks)
+                .ToDictionary(record => record.Key, record => new PlayerRecord
+                {
+                    PlayerName = record.Value.PlayerName,
+                    TimerTicks = record.Value.TimerTicks
+                });
 
-                return sortedRecords;
-            }
-
-            return new Dictionary<string, PlayerRecord>();
+            return sortedRecords;
         }
 
         private async Task<(int? Tier, string? Type)> FineMapInfoFromHTTP(string url)
@@ -476,7 +484,7 @@ namespace SharpTimer
             }
         }
 
-        private async Task AddMapInfoToHostname()
+        private async Task GetMapInfo()
         {
             string mapInfoSource = GetMapInfoSource();
             var (mapTier, mapType) = await FineMapInfoFromHTTP(mapInfoSource);
@@ -536,27 +544,34 @@ namespace SharpTimer
 
         private void LoadMapData()
         {
-            Server.ExecuteCommand($"hostname {defaultServerHostname}");
+            if (autosetHostname) Server.ExecuteCommand($"hostname {defaultServerHostname}");
 
             if (srEnabled == true) ServerRecordADtimer();
 
-            string recordsFileName = "SharpTimer/player_records.json";
+            currentMapName = Server.MapName;
+
+            string recordsFileName = $"SharpTimer/PlayerRecords/{currentMapName}.json";
             playerRecordsPath = Path.Join(gameDir + "/csgo/cfg", recordsFileName);
 
             string mysqlConfigFileName = "SharpTimer/mysqlConfig.json";
             mySQLpath = Path.Join(gameDir + "/csgo/cfg", mysqlConfigFileName);
 
-            currentMapName = Server.MapName;
-
             string mapdataFileName = $"SharpTimer/MapData/{currentMapName}.json";
             string mapdataPath = Path.Join(gameDir + "/csgo/cfg", mapdataFileName);
+
+            entityCache = new EntityCache();
+            UpdateEntityCache();
+
+            SortedCachedRecords = GetSortedRecords();
 
             currentMapTier = null; //making sure previous map tier and type are wiped
             currentMapType = null;
 
-            _ = AddMapInfoToHostname();
+            _ = GetMapInfo();
 
             if (triggerPushFixEnabled == true) FindTriggerPushData();
+
+            primaryChatColor = ParseColorToSymbol(primaryHUDcolor);
 
             if (File.Exists(mapdataPath))
             {
