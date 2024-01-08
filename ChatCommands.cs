@@ -212,30 +212,6 @@ namespace SharpTimer
             }
         }
 
-        [ConsoleCommand("css_azerty", "Switches layout to AZERTY")]
-        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
-        public void AzertySwitchCommand(CCSPlayerController? player, CommandInfo command)
-        {
-            if (!IsAllowedPlayer(player)) return;
-            SharpTimerDebug($"{player.PlayerName} calling css_azerty...");
-
-            if (playerTimers[player.Slot].TicksSinceLastCmd < cmdCooldown)
-            {
-                player.PrintToChat(msgPrefix + $" Command is on cooldown. Chill...");
-                return;
-            }
-
-            playerTimers[player.Slot].TicksSinceLastCmd = 0;
-
-            playerTimers[player.Slot].Azerty = playerTimers[player.Slot].Azerty ? false : true;
-
-            player.PrintToChat($"Azerty Layout set to: {primaryChatColor}{playerTimers[player.Slot].Azerty}");
-            SharpTimerDebug($"Azerty Layout set to: {playerTimers[player.Slot].Azerty} for {player.PlayerName}");
-
-            //if(useMySQL == true) _ = SavePlayerBoolStatToDatabase(player.SteamID.ToString(), "Azerty", playerTimers[player.Slot].Azerty);
-
-        }
-
         [ConsoleCommand("css_hud", "Draws/Hides The timer HUD")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void HUDSwitchCommand(CCSPlayerController? player, CommandInfo command)

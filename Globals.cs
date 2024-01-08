@@ -95,8 +95,6 @@ namespace SharpTimer
         public string? currentMapName;
         public string? defaultServerHostname = ConVar.Find("hostname").StringValue;
 
-        private StringBuilder hudContentBuilder = new StringBuilder();
-
         public string? remoteBhopDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/main/remote_data/bhop_.json";
         public string? remoteKZDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/main/remote_data/kz_.json";
         public string? remoteSurfDataSource = "https://raw.githubusercontent.com/DEAFPS/SharpTimer/main/remote_data/surf_.json";

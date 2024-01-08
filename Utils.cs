@@ -66,44 +66,6 @@ namespace SharpTimer
             Console.WriteLine($"\u001b[36m[SharpTimer] \u001b[37m{msg}");
         }
 
-        private string GetSpeedBar(double speed)
-        {
-            const int barLength = 80;
-
-            int barProgress = (int)Math.Round((speed / altVeloMaxSpeed) * barLength);
-            StringBuilder speedBar = new StringBuilder(barLength);
-
-            for (int i = 0; i < barLength; i++)
-            {
-                if (i < barProgress)
-                {
-                    speedBar.Append($"<font class='fontSize-s' color='{(speed >= altVeloMaxSpeed ? GetRainbowColor() : primaryHUDcolor)}'>|</font>");
-                }
-                else
-                {
-                    speedBar.Append($"<font class='fontSize-s' color='{secondaryHUDcolor}'>|</font>");
-                }
-            }
-
-            return $"{speedBar}<br>";
-        }
-
-        private string GetRainbowColor()
-        {
-            const double rainbowPeriod = 2.0;
-
-            double percentage = (Server.EngineTime % rainbowPeriod) / rainbowPeriod;
-            double red = Math.Sin(2 * Math.PI * (percentage)) * 127 + 128;
-            double green = Math.Sin(2 * Math.PI * (percentage + 1.0 / 3.0)) * 127 + 128;
-            double blue = Math.Sin(2 * Math.PI * (percentage + 2.0 / 3.0)) * 127 + 128;
-
-            int intRed = (int)Math.Round(red);
-            int intGreen = (int)Math.Round(green);
-            int intBlue = (int)Math.Round(blue);
-
-            return $"#{intRed:X2}{intGreen:X2}{intBlue:X2}";
-        }
-
         private static string FormatTime(int ticks)
         {
             TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
@@ -420,7 +382,7 @@ namespace SharpTimer
 
         public Dictionary<string, PlayerRecord> GetSortedRecords(int bonusX = 0)
         {
-            string mapRecordsPath = Path.Combine(playerRecordsPath, bonusX == 0 ? "" : $"_bonus{bonusX}");
+            string mapRecordsPath = Path.Combine(playerRecordsPath, bonusX == 0 ? $"{currentMapName}.json" : $"{currentMapName}_bonus{bonusX}.json");
 
             Dictionary<string, PlayerRecord> records;
 
@@ -561,7 +523,7 @@ namespace SharpTimer
 
             currentMapName = Server.MapName;
 
-            string recordsFileName = $"SharpTimer/PlayerRecords/{currentMapName}.json";
+            string recordsFileName = $"SharpTimer/PlayerRecords/";
             playerRecordsPath = Path.Join(gameDir + "/csgo/cfg", recordsFileName);
 
             string mysqlConfigFileName = "SharpTimer/mysqlConfig.json";
