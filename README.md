@@ -66,6 +66,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 | `!timer` | Stops timer and blocks it from starting |´
 | `!goto` | Teleports the player to another player by name |
 | `!stage` | Teleports the player to a stage by index |
+| `!sthelp` | Prints commdands for player |
 | `!stver` | Prints the current plugin version |
 
 
