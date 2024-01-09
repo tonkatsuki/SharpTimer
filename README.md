@@ -15,7 +15,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 <details> 
   <summary>Surf Stages and Checkpoints</summary>
   <img src="https://i.imgur.com/xL2y6vs.png">
-</details>https://i.imgur.com/7vSKeCv.png
+</details>
 
 <details> 
     <summary>Bonus stages</summary>
