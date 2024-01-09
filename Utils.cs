@@ -466,13 +466,16 @@ namespace SharpTimer
             string tierString = currentMapTier != null ? $" | Tier: {currentMapTier}" : "";
             string typeString = currentMapType != null ? $" | {currentMapType}" : "";
 
-            if (!autosetHostname) return;
-
-            Server.NextFrame(() =>
+            if (autosetHostname == true)
             {
-                Server.ExecuteCommand($"hostname {defaultServerHostname}{tierString}{typeString}");
-                SharpTimerDebug($"SharpTimer Hostname Updated to: {ConVar.Find("hostname").StringValue}");
-            });
+                Server.NextFrame(() =>
+                {
+                    Server.ExecuteCommand($"hostname {defaultServerHostname}{tierString}{typeString}");
+                    SharpTimerDebug($"SharpTimer Hostname Updated to: {ConVar.Find("hostname").StringValue}");
+                });
+            }
+
+
         }
 
         private string GetMapInfoSource()
@@ -517,8 +520,7 @@ namespace SharpTimer
 
         private void LoadMapData()
         {
-            if (autosetHostname) Server.ExecuteCommand($"hostname {defaultServerHostname}");
-
+            Server.ExecuteCommand($"execifexists SharpTimer/config.cfg");
             if (srEnabled == true) ServerRecordADtimer();
 
             currentMapName = Server.MapName;

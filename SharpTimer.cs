@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
@@ -14,6 +15,8 @@ namespace SharpTimer
         public override void Load(bool hotReload)
         {
             SharpTimerDebug("Loading Plugin...");
+
+            defaultServerHostname = ConVar.Find("hostname").StringValue;
 
             gameDir = Server.GameDirectory;
             SharpTimerDebug($"Set gameDir to {gameDir}");
@@ -134,16 +137,6 @@ namespace SharpTimer
                 }
             });
 
-            /* RegisterListener<Listeners.OnTick>(() =>
-            {
-                foreach (var playerEntry in connectedPlayers)
-                {
-                    var player = playerEntry.Value;
-                    
-                    player.PrintToCenter($"{FormatTime(playerTimers[player.Slot].TimerTicks)}");
-                    if(playerTimers[player.Slot].IsTimerRunning) playerTimers[player.Slot].TimerTicks++;
-                }
-            }); */
             RegisterListener<Listeners.OnTick>(TimerOnTick);
 
             HookEntityOutput("trigger_multiple", "OnStartTouch", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
@@ -397,18 +390,7 @@ namespace SharpTimer
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && disableDamage == true)
             {
-                VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook((h =>
-                {
-                    if (disableDamage == false || h == null) return HookResult.Continue;
-
-                    var damageInfoParam = h.GetParam<CTakeDamageInfo>(1);
-
-                    if (damageInfoParam == null) return HookResult.Continue;
-
-                    if (disableDamage == true) damageInfoParam.Damage = 0;
-
-                    return HookResult.Continue;
-                }), HookMode.Pre);
+                VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(this.OnTakeDamage, HookMode.Pre);
             }
             else
             {
@@ -416,6 +398,26 @@ namespace SharpTimer
             }
 
             SharpTimerDebug("Plugin Loaded");
+        }
+
+        public override void Unload(bool hotReload)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && disableDamage == true)
+            {
+                VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(this.OnTakeDamage, HookMode.Pre);
+            }
+        }
+
+        private HookResult OnTakeDamage(dynamic h) {
+            if (disableDamage == false || h == null) return HookResult.Continue;
+
+            var damageInfoParam = h.GetParam<CTakeDamageInfo>(1);
+
+            if (damageInfoParam == null) return HookResult.Continue;
+
+            if (disableDamage == true) damageInfoParam.Damage = 0;
+
+            return HookResult.Continue;
         }
     }
 }

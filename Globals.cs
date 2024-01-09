@@ -9,7 +9,7 @@ namespace SharpTimer
     public partial class SharpTimer
     {
         public override string ModuleName => "SharpTimer";
-        public override string ModuleVersion => $"0.1.7 - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
+        public override string ModuleVersion => $"0.1.8 - {new DateTime(Builtin.CompileTime, DateTimeKind.Utc)}";
         public override string ModuleAuthor => "DEAFPS https://github.com/DEAFPS/";
         public override string ModuleDescription => "A simple CSS Timer Plugin";
 
@@ -65,7 +65,7 @@ namespace SharpTimer
         public bool cpOnlyWhenTimerStopped = false;
         public bool connectMsgEnabled = true;
         public bool cmdJoinMsgEnabled = true;
-        public bool autosetHostname = true;
+        public bool autosetHostname = false;
         public bool srEnabled = true;
         public int srTimer = 120;
         public int rankHUDTimer = 170;

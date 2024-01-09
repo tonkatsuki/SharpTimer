@@ -11,15 +11,13 @@ namespace SharpTimer
 {
     public partial class SharpTimer
     {
-        [ConsoleCommand("css_dea")]
-        [RequiresPermissions("@css/root")]
+        [ConsoleCommand("css_sthelp", "Prints all commands for the player")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
-        public void DeaTest(CCSPlayerController? player, CommandInfo command)
+        public void HelpCommand(CCSPlayerController? player, CommandInfo command)
         {
             if (!IsAllowedPlayer(player)) return;
 
-            player.PlayerPawn.Value.WeaponServices.ActiveWeapon.Value.SubclassID.Value = 508;
-            //Utilities.SetStateChanged(player.PlayerPawn.Value.WeaponServices.ActiveWeapon.Value, "CBasePlayerWeapon", "m_iDesiredFOV");
+            PrintAllEnabledCommands(player);
         }
         
         [ConsoleCommand("css_addstartzone", "Adds a startzone to the mapdata.json file")]
