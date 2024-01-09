@@ -281,54 +281,57 @@ namespace SharpTimer
 
         public void DrawWireframe2D(Vector corner1, Vector corner2, float height = 50)
         {
-            Vector[] corners = new Vector[8];
-            corners[0] = corner1;
-            corners[1] = new Vector(corner2.X, corner1.Y, corner1.Z);
-            corners[2] = new Vector(corner1.X, corner2.Y, corner1.Z);
-            corners[3] = corner2;
+            Vector corner3 = new Vector(corner2.X, corner1.Y, corner1.Z);
+            Vector corner4 = new Vector(corner1.X, corner2.Y, corner1.Z);
 
-            for (int i = 0; i < 4; i++)
-                corners[i + 4] = new Vector(corners[i].X, corners[i].Y, corners[i].Z + height);
+            Vector corner1_top = new Vector(corner1.X, corner1.Y, corner1.Z + height);
+            Vector corner2_top = new Vector(corner2.X, corner2.Y, corner2.Z + height);
+            Vector corner3_top = new Vector(corner2.X, corner1.Y, corner1.Z + height);
+            Vector corner4_top = new Vector(corner1.X, corner2.Y, corner1.Z + height);
 
-            for (int i = 0; i < 4; i++)
-            {
-                DrawLaserBetween(corners[i], corners[(i + 1) % 4]);
-                DrawLaserBetween(corners[i], corners[i + 4]);
-            }
+            DrawLaserBetween(corner1, corner3);
+            DrawLaserBetween(corner1, corner4);
+            DrawLaserBetween(corner2, corner3);
+            DrawLaserBetween(corner2, corner4);
 
-            for (int i = 4; i < 8; i++)
-            {
-                DrawLaserBetween(corners[i], corners[(i + 1) % 4 + 4]);
-                DrawLaserBetween(corners[i], corners[i - 4]);
-            }
+            DrawLaserBetween(corner1_top, corner3_top);
+            DrawLaserBetween(corner1_top, corner4_top);
+            DrawLaserBetween(corner2_top, corner3_top);
+            DrawLaserBetween(corner2_top, corner4_top);
 
-            for (int i = 0; i < 4; i++)
-                DrawLaserBetween(corners[i], corners[i + 4]);
+            DrawLaserBetween(corner1, corner1_top);
+            DrawLaserBetween(corner2, corner2_top);
+            DrawLaserBetween(corner3, corner3_top);
+            DrawLaserBetween(corner4, corner4_top);
         }
 
         public void DrawWireframe3D(Vector corner1, Vector corner8)
         {
-            Vector[] corners = new Vector[8];
-            corners[0] = corner1;
-            corners[1] = new Vector(corner1.X, corner8.Y, corner1.Z);
-            corners[2] = new Vector(corner8.X, corner8.Y, corner1.Z);
-            corners[3] = new Vector(corner8.X, corner1.Y, corner1.Z);
-            corners[4] = new Vector(corner8.X, corner1.Y, corner8.Z);
-            corners[5] = new Vector(corner1.X, corner1.Y, corner8.Z);
-            corners[6] = new Vector(corner1.X, corner8.Y, corner8.Z);
-            corners[7] = corner8;
+            Vector corner2 = new Vector(corner1.X, corner8.Y, corner1.Z);
+            Vector corner3 = new Vector(corner8.X, corner8.Y, corner1.Z);
+            Vector corner4 = new Vector(corner8.X, corner1.Y, corner1.Z);
 
-            for (int i = 0; i < 4; i++)
-            {
-                DrawLaserBetween(corners[i], corners[(i + 1) % 4]);
-                DrawLaserBetween(corners[i + 4], corners[(i + 1) % 4 + 4]);
-                DrawLaserBetween(corners[i], corners[i + 4]);
-            }
+            Vector corner5 = new Vector(corner8.X, corner1.Y, corner8.Z);
+            Vector corner6 = new Vector(corner1.X, corner1.Y, corner8.Z);
+            Vector corner7 = new Vector(corner1.X, corner8.Y, corner8.Z);
 
-            for (int i = 0; i < 4; i++)
-            {
-                DrawLaserBetween(corners[i], corners[i + 4]);
-            }
+            //top square
+            DrawLaserBetween(corner1, corner2);
+            DrawLaserBetween(corner2, corner3);
+            DrawLaserBetween(corner3, corner4);
+            DrawLaserBetween(corner4, corner1);
+
+            //bottom square
+            DrawLaserBetween(corner5, corner6);
+            DrawLaserBetween(corner6, corner7);
+            DrawLaserBetween(corner7, corner8);
+            DrawLaserBetween(corner8, corner5);
+
+            //connect them both to build a cube
+            DrawLaserBetween(corner1, corner6);
+            DrawLaserBetween(corner2, corner7);
+            DrawLaserBetween(corner3, corner8);
+            DrawLaserBetween(corner4, corner5);
         }
 
         private bool IsVectorInsideBox(Vector playerVector, Vector corner1, Vector corner2)
