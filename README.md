@@ -3,17 +3,32 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 ## Features
 <details> 
-  <summary>Timer, speedometer and key input</summary>
-   <img src="https://i.imgur.com/cGUjH6m.png">
+  <summary>Timer, speedometer and key input with color customization</summary>
+   <img src="https://i.imgur.com/TxAwgbC.png">
 </details>
 
 <details> 
-  <summary>Players personal best</summary>
+  <summary>Players PB</summary>
   <img src="https://i.imgur.com/9HGOhRR.png">
 </details>
 
 <details> 
-  <summary>Checkpoint system (disabled by default)</summary>
+  <summary>Surf Stages and Checkpoints</summary>
+  <img src="https://i.imgur.com/xL2y6vs.png">
+</details>https://i.imgur.com/7vSKeCv.png
+
+<details> 
+    <summary>Bonus stages</summary>
+  <img src="https://i.imgur.com/NURlZBK.png">
+</details>
+
+<details> 
+  <summary>Rank Icons</summary>
+  <img src="https://i.imgur.com/7vSKeCv.png">
+</details>
+
+<details> 
+  <summary>KZ Checkpoint system (disabled by default)</summary>
    <img src="https://i.imgur.com/USX5i8C.png"><br>
    <img src="https://i.imgur.com/kWiHOlz.png"><br>
    <img src="https://i.imgur.com/lXwXNN7.png"><br>
