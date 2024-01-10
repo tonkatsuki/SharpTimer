@@ -48,10 +48,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: ["prepare", "build"]
     steps:
-      - name: Test1
-        run: echo "${{ needs.prepare.outputs.BUILD_NUMBER }}"
-      - name: Test2
-        run: echo "${{ needs.prepare.outputs.version }}"
       - uses: actions/checkout@v3
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -72,7 +68,7 @@ jobs:
         with:
           type: "zip"
           filename: "${{ env.PROJECT_NAME }}.zip"
-          path: ${{ env.OUTPUT_PATH }}
+          path: addons/${{ env.OUTPUT_PATH }} cfg/
       - name: CS2-DeleteLogs
         uses: ncipollo/release-action@v1.12.0
         with:
