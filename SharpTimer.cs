@@ -208,7 +208,8 @@ namespace SharpTimer
                         if ((maxStartingSpeedEnabled == true && use2DSpeed == false && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length()) > maxStartingSpeed) ||
                             (maxStartingSpeedEnabled == true && use2DSpeed == true  && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed))
                         {
-                            AdjustPlayerVelocity(player, maxStartingSpeed);
+                            Action<CCSPlayerController?, float, bool> adjustVelocity = use2DSpeed ? AdjustPlayerVelocity2D : AdjustPlayerVelocity;
+                            adjustVelocity(player, maxStartingSpeed, false);
                         }
 
                         SharpTimerDebug($"Player {player.PlayerName} entered StartZone");
@@ -238,7 +239,8 @@ namespace SharpTimer
                         if ((maxStartingSpeedEnabled == true && use2DSpeed == false && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length()) > maxStartingSpeed) ||
                             (maxStartingSpeedEnabled == true && use2DSpeed == true  && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed))
                         {
-                            AdjustPlayerVelocity(player, maxStartingSpeed);
+                            Action<CCSPlayerController?, float, bool> adjustVelocity = use2DSpeed ? AdjustPlayerVelocity2D : AdjustPlayerVelocity;
+                            adjustVelocity(player, maxStartingSpeed, false);
                         }
                         SharpTimerDebug($"Player {player.PlayerName} entered Bonus{startBonusX} StartZone");
                         return HookResult.Continue;
@@ -281,7 +283,8 @@ namespace SharpTimer
                         if ((maxStartingSpeedEnabled == true && use2DSpeed == false && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length()) > maxStartingSpeed) ||
                             (maxStartingSpeedEnabled == true && use2DSpeed == true  && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed))
                         {
-                            AdjustPlayerVelocity(player, maxStartingSpeed);
+                            Action<CCSPlayerController?, float, bool> adjustVelocity = use2DSpeed ? AdjustPlayerVelocity2D : AdjustPlayerVelocity;
+                            adjustVelocity(player, maxStartingSpeed, false);
                         }
 
                         SharpTimerDebug($"Player {player.PlayerName} left StartZone");
@@ -298,7 +301,8 @@ namespace SharpTimer
                         if ((maxStartingSpeedEnabled == true && use2DSpeed == false && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length()) > maxStartingSpeed) ||
                             (maxStartingSpeedEnabled == true && use2DSpeed == true  && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed))
                         {
-                            AdjustPlayerVelocity(player, maxStartingSpeed);
+                            Action<CCSPlayerController?, float, bool> adjustVelocity = use2DSpeed ? AdjustPlayerVelocity2D : AdjustPlayerVelocity;
+                            adjustVelocity(player, maxStartingSpeed, false);
                         }
 
                         SharpTimerDebug($"Player {player.PlayerName} left BonusStartZone {StartBonusX}");
@@ -339,7 +343,11 @@ namespace SharpTimer
 
                     if (!IsAllowedPlayer(player)) return HookResult.Continue;
 
-                    if (IsAllowedPlayer(player) && resetTriggerTeleportSpeedEnabled == true && currentMapOverrideDisableTelehop == false) AdjustPlayerVelocity(player, 0);
+                    if (IsAllowedPlayer(player) && resetTriggerTeleportSpeedEnabled == true && currentMapOverrideDisableTelehop == false)
+                    {
+                        Action<CCSPlayerController?, float, bool> adjustVelocity = use2DSpeed ? AdjustPlayerVelocity2D : AdjustPlayerVelocity;
+                        adjustVelocity(player, 0, false);
+                    }
 
                     return HookResult.Continue;
                 }

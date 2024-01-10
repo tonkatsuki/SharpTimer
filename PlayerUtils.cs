@@ -259,7 +259,8 @@ namespace SharpTimer
                 if ((maxStartingSpeedEnabled == true && use2DSpeed == false && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length()) > maxStartingSpeed) ||
                     (maxStartingSpeedEnabled == true && use2DSpeed == true  && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed))
                 {
-                    AdjustPlayerVelocity(player, maxStartingSpeed, true);
+                    Action<CCSPlayerController?, float, bool> adjustVelocity = use2DSpeed ? AdjustPlayerVelocity2D : AdjustPlayerVelocity;
+                    adjustVelocity(player, maxStartingSpeed, true);
                 }
             }
         }
@@ -295,6 +296,22 @@ namespace SharpTimer
             player.PlayerPawn.Value.AbsVelocity.Y = (float)adjustedY;
             player.PlayerPawn.Value.AbsVelocity.Z = (float)adjustedZ;
 
+            if (!forceNoDebug) SharpTimerDebug($"Adjusted Velo for {player.PlayerName} to {player.PlayerPawn.Value.AbsVelocity}");
+        }
+
+        private void AdjustPlayerVelocity2D(CCSPlayerController? player, float velocity, bool forceNoDebug = false)
+        {
+            if (!IsAllowedPlayer(player)) return;
+
+            var currentX = player.PlayerPawn.Value.AbsVelocity.X;
+            var currentY = player.PlayerPawn.Value.AbsVelocity.Y;
+            var currentSpeed2D = Math.Sqrt(currentX * currentX + currentY * currentY);
+            var normalizedX = currentX / currentSpeed2D;
+            var normalizedY = currentY / currentSpeed2D;
+            var adjustedX = normalizedX * velocity; // Adjusted speed limit
+            var adjustedY = normalizedY * velocity; // Adjusted speed limit
+            player.PlayerPawn.Value.AbsVelocity.X = (float)adjustedX;
+            player.PlayerPawn.Value.AbsVelocity.Y = (float)adjustedY;
             if (!forceNoDebug) SharpTimerDebug($"Adjusted Velo for {player.PlayerName} to {player.PlayerPawn.Value.AbsVelocity}");
         }
 

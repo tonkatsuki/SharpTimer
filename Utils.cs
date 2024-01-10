@@ -284,6 +284,7 @@ namespace SharpTimer
             beam.EndPos.X = endPos.X;
             beam.EndPos.Y = endPos.Y;
             beam.EndPos.Z = endPos.Z;
+            beam.FadeMinDist = 9999;
 
             beam.DispatchSpawn();
             SharpTimerDebug($"Beam Spawned at S:{startPos} E:{beam.EndPos}");
