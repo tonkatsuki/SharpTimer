@@ -249,8 +249,18 @@ namespace SharpTimer
             return Math.Sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
         }
 
-        public void DrawLaserBetween(Vector startPos, Vector endPos)
+        public void DrawLaserBetween(Vector startPos, Vector endPos, string _color = "")
         {
+            string beamColor = "";
+            if(beamColorOverride == true)
+            {
+                beamColor = _color;
+            }
+            else
+            {
+                beamColor = primaryHUDcolor;
+            }
+
             CBeam beam = Utilities.CreateEntityByName<CBeam>("beam");
             if (beam == null)
             {
@@ -258,13 +268,13 @@ namespace SharpTimer
                 return;
             }
 
-            if (IsHexColorCode(primaryHUDcolor))
+            if (IsHexColorCode(beamColor))
             {
-                beam.Render = ColorTranslator.FromHtml(primaryHUDcolor);
+                beam.Render = ColorTranslator.FromHtml(beamColor);
             }
             else
             {
-                beam.Render = Color.FromName(primaryHUDcolor);
+                beam.Render = Color.FromName(beamColor);
             }
 
             beam.Width = 1.5f;
@@ -279,7 +289,7 @@ namespace SharpTimer
             SharpTimerDebug($"Beam Spawned at S:{startPos} E:{beam.EndPos}");
         }
 
-        public void DrawWireframe2D(Vector corner1, Vector corner2, float height = 50)
+        public void DrawWireframe2D(Vector corner1, Vector corner2, string _color, float height = 50)
         {
             Vector corner3 = new Vector(corner2.X, corner1.Y, corner1.Z);
             Vector corner4 = new Vector(corner1.X, corner2.Y, corner1.Z);
@@ -289,23 +299,23 @@ namespace SharpTimer
             Vector corner3_top = new Vector(corner2.X, corner1.Y, corner1.Z + height);
             Vector corner4_top = new Vector(corner1.X, corner2.Y, corner1.Z + height);
 
-            DrawLaserBetween(corner1, corner3);
-            DrawLaserBetween(corner1, corner4);
-            DrawLaserBetween(corner2, corner3);
-            DrawLaserBetween(corner2, corner4);
+            DrawLaserBetween(corner1, corner3, _color);
+            DrawLaserBetween(corner1, corner4, _color);
+            DrawLaserBetween(corner2, corner3, _color);
+            DrawLaserBetween(corner2, corner4, _color);
 
-            DrawLaserBetween(corner1_top, corner3_top);
-            DrawLaserBetween(corner1_top, corner4_top);
-            DrawLaserBetween(corner2_top, corner3_top);
-            DrawLaserBetween(corner2_top, corner4_top);
+            DrawLaserBetween(corner1_top, corner3_top, _color);
+            DrawLaserBetween(corner1_top, corner4_top, _color);
+            DrawLaserBetween(corner2_top, corner3_top, _color);
+            DrawLaserBetween(corner2_top, corner4_top, _color);
 
-            DrawLaserBetween(corner1, corner1_top);
-            DrawLaserBetween(corner2, corner2_top);
-            DrawLaserBetween(corner3, corner3_top);
-            DrawLaserBetween(corner4, corner4_top);
+            DrawLaserBetween(corner1, corner1_top, _color);
+            DrawLaserBetween(corner2, corner2_top, _color);
+            DrawLaserBetween(corner3, corner3_top, _color);
+            DrawLaserBetween(corner4, corner4_top, _color);
         }
 
-        public void DrawWireframe3D(Vector corner1, Vector corner8)
+        public void DrawWireframe3D(Vector corner1, Vector corner8, string _color)
         {
             Vector corner2 = new Vector(corner1.X, corner8.Y, corner1.Z);
             Vector corner3 = new Vector(corner8.X, corner8.Y, corner1.Z);
@@ -316,22 +326,22 @@ namespace SharpTimer
             Vector corner7 = new Vector(corner1.X, corner8.Y, corner8.Z);
 
             //top square
-            DrawLaserBetween(corner1, corner2);
-            DrawLaserBetween(corner2, corner3);
-            DrawLaserBetween(corner3, corner4);
-            DrawLaserBetween(corner4, corner1);
+            DrawLaserBetween(corner1, corner2, _color);
+            DrawLaserBetween(corner2, corner3, _color);
+            DrawLaserBetween(corner3, corner4, _color);
+            DrawLaserBetween(corner4, corner1, _color);
 
             //bottom square
-            DrawLaserBetween(corner5, corner6);
-            DrawLaserBetween(corner6, corner7);
-            DrawLaserBetween(corner7, corner8);
-            DrawLaserBetween(corner8, corner5);
+            DrawLaserBetween(corner5, corner6, _color);
+            DrawLaserBetween(corner6, corner7, _color);
+            DrawLaserBetween(corner7, corner8, _color);
+            DrawLaserBetween(corner8, corner5, _color);
 
             //connect them both to build a cube
-            DrawLaserBetween(corner1, corner6);
-            DrawLaserBetween(corner2, corner7);
-            DrawLaserBetween(corner3, corner8);
-            DrawLaserBetween(corner4, corner5);
+            DrawLaserBetween(corner1, corner6, _color);
+            DrawLaserBetween(corner2, corner7, _color);
+            DrawLaserBetween(corner3, corner8, _color);
+            DrawLaserBetween(corner4, corner5, _color);
         }
 
         private bool IsVectorInsideBox(Vector playerVector, Vector corner1, Vector corner2)
@@ -639,8 +649,8 @@ namespace SharpTimer
 
                     if (useTriggers == false)
                     {
-                        DrawWireframe2D(currentMapStartC1, currentMapStartC2, fakeTriggerHeight);
-                        DrawWireframe2D(currentMapEndC1, currentMapEndC2, fakeTriggerHeight);
+                        DrawWireframe2D(currentMapStartC1, currentMapStartC2, startBeamColor, fakeTriggerHeight);
+                        DrawWireframe2D(currentMapEndC1, currentMapEndC2, endBeamColor, fakeTriggerHeight);
                     }
                     else
                     {
@@ -648,8 +658,8 @@ namespace SharpTimer
 
                         if (startRight == null || startLeft == null || endRight == null || endLeft == null) return;
 
-                        DrawWireframe3D(startRight, startLeft);
-                        DrawWireframe3D(endRight, endLeft);
+                        DrawWireframe3D(startRight, startLeft, startBeamColor);
+                        DrawWireframe3D(endRight, endLeft, endBeamColor);
                     }
                 }
             }
@@ -660,8 +670,8 @@ namespace SharpTimer
 
             if (useTriggers == false)
             {
-                DrawWireframe2D(currentMapStartC1, currentMapStartC2, fakeTriggerHeight);
-                DrawWireframe2D(currentMapEndC1, currentMapEndC2, fakeTriggerHeight);
+                DrawWireframe2D(currentMapStartC1, currentMapStartC2, startBeamColor, fakeTriggerHeight);
+                DrawWireframe2D(currentMapEndC1, currentMapEndC2, endBeamColor, fakeTriggerHeight);
             }
             else
             {
@@ -669,8 +679,8 @@ namespace SharpTimer
 
                 if (startRight == null || startLeft == null || endRight == null || endLeft == null) return;
 
-                DrawWireframe3D(startRight, startLeft);
-                DrawWireframe3D(endRight, endLeft);
+                DrawWireframe3D(startRight, startLeft, startBeamColor);
+                DrawWireframe3D(endRight, endLeft, endBeamColor);
             }
         }
 

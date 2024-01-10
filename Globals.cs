@@ -28,6 +28,7 @@ namespace SharpTimer
         public string primaryChatColor = "";
         public string startBeamColor = "";
         public string endBeamColor = "";
+        public bool beamColorOverride = false;
         public string currentMapStartTrigger = "trigger_startzone";
         public string currentMapEndTrigger = "trigger_endzone";
         public Vector currentMapStartC1 = new Vector(0, 0, 0);
