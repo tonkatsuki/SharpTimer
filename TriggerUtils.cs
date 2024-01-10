@@ -351,6 +351,37 @@ namespace SharpTimer
             }
         }
 
+        private (Vector?, Vector?, Vector?, Vector?) FindTriggerBounds()
+        {
+            Vector? startMins = null;
+            Vector? startMaxs = null;
+
+            Vector? endMins = null;
+            Vector? endMaxs = null;
+
+            foreach (var trigger in entityCache.Triggers)
+            {
+                if (trigger == null || trigger.Entity.Name == null)
+                    continue;
+
+                if (IsValidStartTriggerName(trigger.Entity.Name.ToString()))
+                {
+                    startMins = trigger.Collision.Mins + trigger.CBodyComponent.SceneNode.AbsOrigin;
+                    startMaxs = trigger.Collision.Maxs + trigger.CBodyComponent.SceneNode.AbsOrigin;
+                    continue;
+                }
+
+                if (IsValidEndTriggerName(trigger.Entity.Name.ToString()))
+                {
+                    endMins = trigger.Collision.Mins + trigger.CBodyComponent.SceneNode.AbsOrigin;
+                    endMaxs = trigger.Collision.Maxs + trigger.CBodyComponent.SceneNode.AbsOrigin;
+                    continue;
+                }
+            }
+
+            return (startMins, startMaxs, endMins, endMaxs);
+        }
+
         private (Vector? startRight, Vector? startLeft, Vector? endRight, Vector? endLeft) FindTriggerCorners()
         {
             var targets = entityCache.InfoTargetEntities;

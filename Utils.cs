@@ -644,7 +644,7 @@ namespace SharpTimer
                     }
                     else
                     {
-                        var (startRight, startLeft, endRight, endLeft) = FindTriggerCorners();
+                        var (startRight, startLeft, endRight, endLeft) = FindTriggerBounds();
 
                         if (startRight == null || startLeft == null || endRight == null || endLeft == null) return;
 
@@ -665,7 +665,7 @@ namespace SharpTimer
             }
             else
             {
-                var (startRight, startLeft, endRight, endLeft) = FindTriggerCorners();
+                var (startRight, startLeft, endRight, endLeft) = FindTriggerBounds();
 
                 if (startRight == null || startLeft == null || endRight == null || endLeft == null) return;
 

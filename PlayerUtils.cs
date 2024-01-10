@@ -81,7 +81,9 @@ namespace SharpTimer
                     StringBuilder stringBuilder = new StringBuilder();
 
                     stringBuilder.Clear();
-                    string formattedPlayerVel = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString("0000");
+                    string formattedPlayerVel = Math.Round(use2DSpeed   ? player.PlayerPawn.Value.AbsVelocity.Length2D()
+                                                                        : player.PlayerPawn.Value.AbsVelocity.Length())
+                                                                        .ToString("0000");
                     string formattedPlayerPre = Math.Round(ParseVector(playerTimer.PreSpeed ?? "0 0 0").Length2D()).ToString("000");
                     string playerTime = FormatTime(timerTicks);
                     string playerBonusTime = FormatTime(playerTimer.BonusTimerTicks);
@@ -254,7 +256,8 @@ namespace SharpTimer
             {
                 OnTimerStart(player);
 
-                if (maxStartingSpeedEnabled == true && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed)
+                if ((maxStartingSpeedEnabled == true && use2DSpeed == false && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length()) > maxStartingSpeed) ||
+                    (maxStartingSpeedEnabled == true && use2DSpeed == true  && Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()) > maxStartingSpeed))
                 {
                     AdjustPlayerVelocity(player, maxStartingSpeed, true);
                 }
@@ -276,13 +279,22 @@ namespace SharpTimer
 
             var currentX = player.PlayerPawn.Value.AbsVelocity.X;
             var currentY = player.PlayerPawn.Value.AbsVelocity.Y;
-            var currentSpeed2D = Math.Sqrt(currentX * currentX + currentY * currentY);
-            var normalizedX = currentX / currentSpeed2D;
-            var normalizedY = currentY / currentSpeed2D;
+            var currentZ = player.PlayerPawn.Value.AbsVelocity.Z;
+
+            var currentSpeed3D = Math.Sqrt(currentX * currentX + currentY * currentY + currentZ * currentZ);
+
+            var normalizedX = currentX / currentSpeed3D;
+            var normalizedY = currentY / currentSpeed3D;
+            var normalizedZ = currentZ / currentSpeed3D;
+
             var adjustedX = normalizedX * velocity; // Adjusted speed limit
             var adjustedY = normalizedY * velocity; // Adjusted speed limit
+            var adjustedZ = normalizedZ * velocity; // Adjusted speed limit
+
             player.PlayerPawn.Value.AbsVelocity.X = (float)adjustedX;
             player.PlayerPawn.Value.AbsVelocity.Y = (float)adjustedY;
+            player.PlayerPawn.Value.AbsVelocity.Z = (float)adjustedZ;
+
             if (!forceNoDebug) SharpTimerDebug($"Adjusted Velo for {player.PlayerName} to {player.PlayerPawn.Value.AbsVelocity}");
         }
 
@@ -307,7 +319,9 @@ namespace SharpTimer
             SharpTimerDebug($"Player {player.PlayerName} has a stage trigger with handle {triggerHandle}");
             var (previousStageTime, previousStageSpeed) = GetStageTime(player.SteamID.ToString(), stageTriggers[triggerHandle]);
 
-            string currentStageSpeed = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString();
+            string currentStageSpeed = Math.Round(use2DSpeed    ? player.PlayerPawn.Value.AbsVelocity.Length2D()
+                                                                : player.PlayerPawn.Value.AbsVelocity.Length())
+                                                                .ToString("0000");
 
             if (previousStageTime != 0)
             {
@@ -342,7 +356,9 @@ namespace SharpTimer
             SharpTimerDebug($"Player {player.PlayerName} has a checkpoint trigger with handle {triggerHandle}");
             var (previousStageTime, previousStageSpeed) = GetStageTime(player.SteamID.ToString(), cpTriggers[triggerHandle]);
 
-            string currentStageSpeed = Math.Round(player.PlayerPawn.Value.AbsVelocity.Length2D()).ToString();
+            string currentStageSpeed = Math.Round(use2DSpeed    ? player.PlayerPawn.Value.AbsVelocity.Length2D()
+                                                                : player.PlayerPawn.Value.AbsVelocity.Length())
+                                                                .ToString("0000");
 
             if (previousStageTime != 0)
             {
