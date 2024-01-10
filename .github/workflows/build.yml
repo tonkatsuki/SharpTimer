@@ -12,7 +12,7 @@ on:
 env:
   PROJECT_PATH: "SharpTimer.csproj"
   PROJECT_NAME: "SharpTimer"
-  OUTPUT_PATH: "./SharpTimer"
+  OUTPUT_PATH: "./addons/counterstrikesharp/plugins/SharpTimer"
 
 jobs:
   prepare:
@@ -68,7 +68,7 @@ jobs:
         with:
           type: "zip"
           filename: "${{ env.PROJECT_NAME }}.zip"
-          path: addons/${{ env.OUTPUT_PATH }} cfg/
+          path: ${{ env.OUTPUT_PATH }} cfg/
       - name: CS2-DeleteLogs
         uses: ncipollo/release-action@v1.12.0
         with:
