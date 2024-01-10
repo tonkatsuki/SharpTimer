@@ -27,7 +27,6 @@ namespace SharpTimer
             Triggers = Utilities.FindAllEntitiesByDesignerName<CBaseTrigger>("trigger_multiple").ToList();
             InfoTeleportDestinations = Utilities.FindAllEntitiesByDesignerName<CInfoTeleportDestination>("info_teleport_destination").ToList();
             TriggerPushEntities = Utilities.FindAllEntitiesByDesignerName<CTriggerPush>("trigger_push").ToList();
-            InfoTargetEntities = Utilities.FindAllEntitiesByDesignerName<CPointEntity>("info_target").ToList();
         }
     }
 

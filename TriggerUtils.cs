@@ -382,39 +382,6 @@ namespace SharpTimer
             return (startMins, startMaxs, endMins, endMaxs);
         }
 
-        private (Vector? startRight, Vector? startLeft, Vector? endRight, Vector? endLeft) FindTriggerCorners()
-        {
-            var targets = entityCache.InfoTargetEntities;
-
-            Vector? startRight = null;
-            Vector? startLeft = null;
-            Vector? endRight = null;
-            Vector? endLeft = null;
-
-            foreach (var target in targets)
-            {
-                if (target == null || target.Entity.Name == null) continue;
-
-                switch (target.Entity.Name)
-                {
-                    case "start_right":
-                        startRight = target.AbsOrigin;
-                        break;
-                    case "start_left":
-                        startLeft = target.AbsOrigin;
-                        break;
-                    case "end_right":
-                        endRight = target.AbsOrigin;
-                        break;
-                    case "end_left":
-                        endLeft = target.AbsOrigin;
-                        break;
-                }
-            }
-
-            return (startRight, startLeft, endRight, endLeft);
-        }
-
         public bool IsInsideTrigger(Vector triggerPos, float triggerCollisionRadius, Vector info_tpPos)
         {
             return info_tpPos.X >= triggerPos.X - triggerCollisionRadius && info_tpPos.X <= triggerPos.X + triggerCollisionRadius &&
