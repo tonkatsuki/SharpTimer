@@ -26,8 +26,6 @@ jobs:
         run: |
           version=$(sed -n -E 's/.*ModuleVersion => \$"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Globals.cs)
           echo "version=${version}" >> $GITHUB_OUTPUT
-          echo "${version}"
-          echo ${{ steps.extract_version.outputs.BUILD_NUMBER }}
 
   build:
     permissions: write-all
@@ -79,5 +77,6 @@ jobs:
         uses: ncipollo/release-action@v1.12.0
         with:
           artifacts: "${{ env.PROJECT_NAME }}.zip"
-          name: "Build ${{ env.BUILD_NUMBER }}"
+          draft: "true"
+          name: "Build ${{ needs.prepare.outputs.BUILD_NUMBER }}"
           tag: "build-${{ needs.prepare.outputs.BUILD_NUMBER }}"
