@@ -26,7 +26,7 @@ jobs:
         run: |
           version=$(sed -n -E 's/.*ModuleVersion => \$"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Globals.cs)
           # echo "::set-output name=BUILD_NUMBER::$version"
-          echo "{BUILD_NUMBER}=${version}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${version}" >> $GITHUB_OUTPUT
           echo ${{ BUILD_NUMBER}}
           echo ${{ env.BUILD_NUMBER}}
 
