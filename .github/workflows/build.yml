@@ -24,6 +24,7 @@ jobs:
         run: |
           version=$(sed -n -E 's/.*ModuleVersion => \$"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Globals.cs)
           echo "BUILD_NUMBER=${version}" >> $GITHUB_OUTPUT
+          echo "BUILD_NUMBER=${version}"
 
   build:
     needs: prepare
@@ -47,6 +48,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Test1
+        run: echo "${{ steps.extract_version.outputs.BUILD_NUMBER }}"
       - uses: actions/checkout@v3
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
