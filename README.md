@@ -143,12 +143,6 @@ These commands require the `@css/root` admin flag
 
 </details>
 
-### Adding Zone outline guides
-* This plugin will look for info_target entities to define the zone outlines. Mappers can place these at the opposite corners of the zone triggers.<details> 
-  <summary>EXAMPLE</summary>
-   <img src="https://i.imgur.com/8nJBHaH.jpeg">
-</details>
-
 
 * These are the supported info_target targetnames
 

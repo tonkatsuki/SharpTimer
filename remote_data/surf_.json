@@ -3,6 +3,10 @@
         "Tier": 1,
         "Type": "Staged"
     },
+    "surf_atrium": {
+        "Tier": 1,
+        "Type": "Linear"
+    },
     "surf_galaxy_easy": {
         "Tier": 1,
         "Type": "Staged"
