@@ -1,5 +1,10 @@
+<div align="center">
+  <img src="https://github.com/DEAFPS/SharpTimer/assets/43534349/8097684d-8b0b-4c39-b093-0acc76ee8fd6" alt="">
+</div>
+
 # SharpTimer
 SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using CounterStrikeSharp<br>
+
 
 ## Features
 <details> 
