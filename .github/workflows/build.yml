@@ -17,15 +17,12 @@ env:
 jobs:
   prepare:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.extract_version.outputs.version }}
     steps:
       - uses: actions/checkout@v3
       - name: Extract Version Number
         id: extract_version
         run: |
           version=$(sed -n -E 's/.*ModuleVersion => \$"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Globals.cs)
-          # echo "::set-output name=BUILD_NUMBER::$version"
           echo "BUILD_NUMBER=${version}" >> $GITHUB_OUTPUT
 
   build:
@@ -76,5 +73,4 @@ jobs:
         with:
           artifacts: "${{ env.PROJECT_NAME }}.zip"
           name: "Build ${{ env.BUILD_NUMBER }}"
-          # tag: "build-$BUILD_NUMBER"
-          tag: "build-${{ steps.extract_version.outputs.version }}"
+          tag: "build-${{ steps.extract_version.outputs.BUILD_NUMBER }}"
