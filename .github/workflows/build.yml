@@ -76,4 +76,5 @@ jobs:
         with:
           artifacts: "${{ env.PROJECT_NAME }}.zip"
           name: "Build ${{ env.BUILD_NUMBER }}"
-          tag: "build-$BUILD_NUMBER"
+          # tag: "build-$BUILD_NUMBER"
+          tag: "build-${{ jobs.prepare.outputs.BUILD_NUMBER }}"
