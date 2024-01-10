@@ -26,8 +26,7 @@ jobs:
         run: |
           version=$(sed -n -E 's/.*ModuleVersion => \$"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Globals.cs)
           echo "::set-output name=BUILD_NUMBER::$version"
-
-  # ... rest of your jobs ...
+          #  echo "${version}" >> $BUILD_NUMBER
 
   build:
     needs: prepare
@@ -35,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      BUILD_NUMBER: ${{ needs.prepare.outputs.version }}
 
     steps:
       - uses: actions/checkout@v3
