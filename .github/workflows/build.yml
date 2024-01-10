@@ -25,18 +25,15 @@ jobs:
         id: extract_version
         run: |
           version=$(sed -n -E 's/.*ModuleVersion => \$"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Globals.cs)
-          echo "::set-output name=BUILD_NUMBER::$version"
-          echo $version
-          #  echo "${version}" >> $BUILD_NUMBER
+          # echo "::set-output name=BUILD_NUMBER::$version"
+          echo "{BUILD_NUMBER}=${version}" >> $GITHUB_ENV
+          echo ${{ BUILD_NUMBER}}
+          echo ${{ env.BUILD_NUMBER}}
 
   build:
     needs: prepare
     permissions: write-all
     runs-on: ubuntu-latest
-
-    env:
-      # BUILD_NUMBER: ${{ needs.prepare.outputs.version }}
-      BUILD_NUMBER: 1.1.1
 
     steps:
       - uses: actions/checkout@v3
