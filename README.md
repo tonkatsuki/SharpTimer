@@ -77,6 +77,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
     - [x] Map Rank (ie 1/100)
     - [x] Map Tier
     - [x] Map Type
+  - [ ] Spectator HUD
 - [x] Zones
   - [x] Hook common triggers by default
   - [x] Manual Zones
@@ -85,7 +86,6 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
   - [x] Save to Json
   - [x] Save to MySQL
 - [x] Ranks
-  - [x] Map Rank icons in hud
   - [x] Map !top
   - [x] Map !topbonus
   - [ ] Global server ranks
