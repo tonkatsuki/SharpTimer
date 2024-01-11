@@ -54,7 +54,6 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 
 [**Web panel** *(optional but recommended)*](https://github.com/Letaryat/sharptimer-web-panel)
 
-:exclamation: **CS2Fixes** does clash with **CSS** there fore the plugin might not work correctly with it
 
 ## Install
 * Download the [latest release](https://github.com/DEAFPS/SharpTimer/releases),
