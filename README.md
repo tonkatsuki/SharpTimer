@@ -101,9 +101,9 @@ These commands require the `@css/root` admin flag
 | ------------- | ------------- |
 | `!noclip`  | Enables noclip for admin |
 
-## Zones
+## Map Data
 
-### Adding Zone Triggers
+### Default Zone Triggers
 * This plugin will look for trigger_multiple entities by default depending what map is being played. By default the plugin tries to hook the following target names:
 
 | Start targetname  | End targetname |
@@ -114,50 +114,47 @@ These commands require the `@css/root` admin flag
 | s1_start |   |
 | stage1_start |   |
 
+### Adding Map Specific Variables
+Map configuration can be customized with a simple `.json` file in `game/csgo/cfg/SharpTimer/MapData`
 
-* If the map uses different trigger targetnames or does not have triggers at all (most bhop and deathrun maps dont) you will have to add them into the `.json` files
+To add map specific Variables simply create a file with the maps name. For example: `kz_hub.json`
 
-* To add Map Start and End zones you can simply add the `targetnames` of the triggers inside a `.json` file in `game/csgo/cfg/SharpTimer/MapData` using `MapStartTrigger` and  `MapEndTrigger`
+and add the variables you with to use
 
-  You can check if a map has built in triggers with the following server commands:
-  ```
-  sv_cheats true
-  ent_find trigger_multiple
-  ```
+| Variable  | What it does |
+| ------------- | ------------- |
+| `MapStartTrigger`  | Sets the start zone trigger targetname for the map* |
+| `MapEndTrigger`  | Sets the end zone trigger targetname for the map* |
+| `RespawnPos` | Sets a custom respawn destination for the `!r` command |
+| `OverrideStageRequirement` | Forces the map to check if the player has been through all stages before finishing |
+| `OverrideDisableTelehop` | If `sharptimer_disable_telehop` is true you can override it to false for this specific map |
 
-### Adding "Fake" Zone Triggers
-* ⚠️ Only use these as "the last resort" you will run into issues otherwise if a map supports default triggers and you decide to add "fake" zone triggers regardless!
-* Many maps do not contain any `startzone` or `endzone` triggers. As a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
+### Manual Zoning Variables
+| Variable  | What it does |
+| ------------- | ------------- |
+| `MapStartC1`  | Sets the 1st start zone corner coordinates for the map** |
+| `MapStartC2` | Sets the 2nd start zone corner coordinates for the map** |
+| `MapEndC1` | Sets the 1st end zone corner coordinates for the map** |
+| `MapEndC2` | Sets the 2nd end zone corner coordinates for the map** |
+
+*⚠️ Only use these if the map does not support the trigger targetnames supported by default in SharpTimer!
+
+**⚠️ Only use these as "the last resort" if the map does not have ANY start/end triggers! Alternatively as a server admin with a `@css/root` flag you can use `!addrespawnpos`, `!addstartzone`, `!addendzone` & `!savezones` to manually add "fake" zone triggers! [Example Video](https://streamable.com/9ez6gq)
 
 <details>
-<summary>Here is a Example of what the `map.json` can look like with both map triggers and manual triggers:</summary>
+<summary>Here is a Example of what the `map.json` can look like:</summary>
 
-### surf_utopia_njv.json
+### surf_example.json
 ```
 {
   "MapStartTrigger": "zone_start",
-  "MapEndTrigger": "zone_end"
-}
-```
-### bhop_zentic.json
-```
-{
-  "MapStartC1": "-67.89055 188.01341 64.03125",
-  "MapStartC2": "123.32273 -187.58983 64.03125",
-  "MapEndC1": "13736.031 1540.6246 -639.96875",
-  "MapEndC2": "13884.47 1915.2767 -639.96875",
-  "RespawnPos": "-2 0 64.03125"
+  "MapEndTrigger": "zone_end",
+  "RespawnPos": "-2 0 64.03125",
+  "OverrideDisableTelehop": "true",
+  "OverrideStageRequirement": "true"
 }
 ```
 
 </details>
-
-
-* These are the supported info_target targetnames
-
-| Start Zone info_target targetname  | End Zone info_target targetname |
-| ------------- | ------------- |
-| left_start  | left_end  |
-| right_start | right_end |
 
 ## Author: [@DEAFPS_](https://twitter.com/deafps_)
