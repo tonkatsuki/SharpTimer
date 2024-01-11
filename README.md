@@ -69,6 +69,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
 # TODO List
 - [x] HUD
   - [x] Speedometer
+  - [x] Pre
   - [x] Timer
   - [x] Info
     - [x] PB
@@ -99,6 +100,7 @@ SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using Coun
   - [ ] Player Server Stats
   - [ ] Player Map Stats
 - [ ] Replays
+- [ ] Jumpstats
 - [x] Silly Stuff
   - [x] Color customization
   - [x] Special Tester Gifs
