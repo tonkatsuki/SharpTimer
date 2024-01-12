@@ -96,8 +96,8 @@ namespace SharpTimer
                     string infoLine = $"{playerTimer.RankHUDString}" +
                                         $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
                                         $"{(currentMapType != null ? $" | {currentMapType}" : "")}" +
-                                        $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")} </font> <br>";
-                    string adLine = $"<font class='fontSize-s' color='{primaryHUDcolor}'discord.gg/steamgamers</font>";
+                                        $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")} </font> ";
+                    /* string adLine = $"<font class='fontSize-s' color='{primaryHUDcolor}'discord.gg/steamgamers</font>"; */
 
                     stringBuilder.Clear();
                     stringBuilder.Append($"{((playerButtons & PlayerButtons.Moveleft) != 0 ? "A" : "_")} " +
@@ -113,7 +113,7 @@ namespace SharpTimer
                     stringBuilder.Append(timerLine)
                                 .Append(veloLine)
                                 .Append(infoLine)
-                                .Append(adLine)
+                                /* .Append(adLine) */
                                 .Append(playerTimer.IsTester && !isTimerRunning && !playerTimer.IsBonusTimerRunning ? playerTimer.TesterPausedGif : "");
 
                     string hudContent = stringBuilder.ToString();
