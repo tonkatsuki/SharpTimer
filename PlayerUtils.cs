@@ -97,7 +97,7 @@ namespace SharpTimer
                                         $"{(currentMapTier != null ? $" | Tier: {currentMapTier}" : "")}" +
                                         $"{(currentMapType != null ? $" | {currentMapType}" : "")}" +
                                         $"{((currentMapType == null && currentMapTier == null) ? $" {currentMapName} " : "")} </font> <br>";
-                    string adLine = $"<font class='fontSize-s' color='{primaryHUDcolor}'discord.gg/steamgamers</font>"
+                    string adLine = $"<font class='fontSize-s' color='{primaryHUDcolor}'discord.gg/steamgamers</font>";
 
                     stringBuilder.Clear();
                     stringBuilder.Append($"{((playerButtons & PlayerButtons.Moveleft) != 0 ? "A" : "_")} " +
