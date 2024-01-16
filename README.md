@@ -5,6 +5,9 @@
 <div align="center">
 <a href='https://ko-fi.com/L3L7T5ZSB' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 </div>
+<div align="center">
+<a href='https://ko-fi.com/L3L7T5ZSB' target='_blank'><img src='https://discordapp.com/api/guilds/1196646791450472488/widget.png?style=banner2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+</div>
 
 # SharpTimer
 SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using CounterStrikeSharp<br>
