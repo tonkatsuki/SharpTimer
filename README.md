@@ -1,13 +1,9 @@
 <div align="center">
-  <img src="https://github.com/DEAFPS/SharpTimer/assets/43534349/c353662a-eb64-43e7-9294-40cfed3d58af" alt="">
+  <img src="https://github.com/DEAFPS/SharpTimer/assets/43534349/c353662a-eb64-43e7-9294-40cfed3d58af" alt="" style="margin: 0;">
+  <a href='https://ko-fi.com/L3L7T5ZSB' target='_blank'><img src='https://github.com/DEAFPS/SharpTimer/assets/43534349/06a05e4d-a4aa-4ed8-b94d-4bfa2939d66f' alt='Buy Me a Coffee at ko-fi.com' style="margin: 0;"></a>
+  <a href='https://discord.gg/SmQXeyMcny' target='_blank'><img src='https://github.com/DEAFPS/SharpTimer/assets/43534349/9ecf2010-4273-420e-900c-cdd37b75ee70' alt='SharpTimer Discord' style="margin: 0;"></a>
 </div>
 
-<div align="center">
-<a href='https://ko-fi.com/L3L7T5ZSB' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-</div>
-<div align="center">
-<a href='https://discord.gg/SmQXeyMcny' target='_blank'><img src='https://discordapp.com/api/guilds/1196646791450472488/widget.png?style=banner2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-</div>
 
 # SharpTimer
 SharpTimer is a simple Surf/KZ/Bhop/MG/Deathrun/etc. CS2 Timer plugin using CounterStrikeSharp<br>
