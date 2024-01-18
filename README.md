@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/DEAFPS/SharpTimer/assets/43534349/8097684d-8b0b-4c39-b093-0acc76ee8fd6" alt="">
+  <img src="https://github.com/DEAFPS/SharpTimer/assets/43534349/c353662a-eb64-43e7-9294-40cfed3d58af" alt="">
 </div>
 
 <div align="center">
