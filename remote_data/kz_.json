@@ -23,7 +23,7 @@
     "kz_beanguy_v2": {
         "Tier": 1
     },
-    "kz_beginnerblock_go": {
+    "kz_beginnerblock": {
         "Tier": 1
     },
     "kz_blocks2006": {
@@ -38,7 +38,7 @@
     "kz_brightblock": {
         "Tier": 1
     },
-    "kz_cartooncastle_go": {
+    "kz_cartooncastle": {
         "Tier": 1
     },
     "kz_caulis_v2": {
@@ -56,7 +56,7 @@
     "kz_chrysoprase": {
         "Tier": 1
     },
-    "kz_cliffhanger_go_global": {
+    "kz_cliffhanger": {
         "Tier": 1
     },
     "kz_conifer": {
@@ -68,7 +68,7 @@
     "kz_cratespeed": {
         "Tier": 1
     },
-    "kz_crate_delight_go": {
+    "kz_crate_delight": {
         "Tier": 1
     },
     "kz_cybersand": {
@@ -113,10 +113,10 @@
     "kz_flying_rabbits": {
         "Tier": 1
     },
-    "kz_forestrace_go": {
+    "kz_forestrace": {
         "Tier": 1
     },
-    "kz_frozen_go": {
+    "kz_frozen": {
         "Tier": 1
     },
     "kz_galaxy_go2": {
@@ -128,7 +128,7 @@
     "kz_giantbean": {
         "Tier": 1
     },
-    "kz_gigablock_go": {
+    "kz_gigablock": {
         "Tier": 1
     },
     "kz_gkd_v2": {
@@ -209,7 +209,7 @@
     "kz_mac": {
         "Tier": 1
     },
-    "kz_man_everest_go_fix": {
+    "kz_man_everest_fix": {
         "Tier": 1
     },
     "kz_megabhop_v2": {
@@ -287,7 +287,7 @@
     "kz_sukblock_v2_fixed": {
         "Tier": 1
     },
-    "kz_summercliff2_go": {
+    "kz_summercliff2": {
         "Tier": 1
     },
     "kz_terablock": {
@@ -296,7 +296,7 @@
     "kz_tomb_fix": {
         "Tier": 1
     },
-    "kz_tradeblock_go": {
+    "kz_tradeblock": {
         "Tier": 1
     },
     "kz_violet_fix": {
@@ -326,7 +326,7 @@
     "xc_cliffjump_fix": {
         "Tier": 1
     },
-    "xc_dtt_nasty_go": {
+    "xc_dtt_nasty": {
         "Tier": 1
     },
     "kz_kzro_justgrab": {
@@ -377,22 +377,22 @@
     "bkz_cauz_final": {
         "Tier": 2
     },
-    "bkz_caves_go": {
+    "bkz_caves": {
         "Tier": 2
     },
     "bkz_cg_coldbhop": {
         "Tier": 2
     },
-    "bkz_chillhop_go": {
+    "bkz_chillhop": {
         "Tier": 2
     },
     "bkz_dydhop": {
         "Tier": 2
     },
-    "bkz_goldbhop_csgo": {
+    "bkz_goldbhop": {
         "Tier": 2
     },
-    "bkz_goldbhop_v2go": {
+    "bkz_goldbhop": {
         "Tier": 2
     },
     "bkz_hellokitty_v2": {
@@ -470,7 +470,7 @@
     "kz_asphyxiate": {
         "Tier": 2
     },
-    "kz_asteroid_field_go": {
+    "kz_asteroid_field": {
         "Tier": 2
     },
     "kz_avalon": {
@@ -704,10 +704,10 @@
     "kz_iluvprok_global": {
         "Tier": 2
     },
-    "kz_j2s_cupblock_go_fix2": {
+    "kz_j2s_cupblock_fix2": {
         "Tier": 2
     },
-    "kz_j2s_tetris_go": {
+    "kz_j2s_tetris": {
         "Tier": 2
     },
     "kz_johndoe": {
@@ -863,10 +863,10 @@
     "kz_perf_darkcave": {
         "Tier": 2
     },
-    "kz_pharaoh_csgo": {
+    "kz_pharaoh": {
         "Tier": 2
     },
-    "kz_pianoclimb_go": {
+    "kz_pianoclimb": {
         "Tier": 2
     },
     "kz_plains": {
@@ -887,7 +887,7 @@
     "kz_psyk": {
         "Tier": 2
     },
-    "kz_psytime_go": {
+    "kz_psytime": {
         "Tier": 2
     },
     "kz_quick7_v2": {
@@ -899,7 +899,7 @@
     "kz_rcn_impermanence": {
         "Tier": 2
     },
-    "kz_redemption_csgo": {
+    "kz_redemption": {
         "Tier": 2
     },
     "kz_refract": {
@@ -1001,7 +1001,7 @@
     "kz_thinkblock": {
         "Tier": 2
     },
-    "kz_toonadventure_go": {
+    "kz_toonadventure": {
         "Tier": 2
     },
     "kz_toonrun_final": {
@@ -1070,7 +1070,7 @@
     "xc_skycastle": {
         "Tier": 2
     },
-    "xc_supermario_go_gfix": {
+    "xc_supermario_gfix": {
         "Tier": 2
     },
     "kz_kzro_wallblocks": {
@@ -1122,7 +1122,7 @@
         "Tier": 2
     },
     "kz_victoria": {
-        "Tier": 1
+        "Tier": 2
     },
     "bkz_canadaszn": {
         "Tier": 2
@@ -1976,7 +1976,7 @@
     "kz_bhop_composure_f": {
         "Tier": 4
     },
-    "kz_bhop_dusk_go": {
+    "kz_bhop_dusk": {
         "Tier": 4
     },
     "kz_bhop_essence": {
@@ -1988,13 +1988,13 @@
     "kz_bhop_northface": {
         "Tier": 4
     },
-    "kz_bhop_nothing_go": {
+    "kz_bhop_nothing": {
         "Tier": 4
     },
     "kz_bhop_rotebal3": {
         "Tier": 4
     },
-    "kz_bhop_skyworld_go": {
+    "kz_bhop_skyworld": {
         "Tier": 4
     },
     "kz_bhop_zenith": {
